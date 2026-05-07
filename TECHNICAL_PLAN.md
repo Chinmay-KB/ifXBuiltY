@@ -2,34 +2,50 @@
 
 ## Summary
 
-Build a fast-launch web app with **Next.js App Router + TypeScript + Tailwind**, deployed on **Vercel**, using **Supabase** for Google auth, Postgres, storage, and public feed data. Image generation uses OpenAI's **Image API** with **GPT Image**, defaulting to the current high-quality model path documented by OpenAI for single-prompt image generation.
+Build a fast-launch web app with **Next.js App Router + TypeScript + Tailwind**, deployed on **Vercel**, using **Supabase** for Google auth, Postgres, storage, and public feed data. Image generation will use OpenAI's **Image API** with **GPT Image**, defaulting to the current high-quality model path documented by OpenAI for single-prompt image generation (generation route not built yet).
 
 V1 loop: browse feed anonymously, sign in with Google to generate, add extra prompt details, publish, remix, upvote/downvote, report, and share a watermarked public page.
+
+## Implementation status (living)
+
+**Done**
+
+- **Framework**: Next.js 16 App Router, TypeScript, Tailwind 4, Yarn 4 (`nodeLinker: node-modules`), Turbopack dev.
+- **Supabase Auth (Google only)**: PKCE flow; `signInWithOAuth` from `/login`; Route Handler `GET /auth/callback` exchanges `code` for session cookies; `@supabase/ssr` browser + server clients; `src/proxy.ts` refreshes session via `getClaims()` (Next.js 16 proxy convention).
+- **Dashboard config** (manual): Supabase **Site URL** + **Redirect URLs** include `{origin}/auth/callback` for local and production; Google Cloud OAuth **Web client** with authorized JS origins for those apps and redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
+- **Database**: Versioned SQL under `supabase/migrations/` — tables `generations`, `votes`, `reports`, `generation_events` with RLS (public read for published+visible generations; owners CRUD own rows; votes/reports intended for server `service_role`); triggers maintain vote/remix/report counters; partial indexes for feed sorts. Apply remote via `yarn sb db push` (linked project; local Docker optional).
+- **Storage**: Private bucket **`generation-images`** (PNG/JPEG/WebP/GIF, 50MB cap); `generations.image_path` matches `storage.objects.name`; SELECT policy allows anon/authenticated reads when linked row is published+visible or owned by user. Uploads from API routes use **`SUPABASE_SECRET_KEY`** / legacy **service_role** (server-only).
+- **Env (see `.env.example`)**: `NEXT_PUBLIC_SUPABASE_URL`; `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`; optional `GENERATION_IMAGES_BUCKET=generation-images`; server-only secret key for privileged writes (not `NEXT_PUBLIC_*`).
+
+**Still scaffold / TODO**
+
+- `/`, `/feed`, `/g/[slug]`, `/remix/[id]` are placeholders (no generator UI wired to DB).
+- All routes under `src/app/api/` return **501 Not implemented**.
+- OpenAI Image generation, watermarking, anonymous session cookies for vote/report, quotas, and moderation thresholds are not implemented yet.
 
 ## Key Implementation Changes
 
 - App structure:
   - `/` generator home with builder, target, tone, screen type, region, and extra details.
+  - `/login` Google sign-in entry (implemented).
   - `/g/[slug]` public generation page with image, prompt details, vote score, remix CTA, report button, and share metadata.
   - `/feed` public feed with newest/trending sort.
   - `/remix/[id]` preloads an existing generation into the generator form.
 
 - Auth and access:
-  - Use Supabase Auth with **Google OAuth only**.
+  - Supabase Auth with **Google OAuth only** (configured in dashboard + PKCE callback route).
   - Anonymous users can browse, remix into a prefilled form, vote, and report.
   - Users must sign in before calling generation or publishing generated output.
   - Generation quotas are enforced per authenticated Supabase user.
 
 - Data model:
-  - `generations`: prompt fields, generated prompt, image path, creator user id, slug, visibility, vote counts, remix parent id, remix count, moderation status, timestamps.
-  - `votes`: generation id, anonymous session id, vote value `1` or `-1`, timestamps; one vote per session per generation.
-  - `reports`: generation id, anonymous session id, reason, timestamps.
-  - `generation_events`: user id, event type, created timestamp for quota/rate limit auditing.
+  - Implemented in Postgres (see migrations): `generations` (includes `image_path`, `visibility` draft/published, `moderation_status`, denormalized vote/remix/report counts, generated `net_score`, `remix_parent_id`); `votes` (`vote_value` ±1, unique per `anon_session_id`); `reports`; `generation_events` (`payload` jsonb).
+  - Planned consumption: same shapes as below for API contracts.
 
 - Image pipeline:
   - Server route builds a structured parody screenshot prompt from the user fields.
-  - Use OpenAI Image API synchronously with a loading state.
-  - Default to high-quality GPT Image output; store the returned image in Supabase Storage.
+  - Use **OpenAI Image API** synchronously with a loading state (may wrap with **Vercel AI SDK** / provider package when implementing `/api/generate`; verify against installed `ai` + provider docs).
+  - Default to high-quality GPT Image output; store files in Supabase bucket **`generation-images`**; persist path on `generations.image_path`.
   - Add a lightweight app watermark during post-processing before storing the share/public image.
   - If generation fails, show a retryable error and do not create a public feed item.
 
@@ -40,6 +56,8 @@ V1 loop: browse feed anonymously, sign in with Google to generate, add extra pro
   - Rate limit generation per user and voting/reporting per anonymous session/IP.
 
 ## Public Interfaces
+
+Route files exist under `src/app/api/`; handlers are **stubs (501)** until implemented.
 
 - `POST /api/generate`
   - Auth required.
@@ -75,9 +93,15 @@ V1 loop: browse feed anonymously, sign in with Google to generate, add extra pro
 ## Assumptions
 
 - Deployment target is Vercel.
-- Database, auth, and image storage are all Supabase.
+- Database, auth, and image storage are all Supabase (hosted project; **Supabase CLI** in repo for `yarn sb link` / `yarn sb db push`; Docker not required).
 - Google OAuth is the only v1 sign-in method.
 - Browsing, voting, and reporting are anonymous; generation requires login.
 - V1 uses synchronous generation rather than a background queue.
 - Trending is computed from net votes plus remix count, with recency weighting.
 - OpenAI Image API is preferred for v1 because OpenAI documents it as the right fit for single-prompt image generation; GPT Image is the default high-quality family.
+
+## Migrations
+
+- **Commit every file** under `supabase/migrations/` to git. They are the canonical schema history; apply to remote with `yarn sb db push` after linking.
+- Do not edit migrations already applied on production; add a **new** migration for changes.
+- `supabase/.temp/` is gitignored (CLI link metadata); each developer runs `yarn sb link` locally.
