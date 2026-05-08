@@ -301,19 +301,16 @@ export async function POST(request: Request) {
     );
   }
 
-  // Deduct 1 credit via Dodo usage event (meter should map 'image.generated' to -1 credit)
+  // Deduct 1 credit via Dodo ledger entry (deterministic credit consumption).
   try {
     const dodoClient2 = getDodoClient();
-    await dodoClient2.usageEvents.ingest({
-      events: [
-        {
-          event_id: `img_${inserted.id}_${Date.now()}`,
-          customer_id: dodoCustomerId!,
-          event_name: "image.generated",
-          timestamp: new Date().toISOString(),
-          metadata: { generation_id: inserted.id, size: "1024x1024" },
-        },
-      ],
+    await dodoClient2.creditEntitlements.balances.createLedgerEntry(dodoCustomerId!, {
+      credit_entitlement_id: entitlementId,
+      entry_type: "debit",
+      amount: "1",
+      reason: "image.generated",
+      idempotency_key: `gen_${inserted.id}`,
+      metadata: { generation_id: String(inserted.id) },
     });
   } catch {
     const obj = inserted.image_path;
@@ -322,12 +319,12 @@ export async function POST(request: Request) {
     }
     await supabase.from("generations").delete().eq("id", inserted.id);
     return NextResponse.json(
-      { error: "Billing ingest failed. Please retry.", code: "billing_ingest_failed" },
+      { error: "Credit debit failed. Please retry.", code: "billing_debit_failed" },
       { status: 502 },
     );
   }
 
-  // Track quota/audit event after successful billing ingest
+  // Track quota/audit event after successful credit debit
   const { error: evErr } = await supabase.from("generation_events").insert({
     user_id: user.id,
     event_type: "generation",

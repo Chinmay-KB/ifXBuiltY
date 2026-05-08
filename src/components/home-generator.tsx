@@ -43,6 +43,7 @@ export function HomeGenerator({ signedIn }: Props) {
   const [credits, setCredits] = useState<number | null>(null);
   const [creditsLoading, setCreditsLoading] = useState(false);
   const [creditsSyncing, setCreditsSyncing] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const pendingCheckoutKey = "ifxb_dodo_checkout_session_id";
 
@@ -58,7 +59,14 @@ export function HomeGenerator({ signedIn }: Props) {
     setShowPaywall(false);
     setResult(null);
     setPublishedSlug(null);
+    setToast(null);
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const refreshCredits = useCallback(async () => {
     if (!signedIn) return;
@@ -197,6 +205,11 @@ export function HomeGenerator({ signedIn }: Props) {
           void refreshCredits();
           return;
         }
+        if (data.code === "billing_debit_failed") {
+          setToast(
+            "Couldn’t deduct a credit. Nothing was charged — please retry.",
+          );
+        }
         setError(data.error ?? "Generation failed");
         setLoading(false);
         return;
@@ -258,6 +271,14 @@ export function HomeGenerator({ signedIn }: Props) {
         </div>
 
         <Surface variant="composer" className="flex flex-col gap-3.5">
+          {toast ? (
+            <div
+              className="rounded-lg border border-line-strong bg-panel px-3 py-2 text-sm font-semibold text-ink"
+              role="status"
+            >
+              {toast}
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-black uppercase tracking-[0.12em] text-muted">
               {creditsSyncing ? "Credits: syncing…" : creditsLabel}
