@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function SignOutButton() {
@@ -18,13 +19,13 @@ export function SignOutButton() {
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="sm"
       disabled={pending}
       onClick={() => void signOut()}
-      className="text-sm font-medium text-zinc-600 underline-offset-4 hover:underline disabled:opacity-50 dark:text-zinc-400"
     >
       {pending ? "Signing out…" : "Sign out"}
-    </button>
+    </Button>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -18,7 +19,8 @@ export function GoogleSignInButton({ nextPath = "/" }: Props) {
     setPending(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const next = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
+      const next =
+        nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
       const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -36,16 +38,20 @@ export function GoogleSignInButton({ nextPath = "/" }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <button
-        type="button"
+      <Button
+        variant="ink"
+        size="lg"
+        className="min-h-[52px] w-full gap-2.5 font-black"
         disabled={pending}
         onClick={() => void signIn()}
-        className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
       >
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white text-[15px] font-black text-ink">
+          G
+        </span>
         {pending ? "Redirecting…" : "Continue with Google"}
-      </button>
+      </Button>
       {message ? (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm font-medium text-barrier" role="alert">
           {message}
         </p>
       ) : null}
