@@ -13,6 +13,7 @@ import { makeGenerationSlugSnippet } from "@/lib/slug";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
+import { getDodoClient, assertDodoEntitlementConfigured } from "@/lib/dodo/client";
 export const runtime = "nodejs";
 
 const DEFAULT_GATEWAY_IMAGE_MODEL = "openai/gpt-image-2";
@@ -129,6 +130,49 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Daily generation limit reached", code: "quota_exceeded" },
       { status: 429 },
+    );
+  }
+
+  // Dodo Payments: verify prepaid Image Credits before generating
+  let dodoCustomerId: string | null = null;
+  try {
+    const { data: mapping } = await supabase
+      .from("dodo_customers")
+      .select("customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    dodoCustomerId = mapping?.customer_id ?? null;
+  } catch {
+    // ignore; handled below
+  }
+
+  if (!dodoCustomerId) {
+    return NextResponse.json(
+      { error: "Insufficient credits. Please buy a credit pack.", code: "insufficient_credits" },
+      { status: 402 },
+    );
+  }
+
+  const entitlementId = assertDodoEntitlementConfigured();
+  const dodoClient = getDodoClient();
+
+  let availableCredits = 0;
+  try {
+    const bal = await dodoClient.creditEntitlements.balances.retrieve(dodoCustomerId, {
+      credit_entitlement_id: entitlementId,
+    });
+    availableCredits = Number(bal.balance ?? "0");
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to verify credits. Please try again.", code: "billing_unavailable" },
+      { status: 503 },
+    );
+  }
+
+  if (!Number.isFinite(availableCredits) || availableCredits <= 0) {
+    return NextResponse.json(
+      { error: "Insufficient credits. Please top up.", code: "insufficient_credits" },
+      { status: 402 },
     );
   }
 
@@ -257,6 +301,33 @@ export async function POST(request: Request) {
     );
   }
 
+  // Deduct 1 credit via Dodo usage event (meter should map 'image.generated' to -1 credit)
+  try {
+    const dodoClient2 = getDodoClient();
+    await dodoClient2.usageEvents.ingest({
+      events: [
+        {
+          event_id: `img_${inserted.id}_${Date.now()}`,
+          customer_id: dodoCustomerId!,
+          event_name: "image.generated",
+          timestamp: new Date().toISOString(),
+          metadata: { generation_id: inserted.id, size: "1024x1024" },
+        },
+      ],
+    });
+  } catch {
+    const obj = inserted.image_path;
+    if (obj) {
+      await service.storage.from(bucket).remove([obj]);
+    }
+    await supabase.from("generations").delete().eq("id", inserted.id);
+    return NextResponse.json(
+      { error: "Billing ingest failed. Please retry.", code: "billing_ingest_failed" },
+      { status: 502 },
+    );
+  }
+
+  // Track quota/audit event after successful billing ingest
   const { error: evErr } = await supabase.from("generation_events").insert({
     user_id: user.id,
     event_type: "generation",

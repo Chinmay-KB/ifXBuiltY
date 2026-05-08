@@ -14,6 +14,8 @@ export function GoogleSignInButton({ nextPath = "/" }: Props) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const NEXT_COOKIE = "ifxb_next";
+
   async function signIn() {
     setMessage(null);
     setPending(true);
@@ -21,7 +23,10 @@ export function GoogleSignInButton({ nextPath = "/" }: Props) {
       const supabase = createSupabaseBrowserClient();
       const next =
         nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      // Store post-login destination in a short-lived cookie so the OAuth redirect URL
+      // can stay stable and match Supabase allow-lists exactly.
+      document.cookie = `${NEXT_COOKIE}=${encodeURIComponent(next)}; Path=/; Max-Age=600; SameSite=Lax`;
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },

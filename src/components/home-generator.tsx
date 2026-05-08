@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -35,15 +35,129 @@ export function HomeGenerator({ signedIn }: Props) {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [result, setResult] = useState<GenResult | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [creditsLoading, setCreditsLoading] = useState(false);
+  const [creditsSyncing, setCreditsSyncing] = useState(false);
+
+  const pendingCheckoutKey = "ifxb_dodo_checkout_session_id";
+
+  const creditsLabel = useMemo(() => {
+    if (!signedIn) return "Credits: sign in";
+    if (creditsLoading) return "Credits: …";
+    if (credits == null) return "Credits: —";
+    return `Credits: ${credits}`;
+  }, [credits, creditsLoading, signedIn]);
 
   const resetForm = useCallback(() => {
     setError(null);
+    setShowPaywall(false);
     setResult(null);
     setPublishedSlug(null);
   }, []);
+
+  const refreshCredits = useCallback(async () => {
+    if (!signedIn) return;
+    setCreditsLoading(true);
+    try {
+      const res = await fetch("/api/credits/balance", { method: "GET" });
+      const data = (await res.json()) as { credits?: number; error?: string };
+      if (res.ok && typeof data.credits === "number") {
+        setCredits(data.credits);
+      } else if (res.status === 401) {
+        setCredits(null);
+      }
+    } catch {
+      // ignore; UI will show unknown state
+    }
+    setCreditsLoading(false);
+  }, [signedIn]);
+
+  useEffect(() => {
+    if (!signedIn) {
+      setCredits(null);
+      return;
+    }
+    void refreshCredits();
+  }, [refreshCredits, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    if (typeof window === "undefined") return;
+
+    const sessionId = window.localStorage.getItem(pendingCheckoutKey);
+    if (!sessionId) return;
+
+    let cancelled = false;
+    (async () => {
+      setCreditsSyncing(true);
+      try {
+        const res = await fetch("/api/credits/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        if (!cancelled && res.ok) {
+          window.localStorage.removeItem(pendingCheckoutKey);
+          await refreshCredits();
+        }
+      } catch {
+        // ignore; user can hit Refresh
+      }
+      if (!cancelled) setCreditsSyncing(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshCredits, signedIn]);
+
+  async function startCheckout() {
+    const productId = process.env.NEXT_PUBLIC_DODO_IMAGE_CREDITS_PRODUCT_ID?.trim();
+    if (!productId) {
+      setError("Missing NEXT_PUBLIC_DODO_IMAGE_CREDITS_PRODUCT_ID");
+      return;
+    }
+    setCheckoutLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout/credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          returnUrl: window.location.href,
+        }),
+      });
+      const data = (await res.json()) as { error?: string; url?: string | null };
+      if (!res.ok) {
+        setError(data.error ?? "Checkout failed");
+        setCheckoutLoading(false);
+        return;
+      }
+      const sessionId =
+        typeof (data as { sessionId?: unknown }).sessionId === "string"
+          ? String((data as { sessionId?: unknown }).sessionId)
+          : null;
+
+      if (sessionId) {
+        window.localStorage.setItem(pendingCheckoutKey, sessionId);
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError("Checkout did not return a URL");
+    } catch {
+      setError("Checkout request failed");
+    }
+    setCheckoutLoading(false);
+  }
 
   async function generate() {
     if (!signedIn) {
@@ -51,6 +165,7 @@ export function HomeGenerator({ signedIn }: Props) {
       return;
     }
     setError(null);
+    setShowPaywall(false);
     setPublishedSlug(null);
     setLoading(true);
     try {
@@ -68,12 +183,20 @@ export function HomeGenerator({ signedIn }: Props) {
       });
       const data = (await res.json()) as {
         error?: string;
+        code?: string;
         id?: number;
         slug?: string;
         imageUrl?: string | null;
         prompt?: { builder?: string; target?: string };
       };
       if (!res.ok) {
+        if (data.code === "insufficient_credits") {
+          setShowPaywall(true);
+          setError(null);
+          setLoading(false);
+          void refreshCredits();
+          return;
+        }
         setError(data.error ?? "Generation failed");
         setLoading(false);
         return;
@@ -91,6 +214,7 @@ export function HomeGenerator({ signedIn }: Props) {
       setError("Network error");
     }
     setLoading(false);
+    void refreshCredits();
   }
 
   async function publish() {
@@ -134,6 +258,20 @@ export function HomeGenerator({ signedIn }: Props) {
         </div>
 
         <Surface variant="composer" className="flex flex-col gap-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-black uppercase tracking-[0.12em] text-muted">
+              {creditsSyncing ? "Credits: syncing…" : creditsLabel}
+            </span>
+            {signedIn ? (
+              <button
+                type="button"
+                onClick={() => void refreshCredits()}
+                className="text-xs font-semibold text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+              >
+                Refresh
+              </button>
+            ) : null}
+          </div>
           <div className="flex flex-col gap-1.5">
             <MicroLabel htmlFor="builder">Builder</MicroLabel>
             <FieldShell>
@@ -245,6 +383,33 @@ export function HomeGenerator({ signedIn }: Props) {
             <p className="text-sm font-medium text-barrier" role="alert">
               {error}
             </p>
+          ) : null}
+          {showPaywall ? (
+            <div className="rounded-lg border border-line-strong bg-panel p-3.5">
+              <p className="text-sm font-semibold text-ink">
+                You’re out of credits.
+              </p>
+              <p className="mt-1 text-sm text-subtle">
+                Buy a credit pack to keep generating.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="chrome"
+                  size="sm"
+                  disabled={checkoutLoading}
+                  onClick={() => void startCheckout()}
+                >
+                  {checkoutLoading ? "Opening checkout…" : "Buy credits"}
+                </Button>
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink"
+                  onClick={resetForm}
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
           ) : null}
         </Surface>
       </div>

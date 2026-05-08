@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
   const oauthError = url.searchParams.get("error");
   const oauthDescription = url.searchParams.get("error_description");
 
-  let next = url.searchParams.get("next") ?? "/";
+  let next =
+    url.searchParams.get("next") ??
+    request.cookies.get("ifxb_next")?.value ??
+    "/";
   if (!next.startsWith("/") || next.startsWith("//")) {
     next = "/";
   }
@@ -63,5 +66,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Clear the transient post-auth redirect cookie (best-effort).
+  response.cookies.set("ifxb_next", "", { path: "/", maxAge: 0 });
   return response;
 }
