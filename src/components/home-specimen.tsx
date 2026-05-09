@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
+import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 function titleCase(s: string) {
@@ -42,7 +43,8 @@ export function HomeSpecimen({
 
   if (!specimen) return null;
 
-  const headlineTarget = titleCase(specimen.target);
+  const { builder, target } = specimen;
+  const headlineTarget = titleCase(target);
   const remixHref = buildCookHref(specimen);
 
   const relatedBg = ["bg-[#F6D93B]", "bg-[#2D6CF6]", "bg-[#2FA66C]", "bg-ink"];
@@ -62,7 +64,7 @@ export function HomeSpecimen({
       }
       if (navigator.share) {
         await navigator.share({
-          title: `if ${specimen.builder} built ${specimen.target}`,
+          title: `if ${builder} built ${target}`,
           url: href,
         });
         return;
@@ -84,8 +86,8 @@ export function HomeSpecimen({
             <div className="flex h-full items-center justify-center rounded-xl bg-panel p-3 sm:p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={specimen.imageSrc}
-                alt={`if ${specimen.builder} built ${specimen.target}`}
+                src={showcaseImageUrl(specimen)}
+                alt={`if ${builder} built ${target}`}
                 className="h-full w-full rounded-lg bg-white object-contain"
               />
             </div>
@@ -100,7 +102,7 @@ export function HomeSpecimen({
                   If
                 </span>
                 <span className="relative mt-1 block w-fit text-[60px] font-black leading-[0.99] sm:text-[80px]">
-                  {specimen.builder}
+                  {builder}
                   <span className="absolute -bottom-2 left-0 right-0 h-[6px] rounded-full bg-[#E8E306]" />
                 </span>
                 <span className="mt-2 block text-[42px] leading-[1.02] sm:text-[54px]">
