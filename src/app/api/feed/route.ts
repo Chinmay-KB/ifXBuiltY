@@ -134,34 +134,43 @@ export async function GET(request: Request) {
   }
 
   const bucket = getGenerationImagesBucket();
-  const items = await Promise.all(
-    list.map(async (r) => {
-      let imageUrl: string | null = null;
-      if (r.image_path) {
-        const { data: signed, error: signErr } = await service.storage
-          .from(bucket)
-          .createSignedUrl(r.image_path, SIGNED_URL_TTL_SEC);
-        if (!signErr && signed?.signedUrl) imageUrl = signed.signedUrl;
+
+  // Batch-sign all image URLs in a single request for speed
+  const paths = list
+    .map((r) => r.image_path)
+    .filter((p): p is string => p != null && p.length > 0);
+
+  let signedUrlMap: Record<string, string> = {};
+  if (paths.length > 0) {
+    const { data: signedArr, error: signErr } = await service.storage
+      .from(bucket)
+      .createSignedUrls(paths, SIGNED_URL_TTL_SEC);
+    if (!signErr && signedArr) {
+      for (const entry of signedArr) {
+        if (entry.signedUrl && entry.path) {
+          signedUrlMap[entry.path] = entry.signedUrl;
+        }
       }
-      return {
-        id: r.id,
-        slug: r.slug,
-        builder: r.builder,
-        target: r.target,
-        tone: r.tone,
-        screenType: r.screen_type,
-        region: r.region,
-        extraDetails: r.extra_details,
-        imageUrl,
-        imagePath: r.image_path,
-        upvoteCount: r.upvote_count,
-        downvoteCount: r.downvote_count,
-        netScore: r.net_score,
-        remixCount: r.remix_count,
-        createdAt: r.created_at,
-      };
-    }),
-  );
+    }
+  }
+
+  const items = list.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    builder: r.builder,
+    target: r.target,
+    tone: r.tone,
+    screenType: r.screen_type,
+    region: r.region,
+    extraDetails: r.extra_details,
+    imageUrl: r.image_path ? (signedUrlMap[r.image_path] ?? null) : null,
+    imagePath: r.image_path,
+    upvoteCount: r.upvote_count,
+    downvoteCount: r.downvote_count,
+    netScore: r.net_score,
+    remixCount: r.remix_count,
+    createdAt: r.created_at,
+  }));
 
   return NextResponse.json({ sort, items, hasMore });
 }

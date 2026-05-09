@@ -127,3 +127,22 @@ body {
     transform: translateX(-100%);
   }
 }
+
+/* Homepage wall conveyor animations */
+@keyframes conveyor-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes conveyor-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

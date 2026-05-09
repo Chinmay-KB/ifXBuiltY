@@ -1,67 +1,97 @@
 import Link from "next/link";
 
-import { HomeFeedGrid } from "@/components/home-feed-grid";
-import { ShowcaseRotator } from "@/components/showcase-rotator";
-import { SHOWCASE_EXAMPLES } from "@/data/showcase-examples";
+import { WallSection } from "@/components/wall-section";
+import type { WallItem } from "@/components/wall-card";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 
 export default async function HomePage() {
-  const { items } = await fetchFeedServer({ sort: "trending", limit: 20 });
+  const { items } = await fetchFeedServer({ sort: "trending", limit: 40 });
+
+  // Map feed items to WallItem shape — only include items with images
+  const wallItems: WallItem[] = items
+    .filter((item) => item.imageUrl)
+    .map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      imageUrl: item.imageUrl,
+      builder: item.builder,
+      target: item.target,
+    }));
 
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="flex flex-col items-center gap-8 px-4 pt-10 pb-12 sm:px-8 md:flex-row md:items-start md:gap-12 md:px-12 md:pt-14 md:pb-16">
-        {/* Hero text + CTA */}
-        <div className="flex max-w-lg flex-col items-center text-center md:items-start md:text-left">
-          <h1 className="font-display text-3xl leading-tight text-ink sm:text-4xl md:text-5xl">
-            What if your favorite brand built something totally different?
+      {/* The Wall — full viewport conveyor rows with dark bg */}
+      {wallItems.length > 0 ? (
+        <WallSection items={wallItems} />
+      ) : (
+        <section className="flex min-h-[60vh] flex-col items-center justify-center bg-ink px-4 text-center">
+          <h1 className="font-display text-3xl text-white sm:text-5xl">
+            What if your favorite brand built something{" "}
+            <span className="text-chrome">totally different</span>?
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Generate hilarious parody screenshots. Combine any company with any
-            product and watch AI bring it to life.
+          <p className="mt-4 text-base text-white/60 sm:text-lg">
+            Combine any company with any product. AI generates the parody screenshot.
           </p>
           <Link
             href="/generate"
-            className="mt-6 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-ink px-6 py-3 text-base font-semibold text-canvas transition-colors hover:bg-ink/90"
+            className="mt-8 inline-flex min-h-[44px] items-center justify-center rounded-full bg-chrome px-8 py-3 text-base font-bold text-ink transition-all hover:scale-105"
           >
-            Start generating
+            Start generating →
           </Link>
-        </div>
+        </section>
+      )}
 
-        {/* Showcase rotator — continuously cycling motion element */}
-        <div className="w-full max-w-sm md:max-w-md">
-          <ShowcaseRotator examples={SHOWCASE_EXAMPLES} />
-        </div>
-      </section>
+      {/* Below the wall — How it works + CTAs */}
+      <section className="bg-canvas px-4 py-20 sm:px-8 md:px-12">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="text-center font-display text-2xl text-ink sm:text-3xl">
+            How it works
+          </h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-3">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-chrome/20 font-display text-xl text-ink">
+                1
+              </span>
+              <h3 className="text-lg font-semibold text-ink">Pick a brand</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Duolingo, Stripe, IKEA, your local government — the weirder the better.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-chrome/20 font-display text-xl text-ink">
+                2
+              </span>
+              <h3 className="text-lg font-semibold text-ink">Pick a product</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                A dating app? Tax software? A funeral home booking system? Go wild.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-chrome/20 font-display text-xl text-ink">
+                3
+              </span>
+              <h3 className="text-lg font-semibold text-ink">AI does the rest</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                A pixel-perfect parody screenshot in their actual design style. Share it, remix it.
+              </p>
+            </div>
+          </div>
 
-      {/* Feed Section */}
-      <section className="flex-1 px-4 pb-12 sm:px-8 md:px-12">
-        {items.length > 0 ? (
-          <>
-            <h2 className="mb-6 font-display text-xl text-ink sm:text-2xl">
-              Trending creations
-            </h2>
-            <HomeFeedGrid initialItems={items} />
-          </>
-        ) : (
-          /* Empty state when no published generations */
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <h2 className="font-display text-2xl text-ink">
-              No creations yet
-            </h2>
-            <p className="mt-3 max-w-md text-base text-muted-foreground">
-              Be the first to generate a parody screenshot. Pick a brand, pick a
-              product, and let AI do the rest.
-            </p>
+          <div className="mt-14 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/generate"
-              className="mt-6 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-ink px-6 py-3 text-base font-semibold text-canvas transition-colors hover:bg-ink/90"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-ink px-8 py-3 text-base font-semibold text-canvas transition-colors hover:bg-ink/90"
             >
-              Create the first one
+              Start generating
+            </Link>
+            <Link
+              href="/feed"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-line px-8 py-3 text-base font-semibold text-ink transition-colors hover:bg-panel"
+            >
+              Browse all creations
             </Link>
           </div>
-        )}
+        </div>
       </section>
     </div>
   );
