@@ -1,63 +1,68 @@
 import Link from "next/link";
 
-import { FeedTile } from "@/components/feed-tile";
-import { HomeGenerator } from "@/components/home-generator";
-import { SiteHeader } from "@/components/site-header";
+import { HomeFeedGrid } from "@/components/home-feed-grid";
+import { ShowcaseRotator } from "@/components/showcase-rotator";
+import { SHOWCASE_EXAMPLES } from "@/data/showcase-examples";
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-const STAGGER = ["", "sm:pt-8", "", "sm:pt-5", ""];
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const feed = await fetchFeedServer({ sort: "trending", limit: 8 });
+  const { items } = await fetchFeedServer({ sort: "trending", limit: 20 });
 
   return (
-    <div className="flex min-h-full flex-col bg-canvas">
-      <SiteHeader user={user} active="generate" />
-      <main className="flex flex-1 flex-col px-4 py-8 sm:px-12 sm:py-10">
-        <HomeGenerator signedIn={!!user} />
-        <section className="mt-12 flex flex-col gap-4 border-t border-line pt-6 sm:mt-14">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-2xl font-black leading-snug text-ink sm:text-[28px]">
-              Hot off the lab bench
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center gap-8 px-4 pt-10 pb-12 sm:px-8 md:flex-row md:items-start md:gap-12 md:px-12 md:pt-14 md:pb-16">
+        {/* Hero text + CTA */}
+        <div className="flex max-w-lg flex-col items-center text-center md:items-start md:text-left">
+          <h1 className="font-display text-3xl leading-tight text-ink sm:text-4xl md:text-5xl">
+            What if your favorite brand built something totally different?
+          </h1>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Generate hilarious parody screenshots. Combine any company with any
+            product and watch AI bring it to life.
+          </p>
+          <Link
+            href="/generate"
+            className="mt-6 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-ink px-6 py-3 text-base font-semibold text-canvas transition-colors hover:bg-ink/90"
+          >
+            Start generating
+          </Link>
+        </div>
+
+        {/* Showcase rotator — continuously cycling motion element */}
+        <div className="w-full max-w-sm md:max-w-md">
+          <ShowcaseRotator examples={SHOWCASE_EXAMPLES} />
+        </div>
+      </section>
+
+      {/* Feed Section */}
+      <section className="flex-1 px-4 pb-12 sm:px-8 md:px-12">
+        {items.length > 0 ? (
+          <>
+            <h2 className="mb-6 font-display text-xl text-ink sm:text-2xl">
+              Trending creations
             </h2>
-            <div className="flex gap-2">
-              <Link
-                href="/feed?sort=trending"
-                className="inline-flex items-center justify-center rounded-full bg-ink px-3.5 py-2 text-[13px] font-extrabold text-white hover:bg-ink/90"
-              >
-                Hot
-              </Link>
-              <Link
-                href="/feed?sort=newest"
-                className="inline-flex items-center justify-center rounded-full border border-line-strong bg-canvas px-3.5 py-2 text-[13px] font-extrabold text-ink hover:bg-panel"
-              >
-                Fresh
-              </Link>
-            </div>
-          </div>
-          {feed.items.length === 0 ? (
-            <p className="max-w-xl text-base text-muted-foreground">
-              Nothing published yet. Be the first to ship something cursed — generate, then publish.
+            <HomeFeedGrid initialItems={items} />
+          </>
+        ) : (
+          /* Empty state when no published generations */
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <h2 className="font-display text-2xl text-ink">
+              No creations yet
+            </h2>
+            <p className="mt-3 max-w-md text-base text-muted-foreground">
+              Be the first to generate a parody screenshot. Pick a brand, pick a
+              product, and let AI do the rest.
             </p>
-          ) : (
-            <div className="flex flex-wrap gap-4 lg:flex-nowrap lg:justify-between">
-              {feed.items.slice(0, 5).map((item, i) => (
-                <FeedTile
-                  key={item.id}
-                  item={item}
-                  index={i}
-                  offsetClass={STAGGER[i] ?? ""}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+            <Link
+              href="/generate"
+              className="mt-6 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-ink px-6 py-3 text-base font-semibold text-canvas transition-colors hover:bg-ink/90"
+            >
+              Create the first one
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

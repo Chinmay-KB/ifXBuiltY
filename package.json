@@ -13,7 +13,9 @@
     "db:stop": "supabase stop",
     "sb": "supabase",
     "sb:login": "supabase login",
-    "ai:image": "tsx index.ts"
+    "ai:image": "tsx index.ts",
+    "showcase:build": "tsx scripts/build-showcase.ts",
+    "test": "vitest --run"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -27,11 +29,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "fast-check": "^4.7.0",
+    "jsdom": "^29.1.1",
     "supabase": "^2.98.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",

@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { HomeShowcaseRotator } from "@/components/home-showcase-rotator";
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
+import type { ShowcaseExample } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 const TONE_CHIPS = ["absurdly polished", "dead serious", "unhinged"] as const;
@@ -21,12 +24,16 @@ type GenResult = {
 
 type Props = {
   signedIn: boolean;
+  showcaseExamples: ShowcaseExample[];
 };
 
-export function HomeGenerator({ signedIn }: Props) {
+export function HomeGenerator({ signedIn, showcaseExamples }: Props) {
   const router = useRouter();
-  const [builder, setBuilder] = useState("Duolingo");
-  const [target, setTarget] = useState("airport security");
+  const searchParams = useSearchParams();
+  const initialBuilder = searchParams.get("b") ?? "Duolingo";
+  const initialTarget = searchParams.get("t") ?? "airport security";
+  const [builder, setBuilder] = useState(initialBuilder);
+  const [target, setTarget] = useState(initialTarget);
   const [tone, setTone] = useState<string>("absurdly polished");
   const [screenType, setScreenType] = useState("mobile app");
   const [region, setRegion] = useState("US");
@@ -86,10 +93,8 @@ export function HomeGenerator({ signedIn }: Props) {
   }, [signedIn]);
 
   useEffect(() => {
-    if (!signedIn) {
-      setCredits(null);
-      return;
-    }
+    if (!signedIn) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshCredits();
   }, [refreshCredits, signedIn]);
 
@@ -251,12 +256,10 @@ export function HomeGenerator({ signedIn }: Props) {
     setPublishing(false);
   }
 
-  const headline = result
-    ? "Freshly forged"
-    : "Your next bad interface";
+  const headline = result ? "Freshly forged" : "Sample interfaces";
   const subtitle = result
     ? `if ${result.builder} built ${result.target}`
-    : "Pick a builder, pick a victim, add one cursed detail.";
+    : "Random combos from the vault — yours next.";
 
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row lg:gap-7">
@@ -437,7 +440,7 @@ export function HomeGenerator({ signedIn }: Props) {
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <Surface variant="panel" className="flex min-h-[320px] flex-col p-4 sm:min-h-[400px] sm:p-5">
-          <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 rounded-lg bg-ink p-5 sm:p-7">
+          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden rounded-lg bg-ink p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <MicroLabel tone="chrome-on-dark">{headline}</MicroLabel>
@@ -481,31 +484,29 @@ export function HomeGenerator({ signedIn }: Props) {
                   alt={`Generated: if ${result.builder} built ${result.target}`}
                   className="max-h-[420px] w-full rounded-lg object-contain"
                 />
-              ) : (
-                <div className="grid max-w-lg gap-3 sm:grid-cols-3">
-                  <div className="h-24 rounded-tile bg-chrome sm:h-28" />
-                  <div className="h-24 rounded-tile bg-vote sm:h-28" />
-                  <div className="h-24 rounded-tile bg-barrier sm:h-28" />
-                </div>
-              )}
-              {!result?.imageUrl && !loading ? (
-                <p className="max-w-lg font-display text-2xl leading-tight text-white sm:text-4xl sm:leading-tight">
-                  Security owl wants your shoes.
-                </p>
-              ) : null}
-              {loading && !result?.imageUrl ? (
+              ) : loading ? (
                 <p className="text-on-dark-soft">Summoning pixels…</p>
-              ) : null}
+              ) : (
+                <HomeShowcaseRotator examples={showcaseExamples} />
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="max-w-xl rounded-full bg-white/10 px-2.5 py-2 text-[13px] text-on-dark-soft">
-                Suggested excuse: “{target} but with streak anxiety.”
-              </p>
-              <span className="rounded-full bg-white px-3 py-2 text-[13px] font-black text-ink">
-                ifXbuiltY
-              </span>
-            </div>
+            {result?.imageUrl ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="max-w-xl rounded-full bg-white/10 px-2.5 py-2 text-[13px] text-on-dark-soft">
+                  Suggested excuse: “{target} but with streak anxiety.”
+                </p>
+                <span className="rounded-full bg-white px-3 py-2 text-[13px] font-black text-ink">
+                  ifXbuiltY
+                </span>
+              </div>
+            ) : loading ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                <span className="rounded-full bg-white px-3 py-2 text-[13px] font-black text-ink">
+                  ifXbuiltY
+                </span>
+              </div>
+            ) : null}
           </div>
         </Surface>
       </div>

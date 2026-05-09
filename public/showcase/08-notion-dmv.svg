@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g08" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3d3d42"/>
+      <stop offset="100%" stop-color="#18181b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="24" fill="url(#g08)"/>
+  <text x="256" y="228" text-anchor="middle" fill="#ffffff" font-family="system-ui,Segoe UI,sans-serif" font-size="22" font-weight="700">Notion</text>
+  <text x="256" y="268" text-anchor="middle" fill="#b4b4b8" font-family="system-ui,Segoe UI,sans-serif" font-size="17" font-weight="600">DMV queue system</text>
+  <text x="256" y="320" text-anchor="middle" fill="#888892" font-family="system-ui,Segoe UI,sans-serif" font-size="13">Placeholder mockup</text>
+  <text x="256" y="348" text-anchor="middle" fill="#65656e" font-family="system-ui,Segoe UI,sans-serif" font-size="11">yarn showcase:build for AI image</text>
+</svg>

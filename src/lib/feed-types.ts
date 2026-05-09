@@ -1,4 +1,4 @@
-export type FeedSort = "newest" | "trending";
+export type FeedSort = "newest" | "trending" | "top";
 
 export type FeedItem = {
   id: number;
@@ -21,5 +21,6 @@ export type FeedItem = {
 export type FeedResponse = {
   sort: FeedSort;
   items: FeedItem[];
+  hasMore: boolean;
   warning?: string;
 };

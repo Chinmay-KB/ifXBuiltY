@@ -52,9 +52,37 @@
   --radius-pill: 9999px;
   --radius-tile: 7px;
 
+  /* Accent (alias for chrome — primary brand accent) */
+  --color-accent: var(--chrome);
+
   /* Elevation */
   --shadow-modal: var(--elevation-modal);
   --shadow-sheet: var(--elevation-sheet);
+
+  /* Transitions */
+  --transition-duration-default: 200ms;
+  --transition-duration-fast: 150ms;
+  --transition-duration-slow: 700ms;
+}
+
+/*
+  Reduced motion: disable auto-play animations and set transitions to 0ms.
+  Components can reference --motion-duration to respect this preference.
+*/
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration-default: 0ms;
+    --transition-duration-fast: 0ms;
+    --transition-duration-slow: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
@@ -62,4 +90,40 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+  Masonry grid utilities — Tailwind v4 includes columns-* natively,
+  but we define a convenience class for the feed masonry pattern.
+*/
+.masonry-feed {
+  columns: 1;
+}
+@media (min-width: 640px) {
+  .masonry-feed {
+    columns: 2;
+  }
+}
+@media (min-width: 1024px) {
+  .masonry-feed {
+    columns: 3;
+  }
+}
+@media (min-width: 1280px) {
+  .masonry-feed {
+    columns: 5;
+  }
+}
+
+/* Indeterminate progress bar animation */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }

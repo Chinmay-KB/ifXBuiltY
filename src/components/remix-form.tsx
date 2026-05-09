@@ -1,0 +1,48 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
+
+import { GeneratorForm } from "@/components/generator-form";
+import type {
+  GenerationInputs,
+  GenerationResult,
+  RemixSource,
+} from "@/lib/ui/types";
+
+type RemixFormProps = {
+  signedIn: boolean;
+  remixSource: RemixSource;
+  initialValues: Partial<GenerationInputs>;
+};
+
+/**
+ * RemixForm wraps GeneratorForm with remix-specific behavior:
+ * - Pre-fills all six fields from the source generation
+ * - Displays "Remixing from..." attribution strip with source label and thumbnail
+ * - Stores parent_generation_id on submission (handled by GeneratorForm via remixSource.id)
+ */
+export function RemixForm({
+  signedIn,
+  remixSource,
+  initialValues,
+}: RemixFormProps) {
+  const router = useRouter();
+
+  const handleGenerated = useCallback(
+    (result: GenerationResult) => {
+      // Navigate to the generation detail page after successful remix
+      router.push(`/g/${result.slug}`);
+    },
+    [router],
+  );
+
+  return (
+    <GeneratorForm
+      signedIn={signedIn}
+      initialValues={initialValues}
+      remixSource={remixSource}
+      onGenerated={handleGenerated}
+    />
+  );
+}
