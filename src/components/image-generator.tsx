@@ -29,6 +29,14 @@ const DEFAULTS = {
   extraDetails: "",
 } as const;
 
+function titleCase(s: string) {
+  return s
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 const STAGES = [
   { id: "prompt", label: "Cooking prompt", atMs: 0 },
   { id: "layout", label: "Sketching layout", atMs: 18_000 },

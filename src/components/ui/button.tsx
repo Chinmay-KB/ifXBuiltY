@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { forwardRef } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -45,27 +46,27 @@ const variantDefaultSize: Partial<Record<ButtonVariant, ButtonSize>> = {
  * Action primitives aligned to Paper (chrome CTA, ink nav, pills, outline).
  * `pillSolid` / `pillOutline` ignore `size` padding — use `className` to tweak.
  */
-export function Button({
-  variant = "chrome",
-  size,
-  className,
-  type = "button",
-  ...rest
-}: ButtonProps) {
-  const resolvedSize = size ?? variantDefaultSize[variant] ?? "md";
-  const isPill = variant === "pillSolid" || variant === "pillOutline";
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    { variant = "chrome", size, className, type = "button", ...rest },
+    ref,
+  ) {
+    const resolvedSize = size ?? variantDefaultSize[variant] ?? "md";
+    const isPill = variant === "pillSolid" || variant === "pillOutline";
 
-  return (
-    <button
-      type={type}
-      className={cn(
-        "inline-flex cursor-pointer items-center justify-center font-semibold transition-[background-color,filter,color] disabled:pointer-events-none disabled:opacity-50",
-        !isPill && variantClass[variant],
-        !isPill && sizeClass[resolvedSize],
-        isPill && variantClass[variant],
-        className,
-      )}
-      {...rest}
-    />
-  );
-}
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={cn(
+          "inline-flex cursor-pointer items-center justify-center font-semibold transition-[background-color,filter,color] disabled:pointer-events-none disabled:opacity-50",
+          !isPill && variantClass[variant],
+          !isPill && sizeClass[resolvedSize],
+          isPill && variantClass[variant],
+          className,
+        )}
+        {...rest}
+      />
+    );
+  },
+);

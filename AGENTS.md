@@ -23,6 +23,8 @@ That tree matches the **installed** Next.js version. Prefer it over model traini
 | Area | Path |
 |------|------|
 | Pages & layouts | `src/app/` |
+| Batch generate (4-up, auth) | `src/app/batch/`, `src/components/batch-generator.tsx` |
+| Company profiles (prompts) | `src/data/company-profiles.json`, `src/lib/prompt/merge-company-pair.ts` |
 | API routes | `src/app/api/` |
 | Proxy (request boundary; Supabase session refresh) | `src/proxy.ts` |
 | Supabase helpers | `src/lib/supabase/` |

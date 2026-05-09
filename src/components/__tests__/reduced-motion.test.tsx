@@ -37,6 +37,10 @@ const showcaseExampleArb: fc.Arbitrary<ShowcaseExample> = fc.record({
   region: fc.constantFrom("global", "us", "eu", "asia"),
   extraDetails: fc.string({ maxLength: 50 }),
   imageSrc: fc.string({ minLength: 1, maxLength: 30 }).map((s) => `/showcase/${s}.svg`),
+  generationSlug: fc.oneof(
+    fc.constant(undefined),
+    fc.string({ minLength: 1, maxLength: 24 }),
+  ),
 });
 
 /** Arbitrary for a non-empty array of showcase examples (1-20 items) */

@@ -17,6 +17,23 @@ export type PublicGeneration = {
   remixCount: number;
 };
 
+/** Storage object path for a published, visible generation — for signing URLs without full row fetch */
+export async function getPublishedImagePathBySlug(
+  slug: string,
+): Promise<string | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("generations")
+    .select("image_path")
+    .eq("slug", slug)
+    .eq("visibility", "published")
+    .eq("moderation_status", "visible")
+    .maybeSingle();
+
+  if (error || !data?.image_path?.trim()) return null;
+  return data.image_path.trim();
+}
+
 export async function getPublishedGenerationBySlug(
   slug: string,
 ): Promise<PublicGeneration | null> {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
+import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 const ROTATION_INTERVAL_MS = 5000;
@@ -87,7 +88,11 @@ export function ShowcaseRotator({ examples }: ShowcaseRotatorProps) {
       <div className="absolute inset-0 flex items-center justify-center p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={examples[currentIndex]?.imageSrc}
+          src={
+            examples[currentIndex]
+              ? showcaseImageUrl(examples[currentIndex])
+              : undefined
+          }
           alt={
             examples[currentIndex]?.builder && examples[currentIndex]?.target
               ? `if ${examples[currentIndex].builder} built ${examples[currentIndex].target}`
@@ -104,7 +109,11 @@ export function ShowcaseRotator({ examples }: ShowcaseRotatorProps) {
       <div className="absolute inset-0 flex items-center justify-center p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={examples[nextIndex]?.imageSrc}
+          src={
+            examples[nextIndex]
+              ? showcaseImageUrl(examples[nextIndex])
+              : undefined
+          }
           alt={
             examples[nextIndex]?.builder && examples[nextIndex]?.target
               ? `if ${examples[nextIndex].builder} built ${examples[nextIndex].target}`

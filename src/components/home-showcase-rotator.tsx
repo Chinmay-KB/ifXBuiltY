@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
+import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 const INTERVAL_MS = 5200;
@@ -76,7 +77,9 @@ export function HomeShowcaseRotator({ examples }: Props) {
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={examples[iA]?.imageSrc}
+              src={
+                examples[iA] ? showcaseImageUrl(examples[iA]) : undefined
+              }
               alt=""
               className={cn(
                 "max-h-full max-w-full rounded-lg object-contain transition-opacity",
@@ -88,7 +91,9 @@ export function HomeShowcaseRotator({ examples }: Props) {
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={examples[iB]?.imageSrc}
+              src={
+                examples[iB] ? showcaseImageUrl(examples[iB]) : undefined
+              }
               alt=""
               className={cn(
                 "max-h-full max-w-full rounded-lg object-contain transition-opacity",

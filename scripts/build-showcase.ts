@@ -4,6 +4,10 @@
  * Requires AI_GATEWAY_API_KEY in .env.local (same as `yarn ai:image`).
  * Uses Vercel AI Gateway; generation incurs real usage on your account.
  *
+ * For operator-driven batches attributed to your account via `/api/generate`, prefer the
+ * Batch UI at `/batch` (uses merged prompts from `src/data/company-profiles.json` via
+ * `mergeCompanyPair` in dev tooling when scripting).
+ *
  * Usage:
  *   yarn showcase:build
  *   yarn showcase:build -- --force

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
+import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 const ROTATION_INTERVAL_MS = 5000;
@@ -115,7 +116,11 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
             <div className="absolute inset-0 flex items-center justify-center p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={showcaseExamples[currentIndex]?.imageSrc}
+                src={
+                  showcaseExamples[currentIndex]
+                    ? showcaseImageUrl(showcaseExamples[currentIndex])
+                    : undefined
+                }
                 alt={showcaseExamples[currentIndex]?.builder && showcaseExamples[currentIndex]?.target
                   ? `if ${showcaseExamples[currentIndex].builder} built ${showcaseExamples[currentIndex].target}`
                   : "Showcase example"}
@@ -130,7 +135,11 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
             <div className="absolute inset-0 flex items-center justify-center p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={showcaseExamples[nextIndex]?.imageSrc}
+                src={
+                  showcaseExamples[nextIndex]
+                    ? showcaseImageUrl(showcaseExamples[nextIndex])
+                    : undefined
+                }
                 alt={showcaseExamples[nextIndex]?.builder && showcaseExamples[nextIndex]?.target
                   ? `if ${showcaseExamples[nextIndex].builder} built ${showcaseExamples[nextIndex].target}`
                   : "Showcase example"}
