@@ -3,7 +3,8 @@ import { Buffer } from "node:buffer";
 import { generateImage } from "ai";
 import { NextResponse } from "next/server";
 
-import { GENERATION_QUOTA_PER_DAY } from "@/lib/constants";
+import { getAllCompanyProfiles, getCompanyScreenshots } from "@/data/company-profiles";
+
 import {
   assertAiGatewayConfigured,
   getGenerationImagesBucket,
@@ -21,9 +22,6 @@ const DEFAULT_GATEWAY_IMAGE_MODEL = "openai/gpt-image-2";
 type GenerateBody = {
   builder?: unknown;
   target?: unknown;
-  tone?: unknown;
-  screenType?: unknown;
-  region?: unknown;
   extraDetails?: unknown;
   remixParentId?: unknown;
 };
@@ -66,9 +64,6 @@ export async function POST(request: Request) {
     prompt = buildGenerationPrompt({
       builder: String(body.builder ?? ""),
       target: String(body.target ?? ""),
-      tone: String(body.tone ?? ""),
-      screenType: String(body.screenType ?? ""),
-      region: String(body.region ?? ""),
       extraDetails: String(body.extraDetails ?? ""),
     });
   } catch (e) {
@@ -96,6 +91,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Validate company data is accessible from the database.
+  // If the DB is unreachable, return 503 so callers know to retry later.
+  try {
+    await getAllCompanyProfiles();
+  } catch {
+    return NextResponse.json(
+      { error: "Company data unavailable", code: "db_unavailable" },
+      { status: 503 },
+    );
+  }
+
   if (remixParentId != null) {
     const { data: parent, error: pErr } = await supabase
       .from("generations")
@@ -110,27 +116,6 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-  }
-
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count: quotaCount, error: quotaErr } = await supabase
-    .from("generation_events")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("event_type", "generation")
-    .gte("created_at", dayAgo);
-
-  if (quotaErr) {
-    return NextResponse.json(
-      { error: "Could not verify generation quota" },
-      { status: 500 },
-    );
-  }
-  if ((quotaCount ?? 0) >= GENERATION_QUOTA_PER_DAY) {
-    return NextResponse.json(
-      { error: "Daily generation limit reached", code: "quota_exceeded" },
-      { status: 429 },
-    );
   }
 
   // Dodo Payments: verify prepaid Image Credits before generating
@@ -179,12 +164,49 @@ export async function POST(request: Request) {
   const imageModel =
     process.env.AI_GATEWAY_IMAGE_MODEL?.trim() || DEFAULT_GATEWAY_IMAGE_MODEL;
 
+  // Fetch reference screenshots for the builder company (if any exist).
+  // Look up the builder by name to get its company_id, then download screenshot bytes.
+  const screenshotBuffers: Buffer[] = [];
+  try {
+    const serviceForScreenshots = createSupabaseServiceClient();
+    const builderName = String(body.builder ?? "").trim();
+    if (builderName) {
+      const { data: companyRow } = await serviceForScreenshots
+        .from("company_profiles")
+        .select("id")
+        .ilike("name", builderName)
+        .maybeSingle();
+
+      if (companyRow) {
+        const screenshotPaths = await getCompanyScreenshots(companyRow.id);
+        for (const path of screenshotPaths) {
+          const { data: fileData } = await serviceForScreenshots.storage
+            .from("company-screenshots")
+            .download(path);
+          if (fileData) {
+            const arrayBuf = await fileData.arrayBuffer();
+            screenshotBuffers.push(Buffer.from(arrayBuf));
+          }
+        }
+      }
+    }
+  } catch {
+    // Non-fatal: if screenshot fetching fails, proceed with text-only prompt
+  }
+
+  // Build the prompt input: use structured format with images if screenshots exist,
+  // otherwise fall back to text-only prompt (current behavior).
+  const promptInput: string | { images: Buffer[]; text: string } =
+    screenshotBuffers.length > 0
+      ? { images: screenshotBuffers, text: prompt }
+      : prompt;
+
   let imageBytes: Buffer;
   let uploadContentType: string;
   try {
     const result = await generateImage({
       model: imageModel,
-      prompt,
+      prompt: promptInput,
       size: "1024x1024",
       providerOptions: {
         gateway: {
@@ -229,9 +251,6 @@ export async function POST(request: Request) {
         slug: string;
         builder: string;
         target: string;
-        tone: string;
-        screen_type: string;
-        region: string;
         extra_details: string;
         image_path: string | null;
       }
@@ -263,9 +282,9 @@ export async function POST(request: Request) {
         slug,
         builder: String(body.builder ?? ""),
         target: String(body.target ?? ""),
-        tone: String(body.tone ?? ""),
-        screen_type: String(body.screenType ?? ""),
-        region: String(body.region ?? ""),
+        tone: "",
+        screen_type: "",
+        region: "",
         extra_details: String(body.extraDetails ?? ""),
         generated_prompt: prompt,
         image_path: objectPath,
@@ -273,7 +292,7 @@ export async function POST(request: Request) {
         remix_parent_id: remixParentId,
       })
       .select(
-        "id, slug, builder, target, tone, screen_type, region, extra_details, image_path",
+        "id, slug, builder, target, extra_details, image_path",
       )
       .maybeSingle();
 
@@ -358,9 +377,6 @@ export async function POST(request: Request) {
     prompt: {
       builder: inserted.builder,
       target: inserted.target,
-      tone: inserted.tone,
-      screenType: inserted.screen_type,
-      region: inserted.region,
       extraDetails: inserted.extra_details,
       generatedPrompt: prompt,
     },

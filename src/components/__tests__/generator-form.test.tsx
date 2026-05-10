@@ -19,12 +19,24 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock next/image
+vi.mock("next/image", () => ({
+  default: (props: Record<string, unknown>) => <img {...props} />,
+}));
+
+// Mock sign-in modal provider
+const mockOpenSignIn = vi.fn();
+vi.mock("@/components/sign-in-modal-provider", () => ({
+  useSignInModal: () => ({ openSignIn: mockOpenSignIn }),
+}));
+
 // Mock useGenerate hook
 const mockGenerate = vi.fn().mockResolvedValue(undefined);
 const mockReset = vi.fn();
 
 let mockResult: null | { id: number; slug: string; imageUrl: string | null; builder: string; target: string } = null;
 let mockError: string | null = null;
+let mockErrorCode: string | null = null;
 let mockIsLoading = false;
 
 vi.mock("@/hooks/use-generate", () => ({
@@ -33,6 +45,7 @@ vi.mock("@/hooks/use-generate", () => ({
     result: mockResult,
     isLoading: mockIsLoading,
     error: mockError,
+    errorCode: mockErrorCode,
     reset: mockReset,
   }),
 }));
@@ -47,6 +60,7 @@ describe("GeneratorForm", () => {
     vi.clearAllMocks();
     mockResult = null;
     mockError = null;
+    mockErrorCode = null;
     mockIsLoading = false;
   });
 
@@ -58,11 +72,8 @@ describe("GeneratorForm", () => {
     expect(targetInput).toBeDefined();
   });
 
-  it("renders secondary controls (tone, screen type, region, extra details)", () => {
+  it("renders extra details textarea", () => {
     render(<GeneratorForm {...defaultProps} />);
-    expect(screen.getByLabelText(/tone/i)).toBeDefined();
-    expect(screen.getByLabelText(/screen type/i)).toBeDefined();
-    expect(screen.getByLabelText(/region/i)).toBeDefined();
     expect(screen.getByLabelText(/extra details/i)).toBeDefined();
   });
 
@@ -72,17 +83,9 @@ describe("GeneratorForm", () => {
     expect(button.hasAttribute("disabled")).toBe(true);
   });
 
-  it("disables Generate button when builder is whitespace-only", () => {
+  it("enables Generate button when both builder and target have values", () => {
     render(
-      <GeneratorForm {...defaultProps} initialValues={{ builder: "   ", target: "test" }} />
-    );
-    const button = screen.getByRole("button", { name: /generate/i });
-    expect(button.hasAttribute("disabled")).toBe(true);
-  });
-
-  it("enables Generate button when both builder and target have non-whitespace text", () => {
-    render(
-      <GeneratorForm {...defaultProps} initialValues={{ builder: "Apple", target: "taxes" }} />
+      <GeneratorForm {...defaultProps} initialValues={{ builder: "Apple", target: "LinkedIn" }} />
     );
     const button = screen.getByRole("button", { name: /generate/i });
     expect(button.hasAttribute("disabled")).toBe(false);
@@ -90,45 +93,36 @@ describe("GeneratorForm", () => {
 
   it("shows sign-in prompt when not authenticated", () => {
     render(<GeneratorForm {...defaultProps} signedIn={false} />);
-    const link = screen.getByRole("link", { name: /sign in to generate/i });
-    expect(link).toBeDefined();
-    expect(link.getAttribute("href")).toBe("/login");
+    const button = screen.getByRole("button", { name: /sign in to generate/i });
+    expect(button).toBeDefined();
   });
 
   it("does not show Generate button when not signed in", () => {
     render(<GeneratorForm {...defaultProps} signedIn={false} />);
-    expect(screen.queryByRole("button", { name: /generate/i })).toBeNull();
+    // The "Generate" button is replaced by "Sign in to generate" button
+    expect(screen.queryByRole("button", { name: /^generate$/i })).toBeNull();
   });
 
-  it("pre-fills form fields from initialValues", () => {
+  it("pre-fills builder and target from initialValues", () => {
     render(
       <GeneratorForm
         {...defaultProps}
         initialValues={{
           builder: "Spotify",
-          target: "dental clinic",
-          tone: "dead serious",
-          screenType: "desktop web",
-          region: "EU",
+          target: "LinkedIn",
           extraDetails: "Make it corporate",
         }}
       />
     );
-    expect((screen.getByLabelText(/builder/i) as HTMLInputElement).value).toBe("Spotify");
-    expect((screen.getByLabelText(/target/i) as HTMLInputElement).value).toBe("dental clinic");
-    expect((screen.getByLabelText(/tone/i) as HTMLSelectElement).value).toBe("dead serious");
-    expect((screen.getByLabelText(/screen type/i) as HTMLSelectElement).value).toBe("desktop web");
-    expect((screen.getByLabelText(/region/i) as HTMLSelectElement).value).toBe("EU");
+    expect((screen.getByLabelText(/builder/i) as HTMLSelectElement).value).toBe("Spotify");
+    expect((screen.getByLabelText(/target/i) as HTMLSelectElement).value).toBe("LinkedIn");
     expect((screen.getByLabelText(/extra details/i) as HTMLTextAreaElement).value).toBe("Make it corporate");
   });
 
   it("uses default values when no initialValues provided", () => {
     render(<GeneratorForm {...defaultProps} />);
-    expect((screen.getByLabelText(/builder/i) as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText(/target/i) as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText(/tone/i) as HTMLSelectElement).value).toBe("satirical");
-    expect((screen.getByLabelText(/screen type/i) as HTMLSelectElement).value).toBe("mobile app");
-    expect((screen.getByLabelText(/region/i) as HTMLSelectElement).value).toBe("global");
+    expect((screen.getByLabelText(/builder/i) as HTMLSelectElement).value).toBe("");
+    expect((screen.getByLabelText(/target/i) as HTMLSelectElement).value).toBe("");
     expect((screen.getByLabelText(/extra details/i) as HTMLTextAreaElement).value).toBe("");
   });
 
@@ -156,7 +150,7 @@ describe("GeneratorForm", () => {
     render(
       <GeneratorForm
         {...defaultProps}
-        initialValues={{ builder: "Apple", target: "taxes" }}
+        initialValues={{ builder: "Apple", target: "LinkedIn" }}
       />
     );
     const button = screen.getByRole("button", { name: /generate/i });
@@ -164,10 +158,7 @@ describe("GeneratorForm", () => {
 
     expect(mockGenerate).toHaveBeenCalledWith({
       builder: "Apple",
-      target: "taxes",
-      tone: "satirical",
-      screenType: "mobile app",
-      region: "global",
+      target: "LinkedIn",
       extraDetails: "",
     }, undefined);
   });
@@ -177,7 +168,7 @@ describe("GeneratorForm", () => {
     render(
       <GeneratorForm
         {...defaultProps}
-        initialValues={{ builder: "Apple", target: "taxes" }}
+        initialValues={{ builder: "Apple", target: "LinkedIn" }}
       />
     );
     const alert = screen.getByRole("alert");

@@ -88,9 +88,6 @@ export default async function RemixPage({ params }: Props) {
   const initialValues: Partial<GenerationInputs> = {
     builder: source.builder,
     target: source.target,
-    tone: source.tone,
-    screenType: source.screen_type,
-    region: source.region,
     extraDetails: source.extra_details,
   };
 

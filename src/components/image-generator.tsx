@@ -21,9 +21,6 @@ type Props = {
 };
 
 const DEFAULTS = {
-  tone: "absurdly polished",
-  screenType: "mobile app",
-  region: "US",
   extraDetails: "",
 } as const;
 
@@ -293,9 +290,6 @@ export function ImageGenerator({ signedIn }: Props) {
         body: JSON.stringify({
           builder,
           target,
-          tone: DEFAULTS.tone,
-          screenType: DEFAULTS.screenType,
-          region: DEFAULTS.region,
           extraDetails: DEFAULTS.extraDetails,
         }),
       });

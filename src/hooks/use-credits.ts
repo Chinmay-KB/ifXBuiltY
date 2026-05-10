@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { emitCreditsChanged } from "@/lib/credits-events";
+
 type CreditsState = {
   credits: number | null;
   isLoading: boolean;
@@ -54,6 +56,7 @@ export function useCredits(signedIn: boolean): UseCreditsReturn {
         error: null,
         hasCustomer: data.hasCustomer ?? false,
       });
+      emitCreditsChanged();
     } catch {
       setState((prev) => ({
         ...prev,

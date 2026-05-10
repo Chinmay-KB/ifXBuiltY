@@ -65,9 +65,6 @@ export function hasInputsChanged(
   return (
     current.builder !== last.builder ||
     current.target !== last.target ||
-    current.tone !== last.tone ||
-    current.screenType !== last.screenType ||
-    current.region !== last.region ||
     current.extraDetails !== last.extraDetails
   );
 }

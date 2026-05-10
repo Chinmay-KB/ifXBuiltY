@@ -10,9 +10,6 @@ const MAX_EXTRA = 2800;
 export type MergedGenerationFields = {
   builder: string;
   target: string;
-  tone: string;
-  screenType: string;
-  region: string;
   extraDetails: string;
 };
 
@@ -23,18 +20,45 @@ function clampExtra(text: string): string {
 }
 
 /**
- * Merge two company profiles into API fields for {@link buildGenerationPrompt}.
- * Builder supplies tone/screen/region defaults; both contribute extraDetails.
+ * Serialize a company's style DNA into a readable prompt fragment.
  */
-export function mergeCompanyPair(
+function formatStyleDna(name: string, dna: CompanyProfile["styleDna"]): string {
+  const parts: string[] = [];
+  if (dna.tone.length > 0) parts.push(`Tone: ${dna.tone.join(", ")}`);
+  if (dna.colors.length > 0) parts.push(`Colors: ${dna.colors.join(", ")}`);
+  if (dna.visual_traits.length > 0) parts.push(`Visual traits: ${dna.visual_traits.join(", ")}`);
+  if (dna.ux_traits.length > 0) parts.push(`UX traits: ${dna.ux_traits.join(", ")}`);
+  if (dna.meme_exaggeration.length > 0) parts.push(`Meme exaggeration: ${dna.meme_exaggeration.join(", ")}`);
+  if (dna.iconic_elements.length > 0) parts.push(`Iconic elements: ${dna.iconic_elements.join(", ")}`);
+  return `Style DNA (${name}): ${parts.join(". ")}`;
+}
+
+/**
+ * Serialize a company's archetype into a readable prompt fragment.
+ */
+function formatArchetype(name: string, arch: CompanyProfile["archetype"]): string {
+  const parts: string[] = [];
+  if (arch.type) parts.push(`Type: ${arch.type}`);
+  if (arch.layout) parts.push(`Layout: ${arch.layout}`);
+  if (arch.sections.length > 0) parts.push(`Sections: ${arch.sections.join(", ")}`);
+  if (arch.content_style.length > 0) parts.push(`Content style: ${arch.content_style.join(", ")}`);
+  return `Archetype (${name}): ${parts.join(". ")}`;
+}
+
+/**
+ * Merge two company profiles into API fields for prompt building.
+ * Builder supplies style DNA; target supplies archetype.
+ */
+export async function mergeCompanyPair(
   builderId: string,
   targetId: string,
-): MergedGenerationFields {
-  const builder = getCompanyProfileById(builderId);
-  const target = getCompanyProfileById(targetId);
+): Promise<MergedGenerationFields> {
+  const builder = await getCompanyProfileById(builderId);
+  const target = await getCompanyProfileById(targetId);
   if (!builder || !target) {
+    const ids = await listCompanyIds();
     throw new RangeError(
-      `Unknown company id(s): ${builderId}, ${targetId}. Valid: ${listCompanyIds().join(", ")}`,
+      `Unknown company id(s): ${builderId}, ${targetId}. Valid: ${ids.join(", ")}`,
     );
   }
   if (builderId === targetId) {
@@ -43,8 +67,8 @@ export function mergeCompanyPair(
 
   const extraDetails = clampExtra(
     [
-      `Builder look-and-feel (${builder.name}): ${builder.builderStyle}`,
-      `Target scenario (${target.name}): ${target.targetDomain}`,
+      formatStyleDna(builder.name, builder.styleDna),
+      formatArchetype(target.name, target.archetype),
       `Blend: Recreate a plausible UI for "${target.name}" as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone.`,
       `On-screen branding: never show "${builder.name}" or "${target.name}" as logos, lockups, or combined wordmarks; no official marks—invented product/org titles and generic icons only.`,
     ].join("\n\n"),
@@ -53,9 +77,6 @@ export function mergeCompanyPair(
   return {
     builder: builder.name,
     target: target.name,
-    tone: builder.tone,
-    screenType: builder.screenType,
-    region: builder.region,
     extraDetails,
   };
 }
@@ -71,20 +92,20 @@ export type SlotWithFields = {
 };
 
 /** Four random builder/target pairs with no duplicate pair in the batch */
-export function fillFourUniqueSlots(): SlotWithFields[] {
+export async function fillFourUniqueSlots(): Promise<SlotWithFields[]> {
   const used = new Set<string>();
   const out: SlotWithFields[] = [];
   let attempts = 0;
   while (out.length < 4 && attempts < 400) {
     attempts++;
-    const { builderId, targetId } = randomDistinctPairIds();
+    const { builderId, targetId } = await randomDistinctPairIds();
     const key = profilePairKey(builderId, targetId);
     if (used.has(key)) continue;
     used.add(key);
     out.push({
       builderId,
       targetId,
-      fields: mergeCompanyPair(builderId, targetId),
+      fields: await mergeCompanyPair(builderId, targetId),
     });
   }
   if (out.length < 4) {
@@ -94,8 +115,8 @@ export function fillFourUniqueSlots(): SlotWithFields[] {
 }
 
 /** Sample random distinct builder/target ids (uniform among companies). */
-export function randomDistinctPairIds(): { builderId: string; targetId: string } {
-  const ids = listCompanyIds();
+export async function randomDistinctPairIds(): Promise<{ builderId: string; targetId: string }> {
+  const ids = await listCompanyIds();
   if (ids.length < 2) {
     throw new RangeError("Need at least two companies for pairing");
   }
@@ -113,10 +134,10 @@ export function randomDistinctPairIds(): { builderId: string; targetId: string }
 }
 
 /** For testing / advanced UI: merge from full profiles without id lookup */
-export function mergeCompanyProfiles(
+export async function mergeCompanyProfiles(
   builder: CompanyProfile,
   target: CompanyProfile,
-): MergedGenerationFields {
+): Promise<MergedGenerationFields> {
   if (builder.id === target.id) {
     throw new RangeError("builder and target must differ");
   }

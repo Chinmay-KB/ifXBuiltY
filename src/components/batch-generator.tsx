@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button, Surface } from "@/components/ui";
 import {
-  fillFourUniqueSlots,
-  mergeCompanyPair,
   profilePairKey,
-  randomDistinctPairIds,
   type MergedGenerationFields,
   type SlotWithFields,
 } from "@/lib/prompt/merge-company-pair";
@@ -45,9 +42,6 @@ async function postGenerate(
       body: JSON.stringify({
         builder: body.builder,
         target: body.target,
-        tone: body.tone,
-        screenType: body.screenType,
-        region: body.region,
         extraDetails: body.extraDetails,
       }),
     });
@@ -81,10 +75,27 @@ async function postGenerate(
   }
 }
 
+async function fetchFourSlots(): Promise<SlotWithFields[]> {
+  const res = await fetch("/api/slots");
+  if (!res.ok) {
+    throw new Error("Failed to fetch slots");
+  }
+  const data = (await res.json()) as { slots: SlotWithFields[] };
+  return data.slots;
+}
+
+async function fetchSingleSlot(): Promise<SlotWithFields> {
+  const res = await fetch("/api/slots/single");
+  if (!res.ok) {
+    throw new Error("Failed to fetch single slot");
+  }
+  const data = (await res.json()) as { slot: SlotWithFields };
+  return data.slot;
+}
+
 export function BatchGenerator() {
-  const [slots, setSlots] = useState<SlotWithFields[]>(() =>
-    fillFourUniqueSlots(),
-  );
+  const [slots, setSlots] = useState<SlotWithFields[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
   const [results, setResults] = useState<RowResult[]>([
     null,
     null,
@@ -94,39 +105,62 @@ export function BatchGenerator() {
   const [loading, setLoading] = useState(false);
   const [publishingIdx, setPublishingIdx] = useState<number | null>(null);
 
-  const reshuffleAll = useCallback(() => {
-    setSlots(fillFourUniqueSlots());
-    setResults([null, null, null, null]);
+  // Load initial slots on mount
+  useEffect(() => {
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetchFourSlots()
+      .then((s) => {
+        if (!cancelled) {
+          setSlots(s);
+          setSlotsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const reshuffleSlot = useCallback((index: number) => {
-    setSlots((prev) => {
-      const next = [...prev];
-      const used = new Set(
-        prev.map((s) => profilePairKey(s.builderId, s.targetId)),
-      );
-      used.delete(profilePairKey(prev[index]!.builderId, prev[index]!.targetId));
+  const reshuffleAll = useCallback(async () => {
+    setSlotsLoading(true);
+    try {
+      const newSlots = await fetchFourSlots();
+      setSlots(newSlots);
+      setResults([null, null, null, null]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, []);
 
-      let attempts = 0;
-      while (attempts++ < 300) {
-        const { builderId, targetId } = randomDistinctPairIds();
-        const key = profilePairKey(builderId, targetId);
-        if (used.has(key)) continue;
-        used.add(key);
-        next[index] = {
-          builderId,
-          targetId,
-          fields: mergeCompanyPair(builderId, targetId),
-        };
-        break;
-      }
-      return next;
-    });
-    setResults((r) => {
-      const copy = [...r];
-      copy[index] = null;
-      return copy;
-    });
+  const reshuffleSlot = useCallback(async (index: number) => {
+    try {
+      const newSlot = await fetchSingleSlot();
+      setSlots((prev) => {
+        const used = new Set(
+          prev.map((s) => profilePairKey(s.builderId, s.targetId)),
+        );
+        // If the new slot collides with an existing one, still use it
+        // (server-side randomness makes collisions rare)
+        const key = profilePairKey(newSlot.builderId, newSlot.targetId);
+        if (used.has(key)) {
+          // Try once more
+          return prev;
+        }
+        const next = [...prev];
+        next[index] = newSlot;
+        return next;
+      });
+      setResults((r) => {
+        const copy = [...r];
+        copy[index] = null;
+        return copy;
+      });
+    } catch {
+      // Silently fail — slot stays unchanged
+    }
   }, []);
 
   const generateFour = useCallback(async () => {
@@ -191,44 +225,53 @@ export function BatchGenerator() {
 
       <Surface variant="composer" className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="ink" onClick={reshuffleAll}>
-            Reshuffle all four
+          <Button
+            type="button"
+            variant="ink"
+            disabled={slotsLoading}
+            onClick={() => void reshuffleAll()}
+          >
+            {slotsLoading ? "Loading…" : "Reshuffle all four"}
           </Button>
           <Button
             type="button"
             variant="outline"
-            disabled={loading}
+            disabled={loading || slotsLoading || slots.length === 0}
             onClick={() => void generateFour()}
           >
             {loading ? "Generating…" : "Generate four"}
           </Button>
         </div>
 
-        <ul className="flex flex-col gap-3">
-          {slots.map((slot, i) => (
-            <li
-              key={`${slot.builderId}-${slot.targetId}-${i}`}
-              className="flex flex-col gap-2 rounded-lg border border-line bg-canvas px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <p className="font-medium text-ink">{pairLabels[i]}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                  {slot.fields.screenType} · {slot.fields.region}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="shrink-0 self-start sm:self-center"
-                disabled={loading}
-                onClick={() => reshuffleSlot(i)}
+        {slotsLoading && slots.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Loading company pairs…</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {slots.map((slot, i) => (
+              <li
+                key={`${slot.builderId}-${slot.targetId}-${i}`}
+                className="flex flex-col gap-2 rounded-lg border border-line bg-canvas px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                Reshuffle
-              </Button>
-            </li>
-          ))}
-        </ul>
+                <div className="min-w-0">
+                  <p className="font-medium text-ink">{pairLabels[i]}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    {slot.fields.builder} → {slot.fields.target}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 self-start sm:self-center"
+                  disabled={loading}
+                  onClick={() => void reshuffleSlot(i)}
+                >
+                  Reshuffle
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </Surface>
 
       <section className="flex flex-col gap-4">
@@ -237,7 +280,7 @@ export function BatchGenerator() {
           {results.map((res, i) => (
             <Surface key={i} className="flex flex-col gap-2 p-3">
               <p className="text-xs font-medium text-muted-foreground">
-                Slot {i + 1}: {pairLabels[i]}
+                Slot {i + 1}: {pairLabels[i] ?? "—"}
               </p>
               {res == null && !loading ? (
                 <p className="text-sm text-muted-foreground">Not generated yet.</p>

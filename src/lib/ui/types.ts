@@ -26,9 +26,6 @@ export type FeedSort = "trending" | "newest" | "top";
 export type GenerationInputs = {
   builder: string;
   target: string;
-  tone: string;
-  screenType: string;
-  region: string;
   extraDetails: string;
 };
 

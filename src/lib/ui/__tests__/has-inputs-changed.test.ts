@@ -18,9 +18,6 @@ import type { GenerationInputs } from "../types";
 const generationInputsArb: fc.Arbitrary<GenerationInputs> = fc.record({
   builder: fc.string(),
   target: fc.string(),
-  tone: fc.string(),
-  screenType: fc.string(),
-  region: fc.string(),
   extraDetails: fc.string(),
 });
 
@@ -41,9 +38,6 @@ describe("hasInputsChanged — Property 14: Regenerate enabled on input change",
     const fieldNames: (keyof GenerationInputs)[] = [
       "builder",
       "target",
-      "tone",
-      "screenType",
-      "region",
       "extraDetails",
     ];
 

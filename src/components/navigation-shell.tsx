@@ -6,6 +6,7 @@ import { CreditsBadge } from "@/components/credits-badge";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";
+import { SUPERADMIN_EMAIL } from "@/lib/admin-constants";
 import { cn } from "@/lib/cn";
 
 type User = {
@@ -17,7 +18,7 @@ type User = {
 
 type NavigationShellProps = {
   user: User;
-  activeSection: "home" | "feed" | "generate";
+  activeSection: "home" | "feed" | "generate" | "admin";
 };
 
 /* ─── Icons (inline SVG, no emoji) ─── */
@@ -82,6 +83,25 @@ function GenerateIcon({ className }: { className?: string }) {
   );
 }
 
+function AdminIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("size-5", className)}
+      aria-hidden="true"
+    >
+      <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z" />
+      <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+    </svg>
+  );
+}
+
 /* ─── Desktop Nav Links ─── */
 
 const navItems = [
@@ -116,6 +136,7 @@ function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
 
 export function NavigationShell({ user, activeSection }: NavigationShellProps) {
   const { openSignIn } = useSignInModal();
+  const isSuperadminUser = user?.email === SUPERADMIN_EMAIL;
 
   return (
     <>
@@ -147,6 +168,20 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
                 {item.label}
               </Link>
             ))}
+            {isSuperadminUser && (
+              <Link
+                href="/admin"
+                className={cn(
+                  "text-sm font-medium transition-colors duration-200",
+                  activeSection === "admin"
+                    ? "font-semibold text-ink"
+                    : "text-muted hover:text-ink",
+                )}
+                aria-current={activeSection === "admin" ? "page" : undefined}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* User area */}
@@ -178,6 +213,9 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
           { section: "home" as const, label: "Home", href: "/" },
           { section: "generate" as const, label: "Generate", href: "/generate" },
           { section: "feed" as const, label: "Feed", href: "/feed" },
+          ...(isSuperadminUser
+            ? [{ section: "admin" as const, label: "Admin", href: "/admin" }]
+            : []),
         ].map((item) => {
           const isActive = activeSection === item.section;
           const Icon =
@@ -185,7 +223,9 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
               ? HomeIcon
               : item.section === "feed"
                 ? FeedIcon
-                : GenerateIcon;
+                : item.section === "admin"
+                  ? AdminIcon
+                  : GenerateIcon;
 
           return (
             <Link

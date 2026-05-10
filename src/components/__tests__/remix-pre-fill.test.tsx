@@ -3,6 +3,7 @@ import * as fc from "fast-check";
 import { render, screen } from "@testing-library/react";
 import { GeneratorForm } from "../generator-form";
 import type { GenerationInputs } from "@/lib/ui/types";
+import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
 
 // Mock next/link to render a plain anchor
 vi.mock("next/link", () => ({
@@ -21,6 +22,16 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock next/image
+vi.mock("next/image", () => ({
+  default: (props: Record<string, unknown>) => <img {...props} />,
+}));
+
+// Mock sign-in modal provider
+vi.mock("@/components/sign-in-modal-provider", () => ({
+  useSignInModal: () => ({ openSignIn: vi.fn() }),
+}));
+
 // Mock useGenerate hook
 vi.mock("@/hooks/use-generate", () => ({
   useGenerate: () => ({
@@ -28,6 +39,7 @@ vi.mock("@/hooks/use-generate", () => ({
     result: null,
     isLoading: false,
     error: null,
+    errorCode: null,
     reset: vi.fn(),
   }),
 }));
@@ -36,68 +48,51 @@ vi.mock("@/hooks/use-generate", () => ({
  * Feature: ui-redesign, Property 12: Remix pre-fill from source
  * Validates: Requirements 6.6, 7.1
  *
- * For any source generation with fields (builder, target, tone, screenType, region, extraDetails),
+ * For any source generation with fields (builder, target, extraDetails),
  * opening the remix flow SHALL pre-fill the form with the exact values from the source generation
- * for all six fields.
+ * for the visible form fields (builder select, target select, extra details textarea).
  */
 describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
-  // Constrained arbitraries matching the select option sets
-  const toneArb = fc.constantFrom("satirical", "absurdly polished", "dead serious", "unhinged");
-  const screenTypeArb = fc.constantFrom("mobile app", "desktop web", "kiosk");
-  const regionArb = fc.constantFrom("global", "US", "EU", "Global south");
+  // Constrained arbitraries matching the actual select option values
+  const builderArb = fc.constantFrom(...BUILDER_OPTIONS.map((b) => b.name));
+  const targetArb = fc.constantFrom(...TARGET_OPTIONS.map((t) => t.name));
 
-  // Arbitrary for free-text fields (builder, target, extraDetails)
-  const textArb = fc.string({ minLength: 1, maxLength: 50 });
+  // Arbitrary for extra details (free text)
+  const extraDetailsArb = fc.string({ minLength: 0, maxLength: 100 });
 
-  // Arbitrary for a full GenerationInputs representing a source generation
-  const generationInputsArb: fc.Arbitrary<GenerationInputs> = fc.record({
-    builder: textArb,
-    target: textArb,
-    tone: toneArb,
-    screenType: screenTypeArb,
-    region: regionArb,
-    extraDetails: fc.string({ minLength: 0, maxLength: 100 }),
-  });
-
-  it("should pre-fill all six form fields with exact values from source generation", () => {
+  it("should pre-fill builder, target, and extra details with exact values from source generation", () => {
     fc.assert(
-      fc.property(generationInputsArb, (sourceInputs) => {
+      fc.property(builderArb, targetArb, extraDetailsArb, (builder, target, extraDetails) => {
+        const sourceInputs: GenerationInputs = {
+          builder,
+          target,
+          extraDetails,
+        };
+
         const { container } = render(
           <GeneratorForm
             signedIn={true}
             initialValues={sourceInputs}
             remixSource={{
               id: 1,
-              label: `if ${sourceInputs.builder} built ${sourceInputs.target}`,
+              label: `if ${builder} built ${target}`,
               imageUrl: null,
             }}
             onGenerated={vi.fn()}
           />
         );
 
-        // Verify builder field
-        const builderInput = screen.getByLabelText(/builder/i) as HTMLInputElement;
-        expect(builderInput.value).toBe(sourceInputs.builder);
+        // Verify builder select
+        const builderInput = screen.getByLabelText(/builder/i) as HTMLSelectElement;
+        expect(builderInput.value).toBe(builder);
 
-        // Verify target field
-        const targetInput = screen.getByLabelText(/target/i) as HTMLInputElement;
-        expect(targetInput.value).toBe(sourceInputs.target);
-
-        // Verify tone select
-        const toneSelect = screen.getByLabelText(/tone/i) as HTMLSelectElement;
-        expect(toneSelect.value).toBe(sourceInputs.tone);
-
-        // Verify screenType select
-        const screenTypeSelect = screen.getByLabelText(/screen type/i) as HTMLSelectElement;
-        expect(screenTypeSelect.value).toBe(sourceInputs.screenType);
-
-        // Verify region select
-        const regionSelect = screen.getByLabelText(/region/i) as HTMLSelectElement;
-        expect(regionSelect.value).toBe(sourceInputs.region);
+        // Verify target select
+        const targetInput = screen.getByLabelText(/target/i) as HTMLSelectElement;
+        expect(targetInput.value).toBe(target);
 
         // Verify extraDetails textarea
         const extraDetailsTextarea = screen.getByLabelText(/extra details/i) as HTMLTextAreaElement;
-        expect(extraDetailsTextarea.value).toBe(sourceInputs.extraDetails);
+        expect(extraDetailsTextarea.value).toBe(extraDetails);
 
         // Clean up for next iteration
         container.remove();

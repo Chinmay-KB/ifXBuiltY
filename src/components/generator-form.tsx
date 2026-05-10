@@ -32,9 +32,6 @@ type GeneratorFormProps = {
 const defaults: GenerationInputs = {
   builder: "",
   target: "",
-  tone: "satirical",
-  screenType: "mobile app",
-  region: "global",
   extraDetails: "",
 };
 
@@ -52,9 +49,6 @@ export function GeneratorForm({
 
   const [builder, setBuilder] = useState(merged.builder);
   const [target, setTarget] = useState(merged.target);
-  const [tone] = useState(merged.tone);
-  const [screenType] = useState(merged.screenType);
-  const [region] = useState(merged.region);
   const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
 
   const { generate, result, isLoading, error, errorCode } = useGenerate();
@@ -89,9 +83,6 @@ export function GeneratorForm({
       const inputs: GenerationInputs = {
         builder,
         target,
-        tone,
-        screenType,
-        region,
         extraDetails,
       };
       onErrorRef.current?.(error, inputs);
@@ -104,14 +95,11 @@ export function GeneratorForm({
     const inputs: GenerationInputs = {
       builder,
       target,
-      tone,
-      screenType,
-      region,
       extraDetails,
     };
     onGeneratingRef.current?.(inputs);
     await generate(inputs, remixSource?.id ? { remixParentId: remixSource.id } : undefined);
-  }, [builder, target, tone, screenType, region, extraDetails, generate, remixSource]);
+  }, [builder, target, extraDetails, generate, remixSource]);
 
   return (
     <Surface variant="composer" className="flex flex-col gap-4">

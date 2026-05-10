@@ -85,9 +85,6 @@ type Phase = "input" | "loading" | "result" | "error";
 const defaultInputs: GenerationInputs = {
   builder: "",
   target: "",
-  tone: "satirical",
-  screenType: "mobile app",
-  region: "global",
   extraDetails: "",
 };
 

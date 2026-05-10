@@ -7,10 +7,7 @@ describe("buildGenerationPrompt", () => {
     const p = buildGenerationPrompt({
       builder: "Microsoft",
       target: "Indian Government portal",
-      tone: "serious",
-      screenType: "desktop web",
-      region: "India",
-      extraDetails: "Dense dashboards.",
+      extraDetails: "Dense dashboards with tricolor accents.",
     });
     expect(p).toContain("Branding guardrails");
     expect(p).toContain("stylistic reference");

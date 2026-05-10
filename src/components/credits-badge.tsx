@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { onCreditsChanged } from "@/lib/credits-events";
+
 /**
  * Displays the user's credit balance as a small badge in the nav.
- * Fetches from /api/credits/balance on mount.
+ * Fetches from /api/credits/balance on mount and re-fetches whenever
+ * any component emits a credits-changed event.
  */
 export function CreditsBadge() {
   const [credits, setCredits] = useState<number | null>(null);
@@ -28,6 +31,13 @@ export function CreditsBadge() {
 
   useEffect(() => {
     void fetchBalance();
+  }, [fetchBalance]);
+
+  // Re-fetch when any component signals that credits changed
+  useEffect(() => {
+    return onCreditsChanged(() => {
+      void fetchBalance();
+    });
   }, [fetchBalance]);
 
   if (loading) {

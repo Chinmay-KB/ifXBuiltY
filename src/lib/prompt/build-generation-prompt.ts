@@ -1,9 +1,6 @@
 type GenerationFields = {
   builder: string;
   target: string;
-  tone: string;
-  screenType: string;
-  region: string;
   extraDetails: string;
 };
 
@@ -19,9 +16,6 @@ export function buildGenerationPrompt(fields: GenerationFields): string {
 
   const lines = [
     `Parody UI screenshot: fictional software for a "${target}"-like scenario, using only the interaction patterns and visual language commonly associated with "${builder}" (stylistic reference — not corporate endorsement).`,
-    fields.tone.trim() ? `Tone: ${fields.tone.trim()}.` : "",
-    fields.screenType.trim() ? `Screen type: ${fields.screenType.trim()}.` : "",
-    fields.region.trim() ? `Regional/cultural cues: ${fields.region.trim()}.` : "",
     fields.extraDetails.trim()
       ? `Additional direction: ${fields.extraDetails.trim()}.`
       : "",
