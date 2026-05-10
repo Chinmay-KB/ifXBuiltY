@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { BatchGenerator } from "@/components/batch-generator";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Batch generate",
+  robots: { index: false, follow: false },
+};
 
 export default async function BatchPage() {
   const supabase = await createSupabaseServerClient();

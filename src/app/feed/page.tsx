@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { FeedPageClient } from "@/components/feed-page-client";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import type { FeedSort } from "@/lib/feed-types";
+
+export const metadata: Metadata = {
+  title: "Browse parody screenshots",
+  description:
+    "Trending and newest AI-generated parody UI screenshots. Vote on brand mashups and filter by builder or target.",
+  alternates: { canonical: "/feed" },
+};
 
 type Props = {
   searchParams: Promise<{ sort?: string; builder?: string; target?: string }>;

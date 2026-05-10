@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
@@ -5,6 +6,11 @@ import { LogoMark, Surface, Wordmark } from "@/components/ui";
 
 type Props = {
   searchParams: Promise<{ error?: string; next?: string }>;
+};
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  robots: { index: false, follow: true },
 };
 
 export default async function LoginPage({ searchParams }: Props) {

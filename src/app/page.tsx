@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { WallSection } from "@/components/wall-section";
 import type { WallItem } from "@/components/wall-card";
 import { fetchFeedServer } from "@/lib/fetch-feed";
+
+export const metadata: Metadata = {
+  title: {
+    absolute:
+      "ifXBuiltY — AI parody screenshots & brand mashups (what if X built Y?)",
+  },
+  description:
+    "Combine any company with any product and get a satirical fake-app screenshot. Browse the wall, generate your own parody UI, vote, remix, and share.",
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const { items } = await fetchFeedServer({ sort: "trending", limit: 40 });

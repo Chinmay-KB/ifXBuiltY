@@ -1,18 +1,70 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { GenerationCard } from "@/components/generation-card";
 import { VoteControls } from "@/components/vote-controls";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import { GENERATION_DETAIL_HERO_SIZES } from "@/lib/generation-image-sizes";
+import { generationMediaAbsoluteUrl } from "@/lib/generation-media-url";
 import { getPublishedGenerationBySlug } from "@/lib/public-generation";
+import { getSiteUrl } from "@/lib/site-url";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
 import { ShareButton } from "./share-button";
 
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const gen = await getPublishedGenerationBySlug(slug);
+
+  if (!gen) {
+    return {
+      title: "Not found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = formatResultTitle(gen.builder, gen.target);
+  const description = `AI-generated parody UI screenshot: ${title}.`;
+  const base = getSiteUrl();
+  const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
+  const ogImage =
+    gen.imageUrl != null
+      ? generationMediaAbsoluteUrl(base, gen.slug, "detail")
+      : undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: canonicalPath,
+      images: ogImage
+        ? [
+            {
+              url: ogImage,
+              width: 1024,
+              height: 1024,
+              alt: title,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ogImage ? [ogImage] : ["/icon.png"],
+    },
+  };
+}
 
 export default async function GenerationDetailPage({ params }: Props) {
   const { slug } = await params;
