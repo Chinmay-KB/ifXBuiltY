@@ -189,3 +189,30 @@ body {
     animation: none;
   }
 }
+
+/* Sign-in modal animation */
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+dialog.sign-in-modal[open] {
+  animation: modal-enter 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+dialog.sign-in-modal::backdrop {
+  animation: modal-enter 0.15s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.sign-in-modal[open],
+  dialog.sign-in-modal::backdrop {
+    animation: none;
+  }
+}

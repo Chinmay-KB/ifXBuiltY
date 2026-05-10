@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
@@ -47,6 +47,7 @@ export function GeneratorForm({
   onError,
   onInsufficientCredits,
 }: GeneratorFormProps) {
+  const { openSignIn } = useSignInModal();
   const merged = { ...defaults, ...initialValues };
 
   const [builder, setBuilder] = useState(merged.builder);
@@ -235,15 +236,16 @@ export function GeneratorForm({
           {isLoading ? "Generating…" : "Generate"}
         </Button>
       ) : (
-        <Link
-          href="/login"
+        <button
+          type="button"
+          onClick={openSignIn}
           className={cn(
             "inline-flex w-full items-center justify-center rounded-lg border-2 border-ink bg-chrome px-4 py-3.5 text-base font-black text-ink transition-[background-color,filter,color]",
             "hover:brightness-[0.98] active:brightness-95",
           )}
         >
           Sign in to generate
-        </Link>
+        </button>
       )}
 
       {/* Inline error display */}

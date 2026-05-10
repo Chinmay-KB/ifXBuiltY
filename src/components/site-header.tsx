@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 
+import { SignInButton } from "@/components/sign-in-button";
 import { SignOutButton } from "@/components/sign-out-button";
 import { LogoMark, NavTextLink, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -10,9 +11,6 @@ type Props = {
   active?: "specimen" | "generate" | "images" | "feed" | "batch";
   primaryAction?: { label: string; href: string };
 };
-
-const signInClass =
-  "inline-flex items-center justify-center rounded-lg border-2 border-transparent bg-ink px-3.5 py-2.5 text-sm font-semibold leading-5 text-white transition-colors hover:bg-ink/90";
 
 export function SiteHeader({ user, active, primaryAction }: Props) {
   return (
@@ -58,9 +56,7 @@ export function SiteHeader({ user, active, primaryAction }: Props) {
             <SignOutButton />
           </>
         ) : (
-          <Link href="/login" className={cn(signInClass, "px-3 sm:px-3.5")}>
-            Sign in
-          </Link>
+          <SignInButton className={cn("px-3 sm:px-3.5")} />
         )}
       </div>
     </header>

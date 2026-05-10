@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { CreditsBadge } from "@/components/credits-badge";
+import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -114,6 +115,8 @@ function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
 /* ─── Main Component ─── */
 
 export function NavigationShell({ user, activeSection }: NavigationShellProps) {
+  const { openSignIn } = useSignInModal();
+
   return (
     <>
       {/* Desktop top nav — hidden below md (768px) */}
@@ -154,12 +157,13 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
                 <UserMenu user={user} />
               </>
             ) : (
-              <Link
-                href="/login"
+              <button
+                type="button"
+                onClick={openSignIn}
                 className="inline-flex items-center justify-center rounded-lg bg-ink px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-ink/90"
               >
                 Sign in
-              </Link>
+              </button>
             )}
           </div>
         </div>

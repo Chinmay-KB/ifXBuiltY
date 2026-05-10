@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
+import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -111,10 +112,12 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <NavigationShellWrapper user={navUser} />
-        <main className="flex flex-1 flex-col pt-16 pb-14 md:pb-0">
-          {children}
-        </main>
+        <SignInModalProvider>
+          <NavigationShellWrapper user={navUser} />
+          <main className="flex flex-1 flex-col pt-16 pb-14 md:pb-0">
+            {children}
+          </main>
+        </SignInModalProvider>
       </body>
     </html>
   );
