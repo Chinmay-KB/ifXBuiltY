@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import Zoom from "@/components/image-zoom";
 import { Button, Surface } from "@/components/ui";
 import {
   profilePairKey,
@@ -297,12 +298,14 @@ export function BatchGenerator() {
               {res && res.ok ? (
                 <>
                   {res.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={res.imageUrl}
-                      alt=""
-                      className="max-h-64 w-full rounded-md object-contain"
-                    />
+                    <Zoom>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={res.imageUrl}
+                        alt=""
+                        className="max-h-64 w-full rounded-md object-contain"
+                      />
+                    </Zoom>
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       Saved — preview URL unavailable.

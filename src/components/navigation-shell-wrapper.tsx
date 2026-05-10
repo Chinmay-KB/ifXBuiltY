@@ -13,6 +13,7 @@ type User = {
 
 type NavigationShellWrapperProps = {
   user: User;
+  isSuperadmin: boolean;
 };
 
 function getActiveSection(
@@ -24,7 +25,7 @@ function getActiveSection(
   return "home";
 }
 
-export function NavigationShellWrapper({ user }: NavigationShellWrapperProps) {
+export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWrapperProps) {
   const pathname = usePathname();
 
   // Don't render the main navigation on admin routes — admin uses its own AdminShell
@@ -34,5 +35,5 @@ export function NavigationShellWrapper({ user }: NavigationShellWrapperProps) {
 
   const activeSection = getActiveSection(pathname);
 
-  return <NavigationShell user={user} activeSection={activeSection} />;
+  return <NavigationShell user={user} activeSection={activeSection} isSuperadmin={isSuperadmin} />;
 }

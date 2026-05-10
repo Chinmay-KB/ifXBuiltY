@@ -5,7 +5,7 @@ import {
 } from "@/data/company-profiles";
 
 /** Max length for extraDetails — image models tolerate long prompts but stay bounded */
-const MAX_EXTRA = 2800;
+const MAX_EXTRA = 4000;
 
 export type MergedGenerationFields = {
   builder: string;
@@ -30,6 +30,8 @@ function formatStyleDna(name: string, dna: CompanyProfile["styleDna"]): string {
   if (dna.ux_traits.length > 0) parts.push(`UX traits: ${dna.ux_traits.join(", ")}`);
   if (dna.meme_exaggeration.length > 0) parts.push(`Meme exaggeration: ${dna.meme_exaggeration.join(", ")}`);
   if (dna.iconic_elements.length > 0) parts.push(`Iconic elements: ${dna.iconic_elements.join(", ")}`);
+  if (dna.behavioral_stereotypes.length > 0) parts.push(`Behavioral stereotypes: ${dna.behavioral_stereotypes.join(", ")}`);
+  if (dna.satirical_patterns.length > 0) parts.push(`Satirical patterns: ${dna.satirical_patterns.join(", ")}`);
   return `Style DNA (${name}): ${parts.join(". ")}`;
 }
 
@@ -67,11 +69,33 @@ export async function mergeCompanyPair(
 
   const extraDetails = clampExtra(
     [
+      // Layer 1: Visual Recognition
       formatStyleDna(builder.name, builder.styleDna),
       formatArchetype(target.name, target.archetype),
-      `Blend: Recreate a plausible UI for "${target.name}" as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone.`,
+
+      // Layer 2: UX Recognition
+      builder.styleDna.ux_traits.length > 0
+        ? `UX Anti-Patterns to exaggerate (${builder.name}): ${builder.styleDna.ux_traits.join(", ")}. Push these to absurd extremes — captchas where they don't belong, popup overload, forced onboarding for trivial actions, weird navigation that only ${builder.name} would think is intuitive.`
+        : "",
+
+      // Layer 2 bonus: satirical patterns
+      builder.styleDna.satirical_patterns.length > 0
+        ? `Satirical UX Patterns (${builder.name}): ${builder.styleDna.satirical_patterns.join("; ")}.`
+        : "",
+
+      // Layer 3: Cultural Recognition (MOST IMPORTANT)
+      builder.styleDna.meme_exaggeration.length > 0
+        ? `Cultural Meme Triggers (${builder.name}) — THIS IS THE MOST IMPORTANT LAYER: ${builder.styleDna.meme_exaggeration.join("; ")}. Use exact phrasing, fake notices, stereotypical CTAs, and emotionally recognizable frustrations that people instantly associate with ${builder.name}. The microcopy must make people say "they would actually do this."`
+        : "",
+
+      // Layer 3 bonus: behavioral stereotypes
+      builder.styleDna.behavioral_stereotypes.length > 0
+        ? `Behavioral Stereotypes (${builder.name}): ${builder.styleDna.behavioral_stereotypes.join("; ")}. Lean into these organizational behaviors — the humor comes from believable overcommitment to ${builder.name}'s product philosophy.`
+        : "",
+
+      `Blend: Recreate a plausible UI for "${target.name}" as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone, but applied to ${target.name}'s domain in a way that is immediately funny and shareable.`,
       `On-screen branding: never show "${builder.name}" or "${target.name}" as logos, lockups, or combined wordmarks; no official marks—invented product/org titles and generic icons only.`,
-    ].join("\n\n"),
+    ].filter(Boolean).join("\n\n"),
   );
 
   return {

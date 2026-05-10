@@ -34,7 +34,7 @@ export function ImageOverlayActions({
 
   return (
     <div
-      className="absolute bottom-3 right-3 flex flex-col gap-2"
+      className="pointer-events-auto absolute bottom-3 right-3 z-20 flex flex-col gap-2"
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >

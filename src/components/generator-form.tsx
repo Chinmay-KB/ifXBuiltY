@@ -1,14 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import Zoom from "@/components/image-zoom";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
-import { REMIX_SOURCE_THUMB_SIZES } from "@/lib/generation-image-sizes";
 import { isGenerateEnabled } from "@/lib/ui/format";
 import type {
   GenerationInputs,
@@ -107,14 +106,16 @@ export function GeneratorForm({
       {remixSource && (
         <div className="flex items-center gap-3 rounded-lg bg-panel px-3 py-2">
           {remixSource.imageUrl && (
-            <Image
-              src={remixSource.imageUrl}
-              alt=""
-              width={40}
-              height={40}
-              sizes={REMIX_SOURCE_THUMB_SIZES}
-              className="size-10 rounded object-cover"
-            />
+            <Zoom>
+              {/* eslint-disable-next-line @next/next/no-img-element -- rmiz measures native <img>; Next/Image breaks zoom geometry */}
+              <img
+                src={remixSource.imageUrl}
+                alt=""
+                width={40}
+                height={40}
+                className="size-10 shrink-0 rounded object-cover"
+              />
+            </Zoom>
           )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-muted">Remixing from</p>

@@ -1,18 +1,16 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { GenerationCard } from "@/components/generation-card";
 import { VoteControls } from "@/components/vote-controls";
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import { GENERATION_DETAIL_HERO_SIZES } from "@/lib/generation-image-sizes";
 import { generationMediaAbsoluteUrl } from "@/lib/generation-media-url";
 import { getPublishedGenerationBySlug } from "@/lib/public-generation";
 import { getSiteUrl } from "@/lib/site-url";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
-import { ImageOverlayActions } from "./image-overlay-actions";
+import { PublishedGenerationHero } from "./published-generation-hero";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -93,31 +91,21 @@ export default async function GenerationDetailPage({ params }: Props) {
   return (
     <div className="flex flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12">
       {/* Hero Image with overlay action buttons */}
-      <section className="relative mx-auto w-full max-w-[600px]">
-        {gen.imageUrl ? (
-          <>
-            <Image
-              src={gen.imageUrl}
-              alt={title}
-              width={1024}
-              height={1024}
-              sizes={GENERATION_DETAIL_HERO_SIZES}
-              priority
-              className="h-auto w-full max-h-[600px] rounded-lg object-contain"
-            />
-            <ImageOverlayActions
-              generationId={gen.id}
-              slug={gen.slug}
-              title={title}
-              imageDownloadUrl={gen.imageDownloadUrl ?? null}
-            />
-          </>
-        ) : (
+      {gen.imageUrl ? (
+        <PublishedGenerationHero
+          imageUrl={gen.imageUrl}
+          title={title}
+          generationId={gen.id}
+          slug={gen.slug}
+          imageDownloadUrl={gen.imageDownloadUrl ?? null}
+        />
+      ) : (
+        <section className="relative mx-auto w-full max-w-[600px]">
           <div className="flex h-64 w-full items-center justify-center rounded-lg bg-panel">
             <p className="font-display text-2xl text-muted">{title}</p>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Generation Meta + Vote Controls side by side */}
       <section className="flex flex-col gap-4">

@@ -24,6 +24,10 @@ vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => <img {...props} />,
 }));
 
+vi.mock("@/components/image-zoom", () => ({
+  default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock sign-in modal provider
 const mockOpenSignIn = vi.fn();
 vi.mock("@/components/sign-in-modal-provider", () => ({

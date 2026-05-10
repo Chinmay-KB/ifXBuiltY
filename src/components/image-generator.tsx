@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import Zoom from "@/components/image-zoom";
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { useCreditProduct } from "@/hooks/use-credit-product";
 import { cn } from "@/lib/cn";
@@ -444,12 +445,14 @@ export function ImageGenerator({ signedIn }: Props) {
 
             <div className="flex flex-col gap-4">
               {result?.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={result.imageUrl}
-                  alt={`Generated: if ${result.builder} built ${result.target}`}
-                  className="max-h-[520px] w-full rounded-lg object-contain"
-                />
+                <Zoom>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={result.imageUrl}
+                    alt={`Generated: if ${result.builder} built ${result.target}`}
+                    className="max-h-[520px] w-full rounded-lg object-contain"
+                  />
+                </Zoom>
               ) : loading ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-on-dark-soft">Summoning pixels…</p>

@@ -6,7 +6,6 @@ import { CreditsBadge } from "@/components/credits-badge";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";
-import { SUPERADMIN_EMAIL } from "@/lib/admin-constants";
 import { cn } from "@/lib/cn";
 
 type User = {
@@ -19,6 +18,7 @@ type User = {
 type NavigationShellProps = {
   user: User;
   activeSection: "home" | "feed" | "generate" | "admin";
+  isSuperadmin: boolean;
 };
 
 /* ─── Icons (inline SVG, no emoji) ─── */
@@ -134,9 +134,9 @@ function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
 
 /* ─── Main Component ─── */
 
-export function NavigationShell({ user, activeSection }: NavigationShellProps) {
+export function NavigationShell({ user, activeSection, isSuperadmin }: NavigationShellProps) {
   const { openSignIn } = useSignInModal();
-  const isSuperadminUser = user?.email === SUPERADMIN_EMAIL;
+  const isSuperadminUser = isSuperadmin;
 
   return (
     <>

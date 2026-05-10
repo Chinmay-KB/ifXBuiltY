@@ -3,6 +3,7 @@ import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
+import { isSuperadmin } from "@/lib/admin-constants";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -113,7 +114,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SignInModalProvider>
-          <NavigationShellWrapper user={navUser} />
+          <NavigationShellWrapper user={navUser} isSuperadmin={isSuperadmin(user?.email)} />
           <main className="flex flex-1 flex-col pt-16 pb-14 md:pb-0">
             {children}
           </main>

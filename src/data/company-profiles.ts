@@ -7,6 +7,8 @@ export type StyleDna = {
   ux_traits: string[];
   meme_exaggeration: string[];
   iconic_elements: string[];
+  behavioral_stereotypes: string[];
+  satirical_patterns: string[];
 };
 
 export type Archetype = {
@@ -32,6 +34,8 @@ const EMPTY_STYLE_DNA: StyleDna = {
   ux_traits: [],
   meme_exaggeration: [],
   iconic_elements: [],
+  behavioral_stereotypes: [],
+  satirical_patterns: [],
 };
 
 const EMPTY_ARCHETYPE: Archetype = {
@@ -59,6 +63,8 @@ function mapRow(row: Record<string, unknown>): CompanyProfile {
           ux_traits: Array.isArray(rawDna.ux_traits) ? rawDna.ux_traits : [],
           meme_exaggeration: Array.isArray(rawDna.meme_exaggeration) ? rawDna.meme_exaggeration : [],
           iconic_elements: Array.isArray(rawDna.iconic_elements) ? rawDna.iconic_elements : [],
+          behavioral_stereotypes: Array.isArray(rawDna.behavioral_stereotypes) ? rawDna.behavioral_stereotypes : [],
+          satirical_patterns: Array.isArray(rawDna.satirical_patterns) ? rawDna.satirical_patterns : [],
         }
       : EMPTY_STYLE_DNA,
     archetype: rawArch

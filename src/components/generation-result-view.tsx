@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 
+import Zoom from "@/components/image-zoom";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatResultTitle, hasInputsChanged } from "@/lib/ui/format";
@@ -116,13 +117,15 @@ export function GenerationResultView({
         {/* Left — Image */}
         <div className="w-full overflow-hidden rounded-xl border border-line bg-panel lg:max-w-[520px]">
           {result.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={result.imageUrl}
-              alt={title}
-              className="w-full object-contain"
-              style={{ maxHeight: "600px" }}
-            />
+            <Zoom>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={result.imageUrl}
+                alt={title}
+                className="w-full object-contain"
+                style={{ maxHeight: "600px" }}
+              />
+            </Zoom>
           ) : (
             <div className="flex h-[300px] items-center justify-center bg-ink/5">
               <span className="text-sm text-muted">Image unavailable</span>

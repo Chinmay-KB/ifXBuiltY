@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 
+import Zoom from "@/components/image-zoom";
 import { cn } from "@/lib/cn";
 
 type UserProfile = {
@@ -156,23 +156,28 @@ function GenerationCard({ generation }: { generation: Generation }) {
   const title = `${generation.builder} × ${generation.target}`;
 
   return (
-    <Link
-      href={`/g/${generation.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-canvas transition-shadow hover:shadow-md"
-    >
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-line bg-canvas transition-shadow hover:shadow-md">
       {/* Image */}
       <div className="relative aspect-[4/3] bg-panel">
-        <Image
-          src={generation.imageUrl!}
-          alt={title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
+        {generation.imageUrl ? (
+          <Zoom>
+            {/* eslint-disable-next-line @next/next/no-img-element -- rmiz measures native <img>; Next/Image breaks zoom geometry */}
+            <img
+              src={generation.imageUrl}
+              alt={title}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          </Zoom>
+        ) : null}
       </div>
 
-      {/* Info */}
-      <div className="flex items-center gap-2 p-3">
+      <Link
+        href={`/g/${generation.slug}`}
+        className="flex items-center gap-2 p-3"
+        aria-label={`Open ${title}`}
+      >
         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
           {title}
         </p>
@@ -199,7 +204,7 @@ function GenerationCard({ generation }: { generation: Generation }) {
             day: "numeric",
           })}
         </span>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
