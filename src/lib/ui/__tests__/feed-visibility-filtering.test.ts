@@ -32,7 +32,10 @@ describe("filterFeedItems - Property 1: Feed visibility filtering", () => {
     slug: fc.string({ minLength: 1, maxLength: 30 }),
     builder: fc.string({ minLength: 1, maxLength: 30 }),
     target: fc.string({ minLength: 1, maxLength: 30 }),
-    imageUrl: fc.option(fc.webUrl(), { nil: null }),
+    imageUrl: fc.option(
+      fc.oneof(fc.webUrl(), fc.constant("/api/generations/x/media?variant=card")),
+      { nil: null },
+    ),
     netScore: fc.integer({ min: -1000, max: 1000 }),
     remixCount: fc.nat({ max: 100 }),
     createdAt: fc.integer({ min: 946684800000, max: 1924991999999 }).map((ts) => new Date(ts).toISOString()),
@@ -62,11 +65,17 @@ describe("filterFeedItems - Property 1: Feed visibility filtering", () => {
       fc.property(recordsArb, (records) => {
         const result = filterFeedItems(records);
 
-        // Every item in the result must have the correct visibility and moderation_status
+        // Every item in the result must come from a published + visible record
         for (const item of result) {
-          const source = records.find((r) => r.id === item.id)!;
-          expect(source.visibility).toBe("published");
-          expect(source.moderation_status).toBe("visible");
+          expect(
+            records.some(
+              (r) =>
+                r.id === item.id &&
+                r.slug === item.slug &&
+                r.visibility === "published" &&
+                r.moderation_status === "visible",
+            ),
+          ).toBe(true);
         }
 
         // Every record that matches the criteria must be in the result

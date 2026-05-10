@@ -3710,6 +3710,7 @@ __metadata:
     next: "npm:16.2.6"
     react: "npm:19.2.4"
     react-dom: "npm:19.2.4"
+    sharp: "npm:^0.34.5"
     supabase: "npm:^2.98.2"
     tailwindcss: "npm:^4"
     tsx: "npm:^4.21.0"

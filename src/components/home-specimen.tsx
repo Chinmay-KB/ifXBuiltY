@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
 import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
+import { HOME_SPECIMEN_HERO_SIZES } from "@/lib/generation-image-sizes";
 
 function titleCase(s: string) {
   return s
@@ -84,12 +86,16 @@ export function HomeSpecimen({
         <div className="w-full lg:max-w-[640px] xl:max-w-[720px]">
           <div className="relative overflow-hidden rounded-2xl border border-line bg-white p-4 sm:p-5 lg:h-[680px] xl:h-[740px]">
             <div className="flex h-full items-center justify-center rounded-xl bg-panel p-3 sm:p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={showcaseImageUrl(specimen)}
-                alt={`if ${builder} built ${target}`}
-                className="h-full w-full rounded-lg bg-white object-contain"
-              />
+              <div className="relative h-full min-h-[240px] w-full">
+                <Image
+                  src={showcaseImageUrl(specimen)}
+                  alt={`if ${builder} built ${target}`}
+                  fill
+                  sizes={HOME_SPECIMEN_HERO_SIZES}
+                  priority
+                  className="rounded-lg bg-white object-contain"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
 import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
+import { GENERATION_LOADING_SHOWCASE_SIZES } from "@/lib/generation-image-sizes";
 
 const ROTATION_INTERVAL_MS = 5000;
 
@@ -114,41 +116,49 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
           <div className="relative aspect-[4/3] w-full">
             {/* Layer A */}
             <div className="absolute inset-0 flex items-center justify-center p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={
-                  showcaseExamples[currentIndex]
-                    ? showcaseImageUrl(showcaseExamples[currentIndex])
-                    : undefined
-                }
-                alt={showcaseExamples[currentIndex]?.builder && showcaseExamples[currentIndex]?.target
-                  ? `if ${showcaseExamples[currentIndex].builder} built ${showcaseExamples[currentIndex].target}`
-                  : "Showcase example"}
-                className={cn(
-                  "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-                  transitionClass,
-                  showNext ? "opacity-0" : "opacity-100",
-                )}
-              />
+              <div className="relative h-full max-h-full w-full max-w-full">
+                {showcaseExamples[currentIndex] ? (
+                  <Image
+                    src={showcaseImageUrl(showcaseExamples[currentIndex])}
+                    alt={
+                      showcaseExamples[currentIndex]?.builder &&
+                      showcaseExamples[currentIndex]?.target
+                        ? `if ${showcaseExamples[currentIndex].builder} built ${showcaseExamples[currentIndex].target}`
+                        : "Showcase example"
+                    }
+                    fill
+                    sizes={GENERATION_LOADING_SHOWCASE_SIZES}
+                    className={cn(
+                      "rounded-lg object-contain transition-opacity",
+                      transitionClass,
+                      showNext ? "opacity-0" : "opacity-100",
+                    )}
+                  />
+                ) : null}
+              </div>
             </div>
             {/* Layer B */}
             <div className="absolute inset-0 flex items-center justify-center p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={
-                  showcaseExamples[nextIndex]
-                    ? showcaseImageUrl(showcaseExamples[nextIndex])
-                    : undefined
-                }
-                alt={showcaseExamples[nextIndex]?.builder && showcaseExamples[nextIndex]?.target
-                  ? `if ${showcaseExamples[nextIndex].builder} built ${showcaseExamples[nextIndex].target}`
-                  : "Showcase example"}
-                className={cn(
-                  "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-                  transitionClass,
-                  showNext ? "opacity-100" : "opacity-0",
-                )}
-              />
+              <div className="relative h-full max-h-full w-full max-w-full">
+                {showcaseExamples[nextIndex] ? (
+                  <Image
+                    src={showcaseImageUrl(showcaseExamples[nextIndex])}
+                    alt={
+                      showcaseExamples[nextIndex]?.builder &&
+                      showcaseExamples[nextIndex]?.target
+                        ? `if ${showcaseExamples[nextIndex].builder} built ${showcaseExamples[nextIndex].target}`
+                        : "Showcase example"
+                    }
+                    fill
+                    sizes={GENERATION_LOADING_SHOWCASE_SIZES}
+                    className={cn(
+                      "rounded-lg object-contain transition-opacity",
+                      transitionClass,
+                      showNext ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                ) : null}
+              </div>
             </div>
           </div>
         ) : (

@@ -1,7 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+
+import { WALL_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
 
 export type WallItem = {
   id: number | string;
@@ -40,14 +43,14 @@ export function WallCard({ item, height, eager = false, tilt = 0 }: WallCardProp
       aria-label={`if ${item.builder} built ${item.target}`}
     >
       {!imgError && item.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={item.imageUrl}
           alt={`if ${item.builder} built ${item.target}`}
-          className="h-full w-full object-cover"
-          width={width}
-          height={height}
+          fill
+          sizes={WALL_CARD_IMAGE_SIZES(width)}
+          className="object-cover"
           loading={eager ? "eager" : "lazy"}
+          priority={eager}
           onError={() => setImgError(true)}
         />
       ) : (

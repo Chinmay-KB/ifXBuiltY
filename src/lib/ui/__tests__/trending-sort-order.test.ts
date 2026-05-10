@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as fc from "fast-check";
 import { sortFeedItems } from "../feed-filters";
-import type { FeedItem } from "../types";
 
 /**
  * Feature: ui-redesign, Property 2: Trending sort order
@@ -24,7 +23,10 @@ describe("sortFeedItems - Property 2: Trending sort order", () => {
     slug: fc.string({ minLength: 1, maxLength: 20 }),
     builder: fc.string({ minLength: 1, maxLength: 30 }),
     target: fc.string({ minLength: 1, maxLength: 30 }),
-    imageUrl: fc.option(fc.webUrl(), { nil: null }),
+    imageUrl: fc.option(
+      fc.oneof(fc.webUrl(), fc.constant("/api/generations/x/media?variant=card")),
+      { nil: null },
+    ),
     netScore: fc.integer({ min: -1000, max: 1000 }),
     remixCount: fc.nat({ max: 500 }),
     createdAt: isoDateArb,

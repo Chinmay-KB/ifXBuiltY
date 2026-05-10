@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 type VoteValue = 1 | -1 | null;
 
@@ -34,9 +34,11 @@ export function useVote({
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use a ref to track the latest state for the async callback
   const stateRef = useRef({ score, userVote });
-  stateRef.current = { score, userVote };
+
+  useEffect(() => {
+    stateRef.current = { score, userVote };
+  }, [score, userVote]);
 
   const vote = useCallback(
     (value: 1 | -1) => {

@@ -125,13 +125,20 @@ export function GeneratePageClient({ signedIn }: GeneratePageClientProps) {
 
         {/* Phase: input or error (show form with error preserved) */}
         {(phase === "input" || phase === "error") && (
-          <GeneratorForm
-            signedIn={signedIn}
-            initialValues={phase === "error" ? currentInputs : undefined}
-            onGenerating={handleGenerating}
-            onGenerated={handleGenerated}
-            onError={handleError}
-          />
+          <>
+            {phase === "error" && error ? (
+              <p className="mb-4 text-sm font-medium text-red-600" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <GeneratorForm
+              signedIn={signedIn}
+              initialValues={phase === "error" ? currentInputs : undefined}
+              onGenerating={handleGenerating}
+              onGenerated={handleGenerated}
+              onError={handleError}
+            />
+          </>
         )}
 
         {/* Phase: loading — show engagement content */}

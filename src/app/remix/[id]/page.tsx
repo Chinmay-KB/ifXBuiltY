@@ -2,9 +2,8 @@ import Link from "next/link";
 
 import { RemixForm } from "@/components/remix-form";
 import { SiteHeader } from "@/components/site-header";
-import { getGenerationImagesBucket } from "@/lib/env-server";
+import { generationMediaPath } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { GenerationInputs, RemixSource } from "@/lib/ui/types";
 
@@ -74,23 +73,10 @@ export default async function RemixPage({ params }: Props) {
     );
   }
 
-  // Generate a signed URL for the source image thumbnail
-  let imageUrl: string | null = null;
   const imagePath = source.image_path?.trim();
-  if (imagePath) {
-    try {
-      const service = createSupabaseServiceClient();
-      const bucket = getGenerationImagesBucket();
-      const { data: signed, error: signErr } = await service.storage
-        .from(bucket)
-        .createSignedUrl(imagePath, 3600);
-      if (!signErr && signed?.signedUrl) {
-        imageUrl = signed.signedUrl;
-      }
-    } catch {
-      /* service role unavailable — proceed without thumbnail */
-    }
-  }
+  const imageUrl = imagePath
+    ? generationMediaPath(source.slug, "card")
+    : null;
 
   // Build the remix source and initial values
   const remixSource: RemixSource = {

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/cn";
+import { GENERATION_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
+import { generationMediaPath } from "@/lib/generation-media-url";
 import { formatCardLabel, formatCompactCount } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -20,7 +23,7 @@ type GenerationCardProps = {
  * - Label: "{builder} built {target}" (truncated at 60 chars)
  * - Compact vote score
  * - Hover reveals CardActionBar on desktop (fade-in 200ms, fade-out 150ms)
- * - Mobile tap navigates to /g/[slug]
+ * - Card opens /g/[slug]; Remix/Download/Share stay clickable when the bar is visible
  * - Remix count badge when remixCount >= 1
  * - Placeholder on image load failure
  *
@@ -43,50 +46,52 @@ export function GenerationCard({ item, showActions = true }: GenerationCardProps
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Mobile: entire card is tappable link to detail page */}
+      {/* Full-card hit target; content uses pointer-events-none so Remix/Download/Share stay usable */}
       <Link
         href={`/g/${item.slug}`}
-        className="absolute inset-0 z-10 lg:hidden"
-        aria-label={label}
+        className="absolute inset-0 z-0 rounded-[7px]"
+        aria-label={`Open ${label}`}
       />
 
-      {/* Image area — ≥70% of card height */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden">
-        {item.imageUrl && !imageError ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs vary by host
-          <img
-            src={item.imageUrl}
-            alt={label}
-            className="h-full w-full object-cover"
-            onError={handleImageError}
-            loading="lazy"
-          />
-        ) : (
-          /* Placeholder on image failure or missing URL */
-          <div className="flex h-full w-full items-center justify-center bg-panel p-4">
-            <p className="text-center font-display text-lg leading-tight text-muted">
-              {label}
-            </p>
-          </div>
-        )}
+      <div className="relative z-10 flex flex-col pointer-events-none">
+        {/* Image area — ≥70% of card height */}
+        <div className="relative aspect-[4/5] w-full overflow-hidden">
+          {item.imageUrl && !imageError ? (
+            <Image
+              src={item.imageUrl}
+              alt={label}
+              fill
+              sizes={GENERATION_CARD_IMAGE_SIZES}
+              className="object-cover"
+              loading="lazy"
+              onError={handleImageError}
+            />
+          ) : (
+            /* Placeholder on image failure or missing URL */
+            <div className="flex h-full w-full items-center justify-center bg-panel p-4">
+              <p className="text-center font-display text-lg leading-tight text-muted">
+                {label}
+              </p>
+            </div>
+          )}
 
-        {/* Remix count badge */}
-        {item.remixCount >= 1 && (
-          <span className="absolute bottom-2 left-2 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-medium text-white">
-            {item.remixCount} {item.remixCount === 1 ? "remix" : "remixes"}
-          </span>
-        )}
+          {/* Remix count badge */}
+          {item.remixCount >= 1 && (
+            <span className="absolute bottom-2 left-2 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-medium text-white">
+              {item.remixCount} {item.remixCount === 1 ? "remix" : "remixes"}
+            </span>
+          )}
 
-        {/* Desktop hover Action Bar */}
-        {showActions && (
-          <div
-            className={cn(
-              "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-gradient-to-t from-ink/60 to-transparent px-3 py-3 transition-opacity lg:flex",
-              isHovered
-                ? "opacity-100 duration-200"
-                : "opacity-0 duration-150"
-            )}
-          >
+          {/* Desktop hover Action Bar */}
+          {showActions && (
+            <div
+              className={cn(
+                "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-gradient-to-t from-ink/60 to-transparent px-3 py-3 transition-opacity lg:flex",
+                isHovered
+                  ? "pointer-events-auto opacity-100 duration-200"
+                  : "pointer-events-none opacity-0 duration-150"
+              )}
+            >
             <CardAction
               label="Remix"
               href={`/remix/${item.id}`}
@@ -98,7 +103,9 @@ export function GenerationCard({ item, showActions = true }: GenerationCardProps
             />
             <CardAction
               label="Download"
-              href={item.imageUrl || "#"}
+              href={
+                item.imageUrl ? generationMediaPath(item.slug, "full") : "#"
+              }
               download
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -127,18 +134,19 @@ export function GenerationCard({ item, showActions = true }: GenerationCardProps
                 </svg>
               }
             />
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
 
-      {/* Card footer: label + vote score */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
-        <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
-          {label}
-        </p>
-        <span className="shrink-0 text-xs font-semibold text-muted">
-          ↑ {score}
-        </span>
+        {/* Card footer: label + vote score */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+            {label}
+          </p>
+          <span className="shrink-0 text-xs font-semibold text-muted">
+            ↑ {score}
+          </span>
+        </div>
       </div>
     </div>
   );

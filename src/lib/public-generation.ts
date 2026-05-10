@@ -1,6 +1,5 @@
-import { getGenerationImagesBucket } from "@/lib/env-server";
+import { generationMediaPath } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export type PublicGeneration = {
   id: number;
@@ -11,13 +10,16 @@ export type PublicGeneration = {
   screenType: string;
   region: string;
   extraDetails: string;
+  /** Optimized WebP for on-page display (~1280px wide max). */
   imageUrl: string | null;
+  /** Original bytes from storage (large download / save-as). */
+  imageDownloadUrl: string | null;
   upvoteCount: number;
   downvoteCount: number;
   remixCount: number;
 };
 
-/** Storage object path for a published, visible generation — for signing URLs without full row fetch */
+/** Storage object path for a published, visible generation (media route auth gate). */
 export async function getPublishedImagePathBySlug(
   slug: string,
 ): Promise<string | null> {
@@ -50,20 +52,9 @@ export async function getPublishedGenerationBySlug(
 
   if (error || !data) return null;
 
-  let imageUrl: string | null = null;
   const path = data.image_path?.trim();
-  if (path) {
-    try {
-      const service = createSupabaseServiceClient();
-      const bucket = getGenerationImagesBucket();
-      const { data: signed, error: signErr } = await service.storage
-        .from(bucket)
-        .createSignedUrl(path, 3600);
-      if (!signErr && signed?.signedUrl) imageUrl = signed.signedUrl;
-    } catch {
-      /* service role unavailable */
-    }
-  }
+  const imageUrl = path ? generationMediaPath(data.slug, "detail") : null;
+  const imageDownloadUrl = path ? generationMediaPath(data.slug, "full") : null;
 
   return {
     id: data.id,
@@ -75,6 +66,7 @@ export async function getPublishedGenerationBySlug(
     region: data.region,
     extraDetails: data.extra_details,
     imageUrl,
+    imageDownloadUrl,
     upvoteCount: data.upvote_count,
     downvoteCount: data.downvote_count,
     remixCount: data.remix_count,

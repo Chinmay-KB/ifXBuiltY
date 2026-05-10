@@ -1,9 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { GenerationCard } from "@/components/generation-card";
 import { VoteControls } from "@/components/vote-controls";
 import { fetchFeedServer } from "@/lib/fetch-feed";
+import { GENERATION_DETAIL_HERO_SIZES } from "@/lib/generation-image-sizes";
 import { getPublishedGenerationBySlug } from "@/lib/public-generation";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
@@ -42,11 +44,14 @@ export default async function GenerationDetailPage({ params }: Props) {
       {/* Hero Image */}
       <section className="w-full">
         {gen.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={gen.imageUrl}
             alt={title}
-            className="mx-auto w-full max-h-[600px] rounded-lg object-contain"
+            width={1024}
+            height={1024}
+            sizes={GENERATION_DETAIL_HERO_SIZES}
+            priority
+            className="mx-auto h-auto w-full max-h-[600px] rounded-lg object-contain"
           />
         ) : (
           <div className="flex h-64 w-full items-center justify-center rounded-lg bg-panel">
@@ -118,9 +123,9 @@ export default async function GenerationDetailPage({ params }: Props) {
           Remix
         </Link>
 
-        {gen.imageUrl ? (
+        {gen.imageDownloadUrl ? (
           <a
-            href={gen.imageUrl}
+            href={gen.imageDownloadUrl}
             download
             className="inline-flex items-center gap-2 rounded-lg border-2 border-ink px-5 py-3 text-sm font-semibold text-ink transition-colors hover:bg-panel"
           >

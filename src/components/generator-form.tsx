@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
+import { REMIX_SOURCE_THUMB_SIZES } from "@/lib/generation-image-sizes";
 import { isGenerateEnabled } from "@/lib/ui/format";
 import type {
   GenerationInputs,
@@ -58,15 +60,15 @@ export function GeneratorForm({
 
   const canGenerate = isGenerateEnabled(builder, target);
 
-  // Notify parent when a result arrives
   const onGeneratedRef = useRef(onGenerated);
-  onGeneratedRef.current = onGenerated;
-
   const onGeneratingRef = useRef(onGenerating);
-  onGeneratingRef.current = onGenerating;
-
   const onErrorRef = useRef(onError);
-  onErrorRef.current = onError;
+
+  useEffect(() => {
+    onGeneratedRef.current = onGenerated;
+    onGeneratingRef.current = onGenerating;
+    onErrorRef.current = onError;
+  }, [onGenerated, onGenerating, onError]);
 
   useEffect(() => {
     if (result) {
@@ -109,10 +111,12 @@ export function GeneratorForm({
       {remixSource && (
         <div className="flex items-center gap-3 rounded-lg bg-panel px-3 py-2">
           {remixSource.imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={remixSource.imageUrl}
               alt=""
+              width={40}
+              height={40}
+              sizes={REMIX_SOURCE_THUMB_SIZES}
               className="size-10 rounded object-cover"
             />
           )}

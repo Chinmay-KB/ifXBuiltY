@@ -95,7 +95,10 @@ type InfiniteScrollSentinelProps = {
 function InfiniteScrollSentinel({ onIntersect }: InfiniteScrollSentinelProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const onIntersectRef = useRef(onIntersect);
-  onIntersectRef.current = onIntersect;
+
+  useEffect(() => {
+    onIntersectRef.current = onIntersect;
+  }, [onIntersect]);
 
   const handleIntersect = useCallback(
     (entries: IntersectionObserverEntry[]) => {

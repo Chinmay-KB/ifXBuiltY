@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 import type { FeedItem, FeedSort } from "@/lib/ui/types";
 
@@ -37,23 +37,17 @@ export function useFeed(options: UseFeedOptions): UseFeedReturn {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Track the current filter state to detect changes and reset
-  const prevFiltersRef = useRef({ sort, builders: builders.join(","), targets: targets.join(",") });
+  const filterKey = `${sort}|${builders.join(",")}|${targets.join(",")}`;
+  const prevFilterKeyRef = useRef(filterKey);
 
-  // Check if filters changed — if so, reset state
-  const currentFilters = { sort, builders: builders.join(","), targets: targets.join(",") };
-  if (
-    prevFiltersRef.current.sort !== currentFilters.sort ||
-    prevFiltersRef.current.builders !== currentFilters.builders ||
-    prevFiltersRef.current.targets !== currentFilters.targets
-  ) {
-    prevFiltersRef.current = currentFilters;
-    // Reset state synchronously during render (React supports this pattern)
+  useEffect(() => {
+    if (prevFilterKeyRef.current === filterKey) return;
+    prevFilterKeyRef.current = filterKey;
     setItems([]);
     setHasMore(true);
     setError(null);
     setIsLoading(false);
-  }
+  }, [filterKey]);
 
   // Use a ref to prevent concurrent fetches
   const isFetchingRef = useRef(false);

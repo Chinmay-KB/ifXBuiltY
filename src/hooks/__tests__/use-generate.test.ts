@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import * as fc from "fast-check";
 import { renderHook, act } from "@testing-library/react";
 import { useGenerate } from "../use-generate";
-import type { GenerationInputs } from "@/lib/ui/types";
 
 /**
  * Feature: ui-redesign, Property 10: Form input preservation on generation error

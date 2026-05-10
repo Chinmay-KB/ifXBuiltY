@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/cn";
+import { FEED_TILE_PREVIEW_SIZES } from "@/lib/generation-image-sizes";
 import { formatCompactCount } from "@/lib/format-count";
 import type { FeedItem } from "@/lib/feed-types";
 
@@ -38,13 +40,15 @@ export function FeedTile({ item, index, offsetClass }: Props) {
         <p className="font-display text-[1.35rem] leading-tight sm:text-[1.75rem] sm:leading-8">
           {title}
         </p>
-        <div className="mt-3 h-16 shrink-0 overflow-hidden rounded-md bg-black/20 sm:h-20">
+        <div className="relative mt-3 h-16 shrink-0 overflow-hidden rounded-md bg-black/20 sm:h-20">
           {item.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs vary by host
-            <img
+            <Image
               src={item.imageUrl}
               alt=""
-              className="h-full w-full object-cover"
+              fill
+              sizes={FEED_TILE_PREVIEW_SIZES}
+              className="object-cover"
+              loading="lazy"
             />
           ) : (
             <div className="h-full w-full bg-ink/30" aria-hidden />

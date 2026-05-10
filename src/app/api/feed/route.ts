@@ -4,13 +4,10 @@ import {
   FEED_DEFAULT_LIMIT,
   FEED_MAX_LIMIT,
 } from "@/lib/constants";
-import { getGenerationImagesBucket } from "@/lib/env-server";
+import { generationMediaPath } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
-
-const SIGNED_URL_TTL_SEC = 3600;
 
 type SortKey = "newest" | "trending" | "top";
 
@@ -103,57 +100,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ sort, items: [], hasMore: false });
   }
 
-  let service: ReturnType<typeof createSupabaseServiceClient>;
-  try {
-    service = createSupabaseServiceClient();
-  } catch {
-    const items = list.map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      builder: r.builder,
-      target: r.target,
-      tone: r.tone,
-      screenType: r.screen_type,
-      region: r.region,
-      extraDetails: r.extra_details,
-      imageUrl: null as string | null,
-      imagePath: r.image_path,
-      upvoteCount: r.upvote_count,
-      downvoteCount: r.downvote_count,
-      netScore: r.net_score,
-      remixCount: r.remix_count,
-      createdAt: r.created_at,
-    }));
-    return NextResponse.json({
-      sort,
-      items,
-      hasMore,
-      warning:
-        "Signed image URLs unavailable; configure SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.",
-    });
-  }
-
-  const bucket = getGenerationImagesBucket();
-
-  // Batch-sign all image URLs in a single request for speed
-  const paths = list
-    .map((r) => r.image_path)
-    .filter((p): p is string => p != null && p.length > 0);
-
-  let signedUrlMap: Record<string, string> = {};
-  if (paths.length > 0) {
-    const { data: signedArr, error: signErr } = await service.storage
-      .from(bucket)
-      .createSignedUrls(paths, SIGNED_URL_TTL_SEC);
-    if (!signErr && signedArr) {
-      for (const entry of signedArr) {
-        if (entry.signedUrl && entry.path) {
-          signedUrlMap[entry.path] = entry.signedUrl;
-        }
-      }
-    }
-  }
-
   const items = list.map((r) => ({
     id: r.id,
     slug: r.slug,
@@ -163,7 +109,7 @@ export async function GET(request: Request) {
     screenType: r.screen_type,
     region: r.region,
     extraDetails: r.extra_details,
-    imageUrl: r.image_path ? (signedUrlMap[r.image_path] ?? null) : null,
+    imageUrl: r.image_path ? generationMediaPath(r.slug, "card") : null,
     imagePath: r.image_path,
     upvoteCount: r.upvote_count,
     downvoteCount: r.downvote_count,

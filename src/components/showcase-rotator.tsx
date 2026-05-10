@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
 import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
+import { SHOWCASE_ROTATOR_SIZES } from "@/lib/generation-image-sizes";
 
 const ROTATION_INTERVAL_MS = 5000;
 
@@ -86,45 +88,47 @@ export function ShowcaseRotator({ examples }: ShowcaseRotatorProps) {
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-panel ring-1 ring-line">
       {/* Layer A */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={
-            examples[currentIndex]
-              ? showcaseImageUrl(examples[currentIndex])
-              : undefined
-          }
-          alt={
-            examples[currentIndex]?.builder && examples[currentIndex]?.target
-              ? `if ${examples[currentIndex].builder} built ${examples[currentIndex].target}`
-              : "Showcase example"
-          }
-          className={cn(
-            "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-            transitionClass,
-            showNext ? "opacity-0" : "opacity-100",
-          )}
-        />
+        <div className="relative h-full max-h-full w-full max-w-full">
+          {examples[currentIndex] ? (
+            <Image
+              src={showcaseImageUrl(examples[currentIndex])}
+              alt={
+                examples[currentIndex]?.builder && examples[currentIndex]?.target
+                  ? `if ${examples[currentIndex].builder} built ${examples[currentIndex].target}`
+                  : "Showcase example"
+              }
+              fill
+              sizes={SHOWCASE_ROTATOR_SIZES}
+              className={cn(
+                "rounded-lg object-contain transition-opacity",
+                transitionClass,
+                showNext ? "opacity-0" : "opacity-100",
+              )}
+            />
+          ) : null}
+        </div>
       </div>
       {/* Layer B */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={
-            examples[nextIndex]
-              ? showcaseImageUrl(examples[nextIndex])
-              : undefined
-          }
-          alt={
-            examples[nextIndex]?.builder && examples[nextIndex]?.target
-              ? `if ${examples[nextIndex].builder} built ${examples[nextIndex].target}`
-              : "Showcase example"
-          }
-          className={cn(
-            "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-            transitionClass,
-            showNext ? "opacity-100" : "opacity-0",
-          )}
-        />
+        <div className="relative h-full max-h-full w-full max-w-full">
+          {examples[nextIndex] ? (
+            <Image
+              src={showcaseImageUrl(examples[nextIndex])}
+              alt={
+                examples[nextIndex]?.builder && examples[nextIndex]?.target
+                  ? `if ${examples[nextIndex].builder} built ${examples[nextIndex].target}`
+                  : "Showcase example"
+              }
+              fill
+              sizes={SHOWCASE_ROTATOR_SIZES}
+              className={cn(
+                "rounded-lg object-contain transition-opacity",
+                transitionClass,
+                showNext ? "opacity-100" : "opacity-0",
+              )}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

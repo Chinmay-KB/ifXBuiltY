@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
 import { showcaseImageUrl } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
+import { HOME_SHOWCASE_ROTATOR_SIZES } from "@/lib/generation-image-sizes";
 
 const INTERVAL_MS = 5200;
 
@@ -75,32 +77,38 @@ export function HomeShowcaseRotator({ examples }: Props) {
       >
         <div className="relative aspect-square w-full">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={
-                examples[iA] ? showcaseImageUrl(examples[iA]) : undefined
-              }
-              alt=""
-              className={cn(
-                "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-                transitionClass,
-                showTop ? "pointer-events-none opacity-0" : "opacity-100",
-              )}
-            />
+            <div className="relative h-full max-h-full w-full max-w-full">
+              {examples[iA] ? (
+                <Image
+                  src={showcaseImageUrl(examples[iA])}
+                  alt=""
+                  fill
+                  sizes={HOME_SHOWCASE_ROTATOR_SIZES}
+                  className={cn(
+                    "rounded-lg object-contain transition-opacity",
+                    transitionClass,
+                    showTop ? "pointer-events-none opacity-0" : "opacity-100",
+                  )}
+                />
+              ) : null}
+            </div>
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={
-                examples[iB] ? showcaseImageUrl(examples[iB]) : undefined
-              }
-              alt=""
-              className={cn(
-                "max-h-full max-w-full rounded-lg object-contain transition-opacity",
-                transitionClass,
-                showTop ? "opacity-100" : "pointer-events-none opacity-0",
-              )}
-            />
+            <div className="relative h-full max-h-full w-full max-w-full">
+              {examples[iB] ? (
+                <Image
+                  src={showcaseImageUrl(examples[iB])}
+                  alt=""
+                  fill
+                  sizes={HOME_SHOWCASE_ROTATOR_SIZES}
+                  className={cn(
+                    "rounded-lg object-contain transition-opacity",
+                    transitionClass,
+                    showTop ? "opacity-100" : "pointer-events-none opacity-0",
+                  )}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

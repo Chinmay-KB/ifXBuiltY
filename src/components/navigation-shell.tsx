@@ -97,6 +97,7 @@ function UserAvatar({ user }: { user: NonNullable<User> }) {
   return (
     <div className="flex items-center gap-2">
       {user.avatar_url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- arbitrary OAuth avatar URLs
         <img
           src={user.avatar_url}
           alt=""
