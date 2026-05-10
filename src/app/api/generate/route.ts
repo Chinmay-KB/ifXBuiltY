@@ -246,7 +246,7 @@ export async function POST(request: Request) {
       .from(bucket)
       .upload(objectPath, imageBytes, {
         contentType: uploadContentType,
-        upsert: false,
+        upsert: true,
       });
 
     if (upErr) {

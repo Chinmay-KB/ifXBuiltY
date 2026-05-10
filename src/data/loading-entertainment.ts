@@ -202,3 +202,12 @@ export function getRandomFunFact(builder: string): string | null {
   if (!facts || facts.length === 0) return null;
   return facts[Math.floor(Math.random() * facts.length)];
 }
+
+/**
+ * Get all fun facts for a specific builder.
+ * Returns empty array if none available.
+ */
+export function getAllFunFacts(builder: string): string[] {
+  const key = builder.toLowerCase().replace(/\s+/g, "-");
+  return BUILDER_FUN_FACTS[key] ?? [];
+}

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { CreditsBadge } from "@/components/credits-badge";
+import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -86,31 +88,26 @@ const navItems = [
   { section: "feed" as const, label: "Feed", href: "/feed" },
 ];
 
-/* ─── User Avatar ─── */
+/* ─── User Avatar (kept for mobile) ─── */
 
-function UserAvatar({ user }: { user: NonNullable<User> }) {
+function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
   const displayName = user.display_name ?? user.email ?? "User";
-  const truncatedName =
-    displayName.length > 20 ? displayName.slice(0, 20) + "…" : displayName;
 
   return (
-    <div className="flex items-center gap-2">
+    <Link href="/profile" className="flex items-center gap-2">
       {user.avatar_url ? (
         // eslint-disable-next-line @next/next/no-img-element -- arbitrary OAuth avatar URLs
         <img
           src={user.avatar_url}
           alt=""
-          className="size-8 rounded-full object-cover"
+          className="size-7 rounded-full object-cover"
         />
       ) : (
-        <div className="flex size-8 items-center justify-center rounded-full bg-panel text-xs font-semibold text-ink">
+        <div className="flex size-7 items-center justify-center rounded-full bg-panel text-xs font-semibold text-ink">
           {displayName.charAt(0).toUpperCase()}
         </div>
       )}
-      <span className="hidden max-w-[120px] truncate text-sm font-medium text-ink lg:inline">
-        {truncatedName}
-      </span>
-    </div>
+    </Link>
   );
 }
 
@@ -150,9 +147,12 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
           </nav>
 
           {/* User area */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             {user ? (
-              <UserAvatar user={user} />
+              <>
+                <CreditsBadge />
+                <UserMenu user={user} />
+              </>
             ) : (
               <Link
                 href="/login"
@@ -205,6 +205,7 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
             </Link>
           );
         })}
+        {user && <UserAvatarMobile user={user} />}
       </nav>
     </>
   );

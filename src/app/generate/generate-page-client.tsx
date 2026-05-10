@@ -8,7 +8,7 @@ import { GeneratorForm } from "@/components/generator-form";
 import { useCredits } from "@/hooks/use-credits";
 import {
   getLoadingMessages,
-  getRandomFunFact,
+  getAllFunFacts,
 } from "@/data/loading-entertainment";
 import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
 
@@ -18,8 +18,9 @@ import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
  */
 function LoadingPreview({ builder }: { builder: string }) {
   const messages = getLoadingMessages(builder);
-  const [funFact] = useState(() => getRandomFunFact(builder));
+  const facts = useRef(getAllFunFacts(builder));
   const [msgIndex, setMsgIndex] = useState(0);
+  const [factIndex, setFactIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -27,6 +28,15 @@ function LoadingPreview({ builder }: { builder: string }) {
     }, 3500);
     return () => clearInterval(id);
   }, [messages.length]);
+
+  // Cycle fun facts every 6 seconds
+  useEffect(() => {
+    if (facts.current.length <= 1) return;
+    const id = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % facts.current.length);
+    }, 6000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -55,14 +65,14 @@ function LoadingPreview({ builder }: { builder: string }) {
         </div>
       </div>
 
-      {/* While you wait — fun fact */}
-      {funFact && (
+      {/* While you wait — cycling fun facts */}
+      {facts.current.length > 0 && (
         <div className="mx-4 mb-4 rounded-xl border border-line bg-canvas px-5 py-4">
           <p className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.04em] text-muted">
             While you wait
           </p>
           <p className="text-[14px] leading-relaxed text-ink">
-            {funFact}
+            {facts.current[factIndex]}
           </p>
         </div>
       )}
