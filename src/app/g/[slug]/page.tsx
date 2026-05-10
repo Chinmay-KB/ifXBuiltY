@@ -4,9 +4,7 @@ import { notFound } from "next/navigation";
 import { GenerationCard } from "@/components/generation-card";
 import { VoteControls } from "@/components/vote-controls";
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import { generationMediaAbsoluteUrl } from "@/lib/generation-media-url";
 import { getPublishedGenerationBySlug } from "@/lib/public-generation";
-import { getSiteUrl } from "@/lib/site-url";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -27,12 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = formatResultTitle(gen.builder, gen.target);
   const description = `AI-generated parody UI screenshot: ${title}.`;
-  const base = getSiteUrl();
   const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
-  const ogImage =
-    gen.imageUrl != null
-      ? generationMediaAbsoluteUrl(base, gen.slug, "og")
-      : undefined;
 
   return {
     title,
@@ -43,23 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: "website",
       url: canonicalPath,
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              width: 1200,
-              height: 1200,
-              type: "image/jpeg",
-              alt: title,
-            },
-          ]
-        : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ogImage ? [ogImage] : ["/icon.png"],
     },
   };
 }
