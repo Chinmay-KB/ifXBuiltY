@@ -3,47 +3,31 @@
 import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui";
+import { useCreditProduct } from "@/hooks/use-credit-product";
 import { cn } from "@/lib/cn";
-
-type CreditPack = {
-  id: string;
-  name: string;
-  credits: number;
-  price: string;
-  description: string;
-};
 
 type CreditsModalProps = {
   open: boolean;
   onClose: () => void;
-  packs?: CreditPack[];
 };
 
-const DEFAULT_PACKS: CreditPack[] = [
-  {
-    id: "pack-10",
-    name: "10 Credits",
-    credits: 10,
-    price: "$5",
-    description: "10 generations",
-  },
-];
-
-export function CreditsModal({
-  open,
-  onClose,
-  packs = DEFAULT_PACKS,
-}: CreditsModalProps) {
-  const [selectedPack, setSelectedPack] = useState(packs[0]?.id ?? "");
+export function CreditsModal({ open, onClose }: CreditsModalProps) {
   const [loading, setLoading] = useState(false);
+  const {
+    product,
+    priceLabel,
+    creditsLabel,
+    loading: productLoading,
+  } = useCreditProduct();
 
   const handleBuy = useCallback(async () => {
+    if (!product) return;
     setLoading(true);
     try {
       const res = await fetch("/api/checkout/credits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId: selectedPack }),
+        body: JSON.stringify({ productId: product.productId }),
       });
 
       if (!res.ok) {
@@ -52,13 +36,19 @@ export function CreditsModal({
       }
 
       const data = await res.json();
+      if (data.sessionId) {
+        window.localStorage.setItem(
+          "ifxb_dodo_checkout_session_id",
+          data.sessionId,
+        );
+      }
       if (data.url) {
         window.location.href = data.url;
       }
     } finally {
       setLoading(false);
     }
-  }, [selectedPack]);
+  }, [product]);
 
   if (!open) return null;
 
@@ -119,30 +109,44 @@ export function CreditsModal({
           </p>
         </div>
 
-        {/* Credit packs */}
+        {/* Credit pack info */}
         <div className="flex flex-col gap-3">
-          {packs.map((pack) => (
-            <button
-              key={pack.id}
-              onClick={() => setSelectedPack(pack.id)}
+          {productLoading ? (
+            <div className="flex items-center justify-between rounded-xl border-2 border-chrome bg-panel px-5 py-[18px]">
+              <div className="flex flex-col gap-1">
+                <span className="text-[17px] font-bold text-ink">Loading…</span>
+                <span className="text-[13px] text-muted">Fetching product info</span>
+              </div>
+            </div>
+          ) : product ? (
+            <div
               className={cn(
-                "flex items-center justify-between rounded-xl border-2 px-5 py-[18px] text-left transition-colors",
-                selectedPack === pack.id
-                  ? "border-chrome bg-panel"
-                  : "border-line bg-canvas hover:bg-panel/50",
+                "flex items-center justify-between rounded-xl border-2 border-chrome bg-panel px-5 py-[18px]",
               )}
             >
               <div className="flex flex-col gap-1">
                 <span className="text-[17px] font-bold text-ink">
-                  {pack.name}
+                  {creditsLabel}
                 </span>
-                <span className="text-[13px] text-muted">
-                  {pack.description}
-                </span>
+                {product.description ? (
+                  <span className="text-[13px] text-muted">
+                    {product.description}
+                  </span>
+                ) : (
+                  <span className="text-[13px] text-muted">
+                    {product.creditsGranted} generations
+                  </span>
+                )}
               </div>
-              <span className="text-xl font-bold text-ink">{pack.price}</span>
-            </button>
-          ))}
+              <span className="text-xl font-bold text-ink">{priceLabel}</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl border-2 border-line bg-canvas px-5 py-[18px]">
+              <span className="text-[15px] text-muted">
+                Unable to load pricing. Try again later.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* CTA */}
@@ -152,12 +156,12 @@ export function CreditsModal({
             size="lg"
             className="w-full"
             onClick={() => void handleBuy()}
-            disabled={loading}
+            disabled={loading || productLoading || !product}
           >
-            {loading ? "Redirecting..." : "Buy credits"}
+            {loading ? "Redirecting…" : "Buy credits"}
           </Button>
           <p className="text-center text-[13px] text-muted">
-            Secure payment via Stripe. No subscription required.
+            Secure payment via Dodo Payments. No subscription required.
           </p>
         </div>
       </div>

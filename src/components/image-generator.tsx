@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
+import { useCreditProduct } from "@/hooks/use-credit-product";
 import { cn } from "@/lib/cn";
 
 type GenResult = {
@@ -108,6 +109,8 @@ export function ImageGenerator({ signedIn }: Props) {
   const [creditsSyncing, setCreditsSyncing] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const { product: creditProduct, priceLabel, creditsLabel: productCreditsLabel } = useCreditProduct();
 
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [stageIdx, setStageIdx] = useState(0);
@@ -272,6 +275,13 @@ export function ImageGenerator({ signedIn }: Props) {
       router.push(`/login?next=${encodeURIComponent("/images")}`);
       return;
     }
+
+    // Pre-check credits before starting the expensive generation
+    if (credits != null && credits <= 0) {
+      setShowPaywall(true);
+      return;
+    }
+
     reset();
     setLoading(true);
     setStartedAt(Date.now());
@@ -607,7 +617,11 @@ export function ImageGenerator({ signedIn }: Props) {
           {showPaywall ? (
             <div className="rounded-lg border border-line-strong bg-panel p-3.5">
               <p className="text-sm font-semibold text-ink">You’re out of credits.</p>
-              <p className="mt-1 text-sm text-subtle">Buy a credit pack to keep generating.</p>
+              <p className="mt-1 text-sm text-subtle">
+                {creditProduct
+                  ? `Get ${productCreditsLabel} for ${priceLabel} to keep generating.`
+                  : "Buy a credit pack to keep generating."}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   variant="chrome"
@@ -615,7 +629,11 @@ export function ImageGenerator({ signedIn }: Props) {
                   disabled={checkoutLoading}
                   onClick={() => void startCheckout()}
                 >
-                  {checkoutLoading ? "Opening checkout…" : "Buy credits"}
+                  {checkoutLoading
+                    ? "Opening checkout…"
+                    : creditProduct
+                      ? `Buy ${productCreditsLabel} — ${priceLabel}`
+                      : "Buy credits"}
                 </Button>
                 <button
                   type="button"

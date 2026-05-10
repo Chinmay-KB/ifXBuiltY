@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
+import { useCreditProduct } from "@/hooks/use-credit-product";
 import { cn } from "@/lib/cn";
 
 const TONE_CHIPS = ["absurdly polished", "dead serious", "unhinged"] as const;
@@ -41,6 +42,9 @@ export function HomeGenerator({ signedIn }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const { product: creditProduct, priceLabel, creditsLabel: productCreditsLabel } = useCreditProduct();
+
   const [result, setResult] = useState<GenResult | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
@@ -174,6 +178,13 @@ export function HomeGenerator({ signedIn }: Props) {
       router.push(`/login?next=${encodeURIComponent("/")}`);
       return;
     }
+
+    // Pre-check credits before starting the expensive generation
+    if (credits != null && credits <= 0) {
+      setShowPaywall(true);
+      return;
+    }
+
     setError(null);
     setShowPaywall(false);
     setPublishedSlug(null);
@@ -411,7 +422,9 @@ export function HomeGenerator({ signedIn }: Props) {
                 You’re out of credits.
               </p>
               <p className="mt-1 text-sm text-subtle">
-                Buy a credit pack to keep generating.
+                {creditProduct
+                  ? `Get ${productCreditsLabel} for ${priceLabel} to keep generating.`
+                  : "Buy a credit pack to keep generating."}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
@@ -420,7 +433,11 @@ export function HomeGenerator({ signedIn }: Props) {
                   disabled={checkoutLoading}
                   onClick={() => void startCheckout()}
                 >
-                  {checkoutLoading ? "Opening checkout…" : "Buy credits"}
+                  {checkoutLoading
+                    ? "Opening checkout…"
+                    : creditProduct
+                      ? `Buy ${productCreditsLabel} — ${priceLabel}`
+                      : "Buy credits"}
                 </Button>
                 <button
                   type="button"
