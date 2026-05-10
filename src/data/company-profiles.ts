@@ -10,8 +10,6 @@ export type CompanyProfile = {
   builderStyle: string;
   /** When this company is the target — domain/product vibe */
   targetDomain: string;
-  /** Short category label for prompt blending */
-  productCategory: string;
 };
 
 export const COMPANY_PROFILES: CompanyProfile[] = raw as CompanyProfile[];

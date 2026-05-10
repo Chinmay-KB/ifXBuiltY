@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { HomeShowcaseRotator } from "@/components/home-showcase-rotator";
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
-import type { ShowcaseExample } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 type GenResult = {
@@ -19,7 +17,6 @@ type GenResult = {
 
 type Props = {
   signedIn: boolean;
-  showcaseExamples: ShowcaseExample[];
 };
 
 const DEFAULTS = {
@@ -44,18 +41,17 @@ const STAGES = [
   { id: "jokes", label: "Adding tiny jokes", atMs: 78_000 },
 ] as const;
 
-function pickSeeds(examples: ShowcaseExample[]) {
-  const unique: ShowcaseExample[] = [];
-  const seen = new Set<string>();
-  for (const ex of examples) {
-    const key = `${ex.builder}__${ex.target}`;
-    if (seen.has(key)) continue;
-    unique.push(ex);
-    seen.add(key);
-    if (unique.length >= 3) break;
-  }
-  return unique;
-}
+type SeedExample = {
+  id: string;
+  builder: string;
+  target: string;
+};
+
+const SEED_EXAMPLES: SeedExample[] = [
+  { id: "duolingo-airport", builder: "Duolingo", target: "airport security" },
+  { id: "ikea-taxes", builder: "IKEA", target: "tax filing software" },
+  { id: "spotify-dental", builder: "Spotify", target: "dental records" },
+];
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
@@ -92,7 +88,7 @@ function buildMeanwhileCards(builder: string, target: string) {
   ];
 }
 
-export function ImageGenerator({ signedIn, showcaseExamples }: Props) {
+export function ImageGenerator({ signedIn }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialBuilder = searchParams.get("b") ?? "Duolingo";
@@ -126,7 +122,7 @@ export function ImageGenerator({ signedIn, showcaseExamples }: Props) {
     return `Credits: ${credits}`;
   }, [credits, creditsLoading, signedIn]);
 
-  const seeds = useMemo(() => pickSeeds(showcaseExamples), [showcaseExamples]);
+  const seeds = SEED_EXAMPLES;
 
   const meanwhileCards = useMemo(
     () => buildMeanwhileCards(builder, target),
@@ -356,7 +352,7 @@ export function ImageGenerator({ signedIn, showcaseExamples }: Props) {
     setPublishing(false);
   }
 
-  const onSelectSeed = useCallback((ex: ShowcaseExample) => {
+  const onSelectSeed = useCallback((ex: SeedExample) => {
     setBuilder(ex.builder);
     setTarget(ex.target);
     reset();
@@ -467,7 +463,9 @@ export function ImageGenerator({ signedIn, showcaseExamples }: Props) {
                   </p>
                 </div>
               ) : (
-                <HomeShowcaseRotator examples={showcaseExamples} />
+                <p className="text-on-dark-soft text-sm">
+                  Pick a builder and target, then hit Generate.
+                </p>
               )}
             </div>
 

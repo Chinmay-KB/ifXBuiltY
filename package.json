@@ -14,7 +14,6 @@
     "sb": "supabase",
     "sb:login": "supabase login",
     "ai:image": "tsx index.ts",
-    "showcase:build": "tsx scripts/build-showcase.ts",
     "test": "vitest --run"
   },
   "dependencies": {

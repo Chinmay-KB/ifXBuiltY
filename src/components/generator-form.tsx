@@ -182,20 +182,11 @@ export function GeneratorForm({
               className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
             >
               <option value="">Select a product...</option>
-              <optgroup label="Existing Products">
-                {TARGET_OPTIONS.filter((t) => t.category === "Existing Product").map((t) => (
-                  <option key={t.id} value={t.name}>
-                    {t.name}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Product Types">
-                {TARGET_OPTIONS.filter((t) => t.category === "Product Type").map((t) => (
-                  <option key={t.id} value={t.name}>
-                    {t.name}
-                  </option>
-                ))}
-              </optgroup>
+              {TARGET_OPTIONS.map((t) => (
+                <option key={t.id} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
             </select>
             <svg
               width="16"

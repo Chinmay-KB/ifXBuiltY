@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { HomeShowcaseRotator } from "@/components/home-showcase-rotator";
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
-import type { ShowcaseExample } from "@/data/showcase-examples";
 import { cn } from "@/lib/cn";
 
 const TONE_CHIPS = ["absurdly polished", "dead serious", "unhinged"] as const;
@@ -24,10 +22,9 @@ type GenResult = {
 
 type Props = {
   signedIn: boolean;
-  showcaseExamples: ShowcaseExample[];
 };
 
-export function HomeGenerator({ signedIn, showcaseExamples }: Props) {
+export function HomeGenerator({ signedIn }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialBuilder = searchParams.get("b") ?? "Duolingo";
@@ -487,7 +484,9 @@ export function HomeGenerator({ signedIn, showcaseExamples }: Props) {
               ) : loading ? (
                 <p className="text-on-dark-soft">Summoning pixels…</p>
               ) : (
-                <HomeShowcaseRotator examples={showcaseExamples} />
+                <p className="text-on-dark-soft text-sm">
+                  Pick a builder and target, then hit Generate.
+                </p>
               )}
             </div>
 

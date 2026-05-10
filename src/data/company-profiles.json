@@ -6,8 +6,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Playful mascot energy, streaks, hearts, gentle guilt-trip microcopy, bright green accents, rounded cards.",
-    "targetDomain": "Learning and habit loops with gamified progress.",
-    "productCategory": "consumer service"
+    "targetDomain": "Learning and habit loops with gamified progress."
   },
   {
     "id": "ikea",
@@ -16,8 +15,7 @@
     "screenType": "desktop web",
     "region": "EU",
     "builderStyle": "Swedish product names, flat illustration, numbered assembly steps, warehouse scale typography.",
-    "targetDomain": "Self-serve shopping with impossible optimism.",
-    "productCategory": "retail"
+    "targetDomain": "Self-serve shopping with impossible optimism."
   },
   {
     "id": "robinhood",
@@ -26,8 +24,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Neon green/black, confetti, streaks, crypto-grade hype, simple big buttons.",
-    "targetDomain": "Trading and instant gratification UX.",
-    "productCategory": "fintech"
+    "targetDomain": "Trading and instant gratification UX."
   },
   {
     "id": "linkedin",
@@ -36,8 +33,7 @@
     "screenType": "desktop web",
     "region": "US",
     "builderStyle": "Blue corporate chrome, endorsements, humble-brag prompts, \"Say congrats\" patterns, MY NETWORK cues.",
-    "targetDomain": "Professional identity and networking rituals.",
-    "productCategory": "social professional"
+    "targetDomain": "Professional identity and networking rituals."
   },
   {
     "id": "spotify",
@@ -46,8 +42,7 @@
     "screenType": "mobile app",
     "region": "EU",
     "builderStyle": "Dark mode, lime accent, playlists and recommendations, rounded cards, audio-first IA.",
-    "targetDomain": "Streaming libraries and discovery.",
-    "productCategory": "media"
+    "targetDomain": "Streaming libraries and discovery."
   },
   {
     "id": "apple",
@@ -56,8 +51,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Large SF-style type, generous whitespace, frosted glass, subtle motion, premium restraint.",
-    "targetDomain": "Consumer hardware and services ecosystem.",
-    "productCategory": "consumer tech"
+    "targetDomain": "Consumer hardware and services ecosystem."
   },
   {
     "id": "google",
@@ -66,8 +60,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Material You cards, colorful accents, chip filters, helpful microcopy, dense settings.",
-    "targetDomain": "Search and horizontal consumer utilities.",
-    "productCategory": "consumer tech"
+    "targetDomain": "Search and horizontal consumer utilities."
   },
   {
     "id": "airbnb",
@@ -76,8 +69,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Rausch coral, rounded photography-forward listings, trust badges, trip storytelling.",
-    "targetDomain": "Marketplace listings and hosted stays.",
-    "productCategory": "travel marketplace"
+    "targetDomain": "Marketplace listings and hosted stays."
   },
   {
     "id": "microsoft",
@@ -86,18 +78,7 @@
     "screenType": "desktop web",
     "region": "US",
     "builderStyle": "Fluent / Office-family density, ribbon-era cues, neutral blues and greys, enterprise grids and pivot tables.",
-    "targetDomain": "Productivity suites and B2B admin consoles.",
-    "productCategory": "enterprise software"
-  },
-  {
-    "id": "indian-govt",
-    "name": "Indian Government",
-    "tone": "dead serious",
-    "screenType": "desktop web",
-    "region": "Global south",
-    "builderStyle": "Sarkari portal overload — bilingual hints, PDF-first links, CAPTCHA energy, dense notices, scrolling schemes lists.",
-    "targetDomain": "Citizen services, certificates, and departmental dashboards.",
-    "productCategory": "government digital services"
+    "targetDomain": "Productivity suites and B2B admin consoles."
   },
   {
     "id": "linear",
@@ -106,8 +87,7 @@
     "screenType": "desktop web",
     "region": "US",
     "builderStyle": "Ultra-fast minimal UI, dark graphite, keyboard-shortcut hints, cycle/issue metaphors, razor-sharp typography.",
-    "targetDomain": "Issue tracking and engineering workflows.",
-    "productCategory": "developer productivity"
+    "targetDomain": "Issue tracking and engineering workflows."
   },
   {
     "id": "twitter",
@@ -116,8 +96,7 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Short-post timeline, bird-era or minimal social chrome, reply chains, trending sidebar, compose prominence.",
-    "targetDomain": "Public conversation and real-time feed.",
-    "productCategory": "social"
+    "targetDomain": "Public conversation and real-time feed."
   },
   {
     "id": "facebook",
@@ -126,7 +105,6 @@
     "screenType": "mobile app",
     "region": "US",
     "builderStyle": "Classic Facebook blue, reactions row, groups and Marketplace tiles, algorithmic feed density.",
-    "targetDomain": "Personal network feed and social engagement.",
-    "productCategory": "social"
+    "targetDomain": "Personal network feed and social engagement."
   }
 ]

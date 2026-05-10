@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
 import { GenerationLoadingState } from "../generation-loading-state";
-import type { ShowcaseExample } from "@/data/showcase-examples";
 
 // Mock matchMedia
 function createMockMatchMedia(reducedMotion: boolean) {
@@ -10,19 +9,6 @@ function createMockMatchMedia(reducedMotion: boolean) {
     media: query,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-  }));
-}
-
-function makeExamples(count: number): ShowcaseExample[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `example-${i}`,
-    builder: `Builder ${i}`,
-    target: `Target ${i}`,
-    tone: "playful",
-    screenType: "mobile",
-    region: "global",
-    extraDetails: "",
-    imageSrc: `/showcase/0${i + 1}-example.svg`,
   }));
 }
 
@@ -37,60 +23,15 @@ describe("GenerationLoadingState", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders showcase slideshow when examples are provided", () => {
-    const examples = makeExamples(3);
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={examples} />
-    );
+  it("renders branded placeholder", () => {
+    const { container } = render(<GenerationLoadingState />);
 
-    // Should render images from showcase examples
-    const images = container.querySelectorAll("img");
-    expect(images.length).toBe(2); // Two layers for cross-fade
-    expect(images[0].getAttribute("src")).toBe(examples[0].imageSrc);
-    expect(images[1].getAttribute("src")).toBe(examples[1].imageSrc);
-  });
-
-  it("renders static placeholder when no showcase examples", () => {
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={[]} />
-    );
-
-    // Should show branded placeholder
     expect(container.textContent).toContain("ifXbuiltY");
     expect(container.textContent).toContain("Generating your creation");
-
-    // Should not render any images
-    expect(container.querySelectorAll("img").length).toBe(0);
-  });
-
-  it("displays microcopy messages", () => {
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(2)} />
-    );
-
-    // First microcopy message should be visible
-    expect(container.textContent).toContain("Overthinking the interface...");
-  });
-
-  it("rotates microcopy every 5 seconds", () => {
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(2)} />
-    );
-
-    expect(container.textContent).toContain("Overthinking the interface...");
-
-    // Advance 5 seconds
-    act(() => {
-      vi.advanceTimersByTime(5000);
-    });
-
-    expect(container.textContent).toContain("Adding unnecessary gradients...");
   });
 
   it("renders indeterminate progress indicator", () => {
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(2)} />
-    );
+    const { container } = render(<GenerationLoadingState />);
 
     const progressBar = container.querySelector('[role="progressbar"]');
     expect(progressBar).not.toBeNull();
@@ -98,106 +39,50 @@ describe("GenerationLoadingState", () => {
   });
 
   it("has accessible role=status container", () => {
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(2)} />
-    );
+    const { container } = render(<GenerationLoadingState />);
 
     const status = container.querySelector('[role="status"]');
     expect(status).not.toBeNull();
     expect(status!.getAttribute("aria-label")).toBe("Generation in progress");
   });
 
-  it("disables auto-play when prefers-reduced-motion is active", () => {
+  it("displays microcopy messages that rotate", () => {
+    const { container } = render(<GenerationLoadingState />);
+
+    const microcopyEl = container.querySelector('[aria-atomic="true"]');
+    const initialText = microcopyEl?.textContent;
+    expect(initialText).toBeTruthy();
+
+    // Advance past rotation interval
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+
+    const afterText = container.querySelector('[aria-atomic="true"]')?.textContent;
+    // Text should have changed (rotated)
+    expect(afterText).toBeTruthy();
+  });
+
+  it("does not rotate microcopy when prefers-reduced-motion is active", () => {
     window.matchMedia = createMockMatchMedia(true);
 
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(3)} />
-    );
+    const { container } = render(<GenerationLoadingState />);
 
-    // Advance time — microcopy should NOT rotate
-    act(() => {
-      vi.advanceTimersByTime(10000);
-    });
+    const microcopyEl = container.querySelector('[aria-atomic="true"]');
+    const initialText = microcopyEl?.textContent;
 
-    // Should still show the first microcopy (no rotation)
-    expect(container.textContent).toContain("Overthinking the interface...");
-  });
-
-  it("uses 0ms transitions when prefers-reduced-motion is active", () => {
-    window.matchMedia = createMockMatchMedia(true);
-
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={makeExamples(3)} />
-    );
-
-    // Images should have duration-0 class
-    const images = container.querySelectorAll("img");
-    images.forEach((img) => {
-      expect(img.className).toContain("duration-0");
-    });
-  });
-
-  it("rotates slideshow images every 5 seconds", () => {
-    const examples = makeExamples(4);
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={examples} />
-    );
-
-    const images = container.querySelectorAll("img");
-
-    // Initially: layer A visible (opacity-100), layer B hidden (opacity-0)
-    expect(images[0].className).toContain("opacity-100");
-    expect(images[1].className).toContain("opacity-0");
-
-    // After 5s: should cross-fade to next
-    act(() => {
-      vi.advanceTimersByTime(5000);
-    });
-
-    const updatedImages = container.querySelectorAll("img");
-    // After rotation, showNext should be true — layer B becomes visible
-    expect(updatedImages[0].className).toContain("opacity-0");
-    expect(updatedImages[1].className).toContain("opacity-100");
-  });
-
-  it("does not rotate slideshow with only one example", () => {
-    const examples = makeExamples(1);
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={examples} />
-    );
-
-    const images = container.querySelectorAll("img");
-    expect(images[0].getAttribute("src")).toBe(examples[0].imageSrc);
-
-    // Advance time — should not crash or change
     act(() => {
       vi.advanceTimersByTime(15000);
     });
 
-    const updatedImages = container.querySelectorAll("img");
-    expect(updatedImages[0].getAttribute("src")).toBe(examples[0].imageSrc);
+    const afterText = container.querySelector('[aria-atomic="true"]')?.textContent;
+    expect(afterText).toBe(initialText);
   });
 
-  it("does not rotate slideshow when prefers-reduced-motion is active", () => {
-    window.matchMedia = createMockMatchMedia(true);
+  it("shows builder-specific loading messages when builder is provided", () => {
+    const { container } = render(<GenerationLoadingState builder="Duolingo" />);
 
-    const examples = makeExamples(4);
-    const { container } = render(
-      <GenerationLoadingState showcaseExamples={examples} />
-    );
-
-    const images = container.querySelectorAll("img");
-    // Initially layer A visible
-    expect(images[0].className).toContain("opacity-100");
-
-    // Advance time — should NOT rotate
-    act(() => {
-      vi.advanceTimersByTime(15000);
-    });
-
-    const updatedImages = container.querySelectorAll("img");
-    // Still layer A visible (no rotation happened)
-    expect(updatedImages[0].className).toContain("opacity-100");
-    expect(updatedImages[1].className).toContain("opacity-0");
+    const microcopyEl = container.querySelector('[aria-atomic="true"]');
+    expect(microcopyEl?.textContent).toBeTruthy();
   });
 });

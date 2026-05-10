@@ -13,15 +13,3 @@ export const GENERATION_DETAIL_HERO_SIZES =
   "(max-width: 768px) 100vw, (max-width: 1280px) 85vw, 920px";
 
 export const REMIX_SOURCE_THUMB_SIZES = "40px";
-
-export const SHOWCASE_ROTATOR_SIZES =
-  "(max-width: 768px) 100vw, min(560px, 92vw)";
-
-export const HOME_SHOWCASE_ROTATOR_SIZES =
-  "(max-width: 640px) 92vw, 380px";
-
-export const HOME_SPECIMEN_HERO_SIZES =
-  "(max-width: 1024px) 100vw, (max-width: 1536px) 640px, 720px";
-
-export const GENERATION_LOADING_SHOWCASE_SIZES =
-  "(max-width: 640px) 100vw, 400px";

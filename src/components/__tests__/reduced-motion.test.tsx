@@ -13,7 +13,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
 import * as fc from "fast-check";
 import { GenerationLoadingState } from "../generation-loading-state";
-import type { ShowcaseExample } from "@/data/showcase-examples";
 
 // --- Helpers ---
 
@@ -27,33 +26,23 @@ function createMockMatchMedia(reducedMotion: boolean) {
   }));
 }
 
-/** Arbitrary for a single ShowcaseExample */
-const showcaseExampleArb: fc.Arbitrary<ShowcaseExample> = fc.record({
-  id: fc.string({ minLength: 1, maxLength: 20 }),
-  builder: fc.string({ minLength: 1, maxLength: 40 }),
-  target: fc.string({ minLength: 1, maxLength: 40 }),
-  tone: fc.constantFrom("playful", "serious", "corporate", "absurd"),
-  screenType: fc.constantFrom("mobile", "desktop", "tablet", "watch"),
-  region: fc.constantFrom("global", "us", "eu", "asia"),
-  extraDetails: fc.string({ maxLength: 50 }),
-  imageSrc: fc.string({ minLength: 1, maxLength: 30 }).map((s) => `/showcase/${s}.svg`),
-  generationSlug: fc.oneof(
-    fc.constant(undefined),
-    fc.string({ minLength: 1, maxLength: 24 }),
-  ),
-});
-
-/** Arbitrary for a non-empty array of showcase examples (1-20 items) */
-const showcaseExamplesArb: fc.Arbitrary<ShowcaseExample[]> = fc.array(
-  showcaseExampleArb,
-  { minLength: 1, maxLength: 20 },
-);
-
 /** Arbitrary for elapsed time in ms (simulate multiple rotation intervals) */
 const elapsedTimeArb: fc.Arbitrary<number> = fc.integer({
   min: 0,
   max: 60000,
 });
+
+/** Arbitrary for builder names */
+const builderArb: fc.Arbitrary<string> = fc.constantFrom(
+  "Duolingo",
+  "IKEA",
+  "Robinhood",
+  "LinkedIn",
+  "Spotify",
+  "Apple",
+  "Google",
+  "",
+);
 
 describe("Property 15: Reduced motion compliance", () => {
   beforeEach(() => {
@@ -65,64 +54,17 @@ describe("Property 15: Reduced motion compliance", () => {
     vi.restoreAllMocks();
   });
 
-  it("slideshow does NOT rotate when prefers-reduced-motion: reduce is active, regardless of examples or time elapsed", () => {
-    fc.assert(
-      fc.property(
-        showcaseExamplesArb,
-        elapsedTimeArb,
-        (examples, elapsed) => {
-          // Arrange: reduced motion active
-          window.matchMedia = createMockMatchMedia(true);
-
-          const { container } = render(
-            <GenerationLoadingState showcaseExamples={examples} />,
-          );
-
-          // Capture initial image state
-          const initialImages = container.querySelectorAll("img");
-          const initialSrcs = Array.from(initialImages).map((img) =>
-            img.getAttribute("src"),
-          );
-          const initialOpacities = Array.from(initialImages).map((img) =>
-            img.className.includes("opacity-100") ? "visible" : "hidden",
-          );
-
-          // Act: advance time by random elapsed duration
-          act(() => {
-            vi.advanceTimersByTime(elapsed);
-          });
-
-          // Assert: images should not have changed (no rotation)
-          const afterImages = container.querySelectorAll("img");
-          const afterSrcs = Array.from(afterImages).map((img) =>
-            img.getAttribute("src"),
-          );
-          const afterOpacities = Array.from(afterImages).map((img) =>
-            img.className.includes("opacity-100") ? "visible" : "hidden",
-          );
-
-          expect(afterSrcs).toEqual(initialSrcs);
-          expect(afterOpacities).toEqual(initialOpacities);
-
-          // Cleanup
-          container.remove();
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
   it("microcopy does NOT cycle when prefers-reduced-motion: reduce is active, regardless of time elapsed", () => {
     fc.assert(
       fc.property(
-        showcaseExamplesArb,
+        builderArb,
         elapsedTimeArb,
-        (examples, elapsed) => {
+        (builder, elapsed) => {
           // Arrange: reduced motion active
           window.matchMedia = createMockMatchMedia(true);
 
           const { container } = render(
-            <GenerationLoadingState showcaseExamples={examples} />,
+            <GenerationLoadingState builder={builder} />,
           );
 
           // Capture initial microcopy text
@@ -146,27 +88,17 @@ describe("Property 15: Reduced motion compliance", () => {
     );
   });
 
-  it("transition classes use duration-0 when prefers-reduced-motion: reduce is active", () => {
+  it("microcopy element uses duration-0 class when prefers-reduced-motion: reduce is active", () => {
     fc.assert(
-      fc.property(showcaseExamplesArb, (examples) => {
+      fc.property(builderArb, (builder) => {
         // Arrange: reduced motion active
         window.matchMedia = createMockMatchMedia(true);
 
         const { container } = render(
-          <GenerationLoadingState showcaseExamples={examples} />,
+          <GenerationLoadingState builder={builder} />,
         );
 
-        // Assert: all img elements should have duration-0 class
-        const images = container.querySelectorAll("img");
-        Array.from(images).forEach((img) => {
-          expect(img.className).toContain("duration-0");
-          // Should NOT contain the normal slow duration class
-          expect(img.className).not.toContain(
-            "duration-[var(--transition-duration-slow)]",
-          );
-        });
-
-        // Assert: microcopy element should also have duration-0
+        // Assert: microcopy element should have duration-0
         const microcopyEl = container.querySelector('[aria-atomic="true"]');
         if (microcopyEl) {
           expect(microcopyEl.className).toContain("duration-0");

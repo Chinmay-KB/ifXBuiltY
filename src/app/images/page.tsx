@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { ImageGenerator } from "@/components/image-generator";
 import { SiteHeader } from "@/components/site-header";
-import { SHOWCASE_EXAMPLES } from "@/data/showcase-examples";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -22,9 +21,8 @@ export default async function ImagesPage() {
     <div className="flex min-h-full flex-col bg-canvas">
       <SiteHeader user={user} active="images" />
       <main className="flex flex-1 flex-col px-4 py-8 sm:px-12 sm:py-10">
-        <ImageGenerator signedIn={!!user} showcaseExamples={SHOWCASE_EXAMPLES} />
+        <ImageGenerator signedIn={!!user} />
       </main>
     </div>
   );
 }
-

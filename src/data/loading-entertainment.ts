@@ -36,12 +36,7 @@ export const BUILDER_FUN_FACTS: Record<string, string[]> = {
     "The 'Designed in California' text is doing a lot of heavy lifting.",
     "Every Apple keynote uses the word 'magical' at least once. It's contractual.",
   ],
-  "indian-govt": [
-    "The Indian Government has 23 different login portals, none of which remember your password.",
-    "Every government website has a scrolling marquee. It's in the constitution.",
-    "The CAPTCHA on Indian government sites was designed to test human patience, not humanity.",
-    "Filing taxes online requires 4 OTPs, 2 browsers, and 1 existential crisis.",
-  ],
+
   google: [
     "Google has shut down more products than most companies have launched.",
     "Google's Material Design has more versions than Android itself.",
@@ -118,15 +113,7 @@ export const LOADING_MESSAGES_BY_BUILDER: Record<string, string[]> = {
     "Designing in California...",
     "Making it thinner than last time...",
   ],
-  "indian-govt": [
-    "Consulting the design committee...",
-    "Filing form 27B in triplicate...",
-    "Adding mandatory Aadhaar verification...",
-    "Translating to 22 official languages...",
-    "Inserting scrolling marquee...",
-    "Loading... please wait in queue #4,827...",
-    "Adding CAPTCHA that even humans can't solve...",
-  ],
+
   google: [
     "Launching a new product (might kill it later)...",
     "Adding Material You to everything...",

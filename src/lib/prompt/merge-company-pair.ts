@@ -44,8 +44,8 @@ export function mergeCompanyPair(
   const extraDetails = clampExtra(
     [
       `Builder look-and-feel (${builder.name}): ${builder.builderStyle}`,
-      `Target scenario (${target.name} — ${target.productCategory}): ${target.targetDomain}`,
-      `Blend: Recreate a plausible UI for "${target.name}"-style ${target.productCategory} as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone.`,
+      `Target scenario (${target.name}): ${target.targetDomain}`,
+      `Blend: Recreate a plausible UI for "${target.name}" as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone.`,
       `On-screen branding: never show "${builder.name}" or "${target.name}" as logos, lockups, or combined wordmarks; no official marks—invented product/org titles and generic icons only.`,
     ].join("\n\n"),
   );
