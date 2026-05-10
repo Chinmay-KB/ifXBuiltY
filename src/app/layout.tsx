@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo_Black, Inter } from "next/font/google";
+import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -7,16 +7,22 @@ import { getSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
   display: "swap",
 });
 
-const archivoBlack = Archivo_Black({
-  variable: "--font-archivo",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: "400",
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
   display: "swap",
 });
 
@@ -98,7 +104,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${archivoBlack.variable} h-full antialiased`}
+      className={`${outfit.variable} ${fraunces.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col overflow-x-hidden bg-canvas font-sans text-ink">
         <script

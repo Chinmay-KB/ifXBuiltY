@@ -57,6 +57,12 @@ V1 loop: browse feed anonymously, sign in with Google to generate, add extra pro
   - Add a lightweight app watermark during post-processing before storing the share/public image.
   - If generation fails, show a retryable error and do not create a public feed item.
 
+- Loading screen entertainment (generation takes 15–30s):
+  - **Dynamic loading messages**: When `POST /api/generate` is called, the response also returns an array of 5–8 funny, prompt-specific loading messages generated alongside the image request (or pre-generated from company profile data). The client cycles through these every 3–4 seconds while polling/streaming for completion. Examples for "Indian Government x LinkedIn": "Consulting the design committee...", "Filing form 27B in triplicate...", "Adding mandatory Aadhaar verification step...", "Translating to 22 official languages...".
+  - **"While you wait" fun facts**: Each builder in `src/data/company-profiles.json` includes a `funFacts` array of 3–5 short, humorous observations about the company/institution. One is randomly shown below the progress bar during generation. These are static per-builder and can be extended over time.
+  - **Progress bar + time estimate**: A yellow progress bar with estimated time remaining gives users a sense of forward movement. The estimate is based on rolling average of recent generation times.
+  - **Implementation**: Loading messages can be generated dynamically by a fast LLM call (e.g. `generateText` with a small model) fired in parallel with the image generation, or pre-computed per builder/target pair and cached. The client receives them in the initial generate response or via a streaming partial response before the image is ready.
+
 - Moderation and abuse controls:
   - Run basic prompt safety checks before image generation.
   - Watermark every public image as fictional/parody.

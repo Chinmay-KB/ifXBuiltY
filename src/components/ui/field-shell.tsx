@@ -8,19 +8,19 @@ type Props = {
 };
 
 const heights: Record<NonNullable<Props["size"]>, string> = {
-  md: "min-h-12 px-3",
-  lg: "h-[68px] px-4",
+  md: "min-h-12 px-4",
+  lg: "h-[52px] px-4",
 };
 
 /**
- * Bordered surface for picker rows / text areas (not a native input —
- * compose inputs or buttons inside).
+ * Bordered surface for picker rows / text areas / dropdowns.
+ * Compose inputs, selects, or buttons inside.
  */
 export function FieldShell({ children, size = "lg", className }: Props) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between rounded-lg border border-line-strong bg-canvas",
+        "flex items-center justify-between rounded-[10px] border-2 border-line-strong bg-panel",
         heights[size],
         className,
       )}

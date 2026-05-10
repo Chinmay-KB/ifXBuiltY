@@ -4,12 +4,12 @@ type Size = "sm" | "md";
 
 const sizes: Record<Size, { box: string; text: string }> = {
   sm: {
-    box: "size-8 rounded-lg border-2 border-ink",
-    text: "text-[17px] leading-[1.35]",
+    box: "size-7 rounded-md",
+    text: "text-sm font-black",
   },
   md: {
-    box: "size-9 rounded-lg border-2 border-ink",
-    text: "text-lg leading-5",
+    box: "size-8 rounded-md",
+    text: "text-base font-black",
   },
 };
 
@@ -18,7 +18,7 @@ type Props = {
   className?: string;
 };
 
-/** Yellow “if” mark — matches Paper nav / system header. */
+/** Yellow "X" mark — matches Paper nav / system header. */
 export function LogoMark({ size = "md", className }: Props) {
   const s = sizes[size];
   return (
@@ -30,7 +30,7 @@ export function LogoMark({ size = "md", className }: Props) {
       )}
       aria-hidden
     >
-      <span className={cn("font-display text-ink", s.text)}>if</span>
+      <span className={cn("font-display text-ink", s.text)}>X</span>
     </div>
   );
 }

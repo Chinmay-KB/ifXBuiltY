@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
+import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
 import { REMIX_SOURCE_THUMB_SIZES } from "@/lib/generation-image-sizes";
@@ -24,6 +25,8 @@ type GeneratorFormProps = {
   onGenerating?: (inputs: GenerationInputs) => void;
   /** Called when generation fails — allows parent to handle error phase */
   onError?: (error: string, inputs: GenerationInputs) => void;
+  /** Called when the API returns insufficient_credits — parent shows modal */
+  onInsufficientCredits?: () => void;
 };
 
 const defaults: GenerationInputs = {
@@ -35,10 +38,6 @@ const defaults: GenerationInputs = {
   extraDetails: "",
 };
 
-const TONE_OPTIONS = ["satirical", "absurdly polished", "dead serious", "unhinged"] as const;
-const SCREEN_OPTIONS = ["mobile app", "desktop web", "kiosk"] as const;
-const REGION_OPTIONS = ["global", "US", "EU", "Global south"] as const;
-
 export function GeneratorForm({
   signedIn,
   initialValues,
@@ -46,29 +45,32 @@ export function GeneratorForm({
   onGenerated,
   onGenerating,
   onError,
+  onInsufficientCredits,
 }: GeneratorFormProps) {
   const merged = { ...defaults, ...initialValues };
 
   const [builder, setBuilder] = useState(merged.builder);
   const [target, setTarget] = useState(merged.target);
-  const [tone, setTone] = useState(merged.tone);
-  const [screenType, setScreenType] = useState(merged.screenType);
-  const [region, setRegion] = useState(merged.region);
+  const [tone] = useState(merged.tone);
+  const [screenType] = useState(merged.screenType);
+  const [region] = useState(merged.region);
   const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
 
-  const { generate, result, isLoading, error } = useGenerate();
+  const { generate, result, isLoading, error, errorCode } = useGenerate();
 
   const canGenerate = isGenerateEnabled(builder, target);
 
   const onGeneratedRef = useRef(onGenerated);
   const onGeneratingRef = useRef(onGenerating);
   const onErrorRef = useRef(onError);
+  const onInsufficientCreditsRef = useRef(onInsufficientCredits);
 
   useEffect(() => {
     onGeneratedRef.current = onGenerated;
     onGeneratingRef.current = onGenerating;
     onErrorRef.current = onError;
-  }, [onGenerated, onGenerating, onError]);
+    onInsufficientCreditsRef.current = onInsufficientCredits;
+  }, [onGenerated, onGenerating, onError, onInsufficientCredits]);
 
   useEffect(() => {
     if (result) {
@@ -78,6 +80,11 @@ export function GeneratorForm({
 
   useEffect(() => {
     if (error) {
+      // If insufficient credits, trigger the modal instead of showing inline error
+      if (errorCode === "insufficient_credits") {
+        onInsufficientCreditsRef.current?.();
+        return;
+      }
       const inputs: GenerationInputs = {
         builder,
         target,
@@ -90,7 +97,7 @@ export function GeneratorForm({
     }
     // Only fire when error changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
+  }, [error, errorCode]);
 
   const handleSubmit = useCallback(async () => {
     const inputs: GenerationInputs = {
@@ -129,107 +136,100 @@ export function GeneratorForm({
         </div>
       )}
 
-      {/* Primary inputs — Builder and Target */}
+      {/* Primary inputs — Builder and Target dropdowns */}
       <div className="flex flex-col gap-4 md:flex-row md:gap-3">
         <div className="flex flex-1 flex-col gap-1.5">
-          <MicroLabel htmlFor="gen-builder">Builder</MicroLabel>
+          <MicroLabel htmlFor="gen-builder">Builder (the who)</MicroLabel>
           <FieldShell>
-            <input
+            <select
               id="gen-builder"
-              type="text"
               value={builder}
               onChange={(e) => setBuilder(e.target.value)}
-              placeholder="e.g. Duolingo"
-              className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-ink outline-none placeholder:text-muted/50"
-              autoComplete="off"
-            />
+              className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
+            >
+              <option value="">Select a company...</option>
+              {BUILDER_OPTIONS.map((b) => (
+                <option key={b.id} value={b.name}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="shrink-0 text-muted"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 6L8 10L12 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </FieldShell>
         </div>
         <div className="flex flex-1 flex-col gap-1.5">
-          <MicroLabel htmlFor="gen-target">Target</MicroLabel>
+          <MicroLabel htmlFor="gen-target">Target (the what)</MicroLabel>
           <FieldShell>
-            <input
+            <select
               id="gen-target"
-              type="text"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              placeholder="e.g. airport security"
-              className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-ink outline-none placeholder:text-muted/50"
-              autoComplete="off"
-            />
+              className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
+            >
+              <option value="">Select a product...</option>
+              <optgroup label="Existing Products">
+                {TARGET_OPTIONS.filter((t) => t.category === "Existing Product").map((t) => (
+                  <option key={t.id} value={t.name}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Product Types">
+                {TARGET_OPTIONS.filter((t) => t.category === "Product Type").map((t) => (
+                  <option key={t.id} value={t.name}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="shrink-0 text-muted"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 6L8 10L12 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </FieldShell>
         </div>
       </div>
 
-      {/* Secondary controls */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 md:flex-row md:gap-3">
-          <div className="flex flex-1 flex-col gap-1.5">
-            <MicroLabel htmlFor="gen-tone">Tone</MicroLabel>
-            <FieldShell size="md">
-              <select
-                id="gen-tone"
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none"
-              >
-                {TONE_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </FieldShell>
-          </div>
-          <div className="flex flex-1 flex-col gap-1.5">
-            <MicroLabel htmlFor="gen-screen-type">Screen type</MicroLabel>
-            <FieldShell size="md">
-              <select
-                id="gen-screen-type"
-                value={screenType}
-                onChange={(e) => setScreenType(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none"
-              >
-                {SCREEN_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </FieldShell>
-          </div>
-          <div className="flex flex-1 flex-col gap-1.5">
-            <MicroLabel htmlFor="gen-region">Region</MicroLabel>
-            <FieldShell size="md">
-              <select
-                id="gen-region"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none"
-              >
-                {REGION_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </FieldShell>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <MicroLabel htmlFor="gen-extra">Extra details</MicroLabel>
-          <label className="flex min-h-[80px] flex-col rounded-lg border border-line-strong bg-canvas p-3">
-            <textarea
-              id="gen-extra"
-              value={extraDetails}
-              onChange={(e) => setExtraDetails(e.target.value)}
-              rows={3}
-              placeholder="Any extra directions for the generation..."
-              className="w-full resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-muted/50"
-            />
-          </label>
-        </div>
+      {/* Extra details (optional) */}
+      <div className="flex flex-col gap-1.5">
+        <MicroLabel htmlFor="gen-extra">Extra details (optional)</MicroLabel>
+        <label className="flex min-h-[80px] flex-col rounded-[10px] border-2 border-line-strong bg-panel p-3">
+          <textarea
+            id="gen-extra"
+            value={extraDetails}
+            onChange={(e) => setExtraDetails(e.target.value)}
+            rows={3}
+            placeholder="Add specific jokes, references, or details you want included..."
+            className="w-full resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-muted/50"
+          />
+        </label>
       </div>
 
       {/* Generate button or sign-in prompt */}

@@ -11,11 +11,22 @@ export const metadata: Metadata = {
   alternates: { canonical: "/generate" },
 };
 
-export default async function GeneratePage() {
+type Props = {
+  searchParams: Promise<{ builder?: string; target?: string }>;
+};
+
+export default async function GeneratePage({ searchParams }: Props) {
+  const params = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <GeneratePageClient signedIn={!!user} />;
+  return (
+    <GeneratePageClient
+      signedIn={!!user}
+      initialBuilder={params.builder}
+      initialTarget={params.target}
+    />
+  );
 }

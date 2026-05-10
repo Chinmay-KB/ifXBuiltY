@@ -5,24 +5,19 @@ import { useEffect, useRef, useState } from "react";
 
 import type { ShowcaseExample } from "@/data/showcase-examples";
 import { showcaseImageUrl } from "@/data/showcase-examples";
+import {
+  getLoadingMessages,
+  getRandomFunFact,
+} from "@/data/loading-entertainment";
 import { cn } from "@/lib/cn";
 import { GENERATION_LOADING_SHOWCASE_SIZES } from "@/lib/generation-image-sizes";
 
-const ROTATION_INTERVAL_MS = 5000;
-
-const microcopy = [
-  "Overthinking the interface...",
-  "Adding unnecessary gradients...",
-  "Consulting the brand guidelines...",
-  "Debating font choices...",
-  "Removing features for simplicity...",
-  "Making it pop...",
-  "Aligning pixels by hand...",
-  "Asking the intern for feedback...",
-] as const;
+const ROTATION_INTERVAL_MS = 3500;
 
 type Props = {
   showcaseExamples: ShowcaseExample[];
+  /** The builder name — used to show builder-specific loading messages */
+  builder?: string;
 };
 
 /**
@@ -35,7 +30,7 @@ type Props = {
  * - Static placeholder fallback when no showcase examples available
  * - Respects prefers-reduced-motion (disables auto-play, 0ms transitions)
  */
-export function GenerationLoadingState({ showcaseExamples }: Props) {
+export function GenerationLoadingState({ showcaseExamples, builder }: Props) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(
@@ -43,6 +38,10 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
   );
   const [showNext, setShowNext] = useState(false);
   const [microcopyIndex, setMicrocopyIndex] = useState(0);
+
+  // Get builder-specific messages
+  const loadingMessages = getLoadingMessages(builder ?? "");
+  const [funFact] = useState(() => getRandomFunFact(builder ?? ""));
 
   // Track mutable state for interval callbacks
   const slideRef = useRef({
@@ -93,11 +92,11 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
     if (reducedMotion) return;
 
     const id = window.setInterval(() => {
-      setMicrocopyIndex((prev) => (prev + 1) % microcopy.length);
+      setMicrocopyIndex((prev) => (prev + 1) % loadingMessages.length);
     }, ROTATION_INTERVAL_MS);
 
     return () => window.clearInterval(id);
-  }, [reducedMotion]);
+  }, [reducedMotion, loadingMessages.length]);
 
   const transitionClass = reducedMotion
     ? "duration-0"
@@ -181,7 +180,7 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
         aria-live="polite"
         aria-atomic="true"
       >
-        {microcopy[microcopyIndex]}
+        {loadingMessages[microcopyIndex % loadingMessages.length]}
       </p>
 
       {/* Indeterminate progress indicator */}
@@ -201,6 +200,18 @@ export function GenerationLoadingState({ showcaseExamples }: Props) {
           )}
         />
       </div>
+
+      {/* Fun fact — "While you wait" */}
+      {funFact && (
+        <div className="mt-2 w-full max-w-[400px] rounded-xl border border-line bg-canvas p-4">
+          <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.04em] text-muted">
+            While you wait
+          </p>
+          <p className="text-sm leading-relaxed text-ink">
+            {funFact}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

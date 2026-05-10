@@ -19,15 +19,8 @@ type GenerationResultViewProps = {
 /**
  * GenerationResultView — displayed after a successful generation.
  *
- * Features:
- * - Hero image at full width, max 600px height, object-fit contain
- * - Title: "if [Builder] built [Target]"
- * - Action pills: publish, share, download, remix
- * - "Generate another" resets to input phase
- * - "Regenerate" enabled when inputs differ from last generation
- * - Publish flow with success link to public page
- *
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8
+ * Layout: Image on the left, action buttons stacked vertically on the right.
+ * On mobile, stacks vertically (image top, actions below).
  */
 export function GenerationResultView({
   result,
@@ -118,104 +111,119 @@ export function GenerationResultView({
         {title}
       </h2>
 
-      {/* Hero image */}
-      <div className="w-full overflow-hidden rounded-xl border border-line bg-panel">
-        {result.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={result.imageUrl}
-            alt={title}
-            className="w-full object-contain"
-            style={{ maxHeight: "600px" }}
-          />
-        ) : (
-          <div className="flex h-[300px] items-center justify-center bg-ink/5">
-            <span className="text-sm text-muted">Image unavailable</span>
-          </div>
-        )}
-      </div>
+      {/* Two-column: image left, actions right */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        {/* Left — Image */}
+        <div className="w-full overflow-hidden rounded-xl border border-line bg-panel lg:max-w-[520px]">
+          {result.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={result.imageUrl}
+              alt={title}
+              className="w-full object-contain"
+              style={{ maxHeight: "600px" }}
+            />
+          ) : (
+            <div className="flex h-[300px] items-center justify-center bg-ink/5">
+              <span className="text-sm text-muted">Image unavailable</span>
+            </div>
+          )}
+        </div>
 
-      {/* Action pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Publish */}
-        {publishState === "success" ? (
-          <Link
-            href={`/g/${publishedSlug}`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-canvas px-3.5 py-2 text-[13px] font-extrabold leading-[18px] text-ink transition-colors hover:bg-panel"
-          >
-            <PublishIcon />
-            Published — View
-          </Link>
-        ) : (
-          <Button
-            variant="pillOutline"
-            onClick={() => void handlePublish()}
-            disabled={publishState === "loading"}
-          >
-            <span className="flex items-center gap-1.5">
+        {/* Right — Actions */}
+        <div className="flex flex-col gap-3 lg:w-[200px] lg:shrink-0">
+          {/* Publish */}
+          {publishState === "success" ? (
+            <Link
+              href={`/g/${publishedSlug}`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-line-strong bg-canvas px-4 py-3 text-[14px] font-bold text-ink transition-colors hover:bg-panel"
+            >
               <PublishIcon />
-              {publishState === "loading" ? "Publishing…" : "Publish"}
+              Published — View
+            </Link>
+          ) : (
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full justify-center font-bold"
+              onClick={() => void handlePublish()}
+              disabled={publishState === "loading"}
+            >
+              <span className="flex items-center gap-2">
+                <PublishIcon />
+                {publishState === "loading" ? "Publishing…" : "Publish"}
+              </span>
+            </Button>
+          )}
+
+          {/* Share */}
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-center font-bold"
+            onClick={() => void handleShare()}
+          >
+            <span className="flex items-center gap-2">
+              <ShareIcon />
+              Share
             </span>
           </Button>
-        )}
 
-        {/* Share */}
-        <Button variant="pillOutline" onClick={() => void handleShare()}>
-          <span className="flex items-center gap-1.5">
-            <ShareIcon />
-            Share
-          </span>
-        </Button>
+          {/* Download */}
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-center font-bold"
+            onClick={() => void handleDownload()}
+            disabled={!result.imageUrl}
+          >
+            <span className="flex items-center gap-2">
+              <DownloadIcon />
+              Download
+            </span>
+          </Button>
 
-        {/* Download */}
-        <Button
-          variant="pillOutline"
-          onClick={() => void handleDownload()}
-          disabled={!result.imageUrl}
-        >
-          <span className="flex items-center gap-1.5">
-            <DownloadIcon />
-            Download
-          </span>
-        </Button>
+          {/* Remix */}
+          <Link
+            href={`/remix/${result.id}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-line-strong bg-canvas px-4 py-3 text-[14px] font-bold text-ink transition-colors hover:bg-panel"
+          >
+            <RemixIcon />
+            Remix
+          </Link>
 
-        {/* Remix */}
-        <Link
-          href={`/remix/${result.id}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-canvas px-3.5 py-2 text-[13px] font-extrabold leading-[18px] text-ink transition-colors hover:bg-panel"
-        >
-          <RemixIcon />
-          Remix
-        </Link>
-      </div>
+          {/* Publish error */}
+          {publishState === "error" && publishError && (
+            <p className="text-sm font-medium text-barrier" role="alert">
+              {publishError}
+            </p>
+          )}
 
-      {/* Publish error */}
-      {publishState === "error" && publishError && (
-        <p className="text-sm font-medium text-barrier" role="alert">
-          {publishError}
-        </p>
-      )}
+          {/* Spacer to push generate buttons to bottom on desktop */}
+          <div className="hidden lg:flex lg:flex-1" />
 
-      {/* Generate another / Regenerate actions */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:gap-3">
-        <Button
-          variant="chrome"
-          size="lg"
-          className="flex-1 font-black"
-          onClick={onReset}
-        >
-          Generate another
-        </Button>
+          {/* Generate another / Regenerate */}
+          <div className="flex flex-col gap-2 pt-4 lg:pt-0">
+            <Button
+              variant="chrome"
+              size="lg"
+              className="w-full font-black"
+              onClick={onReset}
+            >
+              Generate another
+            </Button>
 
-        <Button
-          variant="outline"
-          size="lg"
-          className={cn("flex-1 font-black", !inputsChanged && "opacity-50")}
-          disabled={!inputsChanged}
-          onClick={handleRegenerate}
-        >
-          Regenerate
-        </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className={cn("w-full font-black", !inputsChanged && "opacity-50")}
+              disabled={!inputsChanged}
+              onClick={handleRegenerate}
+            >
+              Regenerate
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -226,8 +234,8 @@ export function GenerationResultView({
 function PublishIcon() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -246,8 +254,8 @@ function PublishIcon() {
 function ShareIcon() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -268,8 +276,8 @@ function ShareIcon() {
 function DownloadIcon() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -288,8 +296,8 @@ function DownloadIcon() {
 function RemixIcon() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

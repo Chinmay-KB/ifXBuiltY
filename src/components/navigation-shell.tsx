@@ -82,9 +82,8 @@ function GenerateIcon({ className }: { className?: string }) {
 /* ─── Desktop Nav Links ─── */
 
 const navItems = [
-  { section: "home" as const, label: "Home", href: "/" },
-  { section: "feed" as const, label: "Feed", href: "/feed" },
   { section: "generate" as const, label: "Generate", href: "/generate" },
+  { section: "feed" as const, label: "Feed", href: "/feed" },
 ];
 
 /* ─── User Avatar ─── */
@@ -136,9 +135,9 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
                 key={item.section}
                 href={item.href}
                 className={cn(
-                  "text-sm font-semibold transition-colors duration-200",
+                  "text-sm font-medium transition-colors duration-200",
                   activeSection === item.section
-                    ? "text-ink"
+                    ? "font-semibold text-ink"
                     : "text-muted hover:text-ink",
                 )}
                 aria-current={
@@ -171,7 +170,11 @@ export function NavigationShell({ user, activeSection }: NavigationShellProps) {
         className="fixed inset-x-0 bottom-0 z-50 flex h-14 items-center justify-around border-t border-line bg-canvas md:hidden"
         aria-label="Mobile navigation"
       >
-        {navItems.map((item) => {
+        {[
+          { section: "home" as const, label: "Home", href: "/" },
+          { section: "generate" as const, label: "Generate", href: "/generate" },
+          { section: "feed" as const, label: "Feed", href: "/feed" },
+        ].map((item) => {
           const isActive = activeSection === item.section;
           const Icon =
             item.section === "home"

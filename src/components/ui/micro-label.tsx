@@ -30,7 +30,7 @@ export function MicroLabel({
     <Tag
       htmlFor={htmlFor}
       className={cn(
-        "text-xs font-black uppercase leading-4 tracking-[0.12em]",
+        "font-mono text-[11px] font-bold uppercase leading-4 tracking-[0.04em]",
         tones[tone],
         className,
       )}

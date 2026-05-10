@@ -6,29 +6,30 @@
 */
 :root {
   --canvas: #ffffff;
-  --ink: #101014;
-  --chrome: #ffd12a;
+  --ink: #0a0a0a;
+  --chrome: #ffd600;
   --vote: #246bfe;
   --remix: #1c8f5a;
-  --barrier: #ef3e36;
-  --panel: #f1f1f3;
-  --line: #e2e2e6;
-  --line-strong: #cfcfd4;
-  --muted: #5e5e66;
-  --muted-foreground: #505058;
-  --subtle: #4b4b52;
+  --barrier: #ff3b30;
+  --panel: #f5f5f0;
+  --line: #e8e8e8;
+  --line-strong: #e0e0e0;
+  --muted: #666666;
+  --muted-foreground: #555555;
+  --subtle: #444444;
   --on-dark-muted: #d7d7dc;
   --on-dark-soft: #e6e6ea;
-  --elevation-modal: 0 22px 70px rgb(16 16 20 / 0.24);
-  --elevation-sheet: 0 -18px 50px rgb(16 16 20 / 0.22);
+  --elevation-modal: 0 24px 80px rgb(0 0 0 / 0.15);
+  --elevation-sheet: 0 -18px 50px rgb(0 0 0 / 0.18);
 }
 
 @theme inline {
   /* Canvas & type */
   --color-canvas: var(--canvas);
   --color-ink: var(--ink);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
 
   /* Brand accents */
   --color-chrome: var(--chrome);
@@ -144,5 +145,27 @@ body {
   }
   to {
     transform: translateX(0);
+  }
+}
+
+/* Homepage floating prompt: word cycle (no View Transitions — avoids snapshot ghosting) */
+@keyframes cycle-word-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-cycle-word-enter {
+  animation: cycle-word-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cycle-word-enter {
+    animation: none;
   }
 }

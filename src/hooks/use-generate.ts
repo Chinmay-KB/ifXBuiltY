@@ -9,6 +9,7 @@ type UseGenerateReturn = {
   result: GenerationResult | null;
   isLoading: boolean;
   error: string | null;
+  errorCode: string | null;
   reset: () => void;
 };
 
@@ -23,6 +24,7 @@ export function useGenerate(): UseGenerateReturn {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   // Guard against concurrent requests
   const inflightRef = useRef(false);
@@ -34,6 +36,7 @@ export function useGenerate(): UseGenerateReturn {
     inflightRef.current = true;
     setIsLoading(true);
     setError(null);
+    setErrorCode(null);
     setResult(null);
 
     try {
@@ -50,7 +53,9 @@ export function useGenerate(): UseGenerateReturn {
         const body = await res.json().catch(() => ({}));
         const message =
           (body as { error?: string }).error || `Generation failed (${res.status})`;
+        const code = (body as { code?: string }).code ?? null;
         setError(message);
+        setErrorCode(code);
         return;
       }
 
@@ -73,7 +78,8 @@ export function useGenerate(): UseGenerateReturn {
   const reset = useCallback(() => {
     setResult(null);
     setError(null);
+    setErrorCode(null);
   }, []);
 
-  return { generate, result, isLoading, error, reset };
+  return { generate, result, isLoading, error, errorCode, reset };
 }
