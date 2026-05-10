@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
   const ogImage =
     gen.imageUrl != null
-      ? generationMediaAbsoluteUrl(base, gen.slug, "detail")
+      ? generationMediaAbsoluteUrl(base, gen.slug, "og")
       : undefined;
 
   return {
@@ -47,8 +47,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? [
             {
               url: ogImage,
-              width: 1024,
-              height: 1024,
+              width: 1200,
+              height: 1200,
+              type: "image/jpeg",
               alt: title,
             },
           ]

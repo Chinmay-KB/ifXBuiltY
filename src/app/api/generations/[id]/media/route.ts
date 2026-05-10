@@ -18,10 +18,11 @@ const VARIANT_WIDTH_PX: Record<Exclude<GenerationMediaVariant, "full">, number> 
   {
     card: 560,
     detail: 1280,
+    og: 1200,
   };
 
 function parseVariant(raw: string | null): GenerationMediaVariant | null {
-  if (raw === "card" || raw === "detail" || raw === "full") return raw;
+  if (raw === "card" || raw === "detail" || raw === "full" || raw === "og") return raw;
   return null;
 }
 
@@ -80,6 +81,17 @@ export async function GET(request: Request, context: RouteContext) {
       width,
       withoutEnlargement: true,
     });
+
+    // OG variant: serve as JPEG for maximum crawler compatibility
+    if (variant === "og") {
+      const out = await pipeline.jpeg({ quality: 80 }).toBuffer();
+      return new NextResponse(new Uint8Array(out), {
+        headers: {
+          "Content-Type": "image/jpeg",
+          "Cache-Control": CACHE_CONTROL,
+        },
+      });
+    }
 
     const out = await pipeline.webp({ quality: 82 }).toBuffer();
 

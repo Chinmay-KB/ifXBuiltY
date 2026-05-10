@@ -1,4 +1,4 @@
-export type GenerationMediaVariant = "card" | "detail" | "full";
+export type GenerationMediaVariant = "card" | "detail" | "full" | "og";
 
 /**
  * Stable same-origin URL for published generation images. Suitable for `img src`
