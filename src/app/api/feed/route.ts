@@ -6,6 +6,7 @@ import {
 } from "@/lib/constants";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
 export const runtime = "nodejs";
 
@@ -16,10 +17,6 @@ function parseSort(raw: string | null): SortKey {
   if (raw === "top") return "top";
   if (raw === "remixes") return "remixes";
   return "newest";
-}
-
-function sanitizeIlikeFragment(s: string): string {
-  return s.replace(/[%*,]/g, "").trim();
 }
 
 function parseLimit(raw: string | null): number {
@@ -51,9 +48,7 @@ export async function GET(request: Request) {
   const offset = parseOffset(url.searchParams.get("offset"));
   const builders = parseCommaSeparated(url.searchParams.get("builder"));
   const targets = parseCommaSeparated(url.searchParams.get("target"));
-  const tones = parseCommaSeparated(url.searchParams.get("tone"))
-    .map(sanitizeIlikeFragment)
-    .filter((s) => s.length > 0);
+  const tones = parseCommaSeparated(url.searchParams.get("tone"));
 
   const supabase = await createSupabaseServerClient();
 
@@ -61,7 +56,7 @@ export async function GET(request: Request) {
   let q = supabase
     .from("generations")
     .select(
-      "id, slug, builder, target, tone, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
+      "id, slug, builder, target, tone, vibe_tags, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
     )
     .eq("visibility", "published")
     .eq("moderation_status", "visible")
@@ -77,10 +72,12 @@ export async function GET(request: Request) {
     q = q.in("target", targets);
   }
 
-  // Tone / vibe filter (substring match, case-insensitive)
+  // Tone / vibe filter (array overlap on vibe_tags column)
   if (tones.length > 0) {
-    const orExpr = tones.map((t) => `tone.ilike.%${t}%`).join(",");
-    q = q.or(orExpr);
+    const sanitized = sanitizeVibeTags(tones);
+    if (sanitized.length > 0) {
+      q = q.overlaps("vibe_tags", sanitized);
+    }
   }
 
   // Apply sort order
@@ -135,6 +132,7 @@ export async function GET(request: Request) {
     builder: r.builder,
     target: r.target,
     tone: r.tone,
+    vibeTags: r.vibe_tags ?? [],
     screenType: r.screen_type,
     region: r.region,
     extraDetails: r.extra_details,

@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { AdminAuthError, requireSuperadmin } from "@/lib/admin";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
 export const runtime = "nodejs";
 
@@ -45,6 +46,13 @@ export async function PUT(
         return NextResponse.json({ error: "archetype must be a JSON object" }, { status: 400 });
       }
       updates.archetype = body.archetype ?? {};
+    }
+
+    if ("defaultVibeTags" in body) {
+      if (!Array.isArray(body.defaultVibeTags)) {
+        return NextResponse.json({ error: "defaultVibeTags must be an array of strings" }, { status: 400 });
+      }
+      updates.default_vibe_tags = sanitizeVibeTags(body.defaultVibeTags);
     }
 
     if (Object.keys(updates).length === 0) {
@@ -92,6 +100,7 @@ export async function PUT(
       styleDna: updated.style_dna,
       archetype: updated.archetype,
       logoPath: updated.logo_path,
+      defaultVibeTags: Array.isArray(updated.default_vibe_tags) ? updated.default_vibe_tags : [],
       createdAt: updated.created_at,
       updatedAt: updated.updated_at,
     });

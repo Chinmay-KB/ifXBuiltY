@@ -13,6 +13,7 @@ export type FeedItem = {
   remixCount: number;
   createdAt: string;
   tone?: string;
+  vibeTags?: string[];
   screenType?: string;
   region?: string;
   extraDetails?: string;

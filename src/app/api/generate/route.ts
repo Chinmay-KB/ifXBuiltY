@@ -9,6 +9,7 @@ import {
   assertAiGatewayConfigured,
   getGenerationImagesBucket,
 } from "@/lib/env-server";
+import { sanitizeVibeTags } from "@/lib/vibe-tags";
 import { buildGenerationPrompt } from "@/lib/prompt/build-generation-prompt";
 import { makeGenerationSlugSnippet } from "@/lib/slug";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -169,17 +170,22 @@ export async function POST(request: Request) {
   // Fetch reference screenshots for the builder company (if any exist).
   // Look up the builder by name to get its company_id, then download screenshot bytes.
   const screenshotBuffers: Buffer[] = [];
+  let builderDefaultVibeTags: string[] = [];
   try {
     const serviceForScreenshots = createSupabaseServiceClient();
     const builderName = String(body.builder ?? "").trim();
     if (builderName) {
       const { data: companyRow } = await serviceForScreenshots
         .from("company_profiles")
-        .select("id")
+        .select("id, default_vibe_tags")
         .ilike("name", builderName)
         .maybeSingle();
 
       if (companyRow) {
+        builderDefaultVibeTags = Array.isArray(companyRow.default_vibe_tags)
+          ? (companyRow.default_vibe_tags as string[])
+          : [];
+
         const screenshotPaths = await getCompanyScreenshots(companyRow.id);
         for (const path of screenshotPaths) {
           const { data: fileData } = await serviceForScreenshots.storage
@@ -285,6 +291,7 @@ export async function POST(request: Request) {
         builder: String(body.builder ?? ""),
         target: String(body.target ?? ""),
         tone: typeof body.tone === "string" ? body.tone.slice(0, 80) : "",
+        vibe_tags: sanitizeVibeTags(builderDefaultVibeTags),
         screen_type: "",
         region: "",
         extra_details: String(body.extraDetails ?? ""),

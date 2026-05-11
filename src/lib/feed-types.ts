@@ -6,6 +6,7 @@ export type FeedItem = {
   builder: string;
   target: string;
   tone: string;
+  vibeTags: string[];
   screenType: string;
   region: string;
   extraDetails: string;

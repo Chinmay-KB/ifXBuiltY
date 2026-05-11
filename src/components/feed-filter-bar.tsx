@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/cn";
 import type { FeedSort } from "@/lib/ui/types";
+import { VIBE_TAGS } from "@/lib/vibe-tags";
 
 /* ─── Types ─── */
 
@@ -32,14 +33,7 @@ const sortOptions: { value: FeedSort; label: string }[] = [
   { value: "top", label: "Staff picks" },
 ];
 
-export const FEED_VIBE_OPTIONS = [
-  "Chaotic",
-  "Scammy",
-  "Premium",
-  "Wholesome",
-  "Bureaucratic",
-  "Cursed",
-] as const;
+export const FEED_VIBE_OPTIONS = VIBE_TAGS;
 
 /* ─── Chevron Icon ─── */
 

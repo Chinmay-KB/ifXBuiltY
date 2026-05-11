@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { AdminAuthError, requireSuperadmin } from "@/lib/admin";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
 export const runtime = "nodejs";
 
@@ -61,6 +62,7 @@ export async function GET() {
     styleDna: row.style_dna ?? {},
     archetype: row.archetype ?? {},
     logoPath: row.logo_path ?? null,
+    defaultVibeTags: Array.isArray(row.default_vibe_tags) ? row.default_vibe_tags : [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     screenshotCount: countMap.get(row.id) ?? 0,
@@ -79,6 +81,7 @@ type CreateCompanyBody = {
   name?: unknown;
   styleDna?: unknown;
   archetype?: unknown;
+  defaultVibeTags?: unknown;
 };
 
 function validateCreateBody(body: CreateCompanyBody): string | null {
@@ -148,6 +151,9 @@ export async function POST(request: Request) {
   const name = (body.name as string).trim();
   const styleDna = (body.styleDna as Record<string, unknown>) ?? {};
   const archetype = (body.archetype as Record<string, unknown>) ?? {};
+  const defaultVibeTags = Array.isArray(body.defaultVibeTags)
+    ? sanitizeVibeTags(body.defaultVibeTags)
+    : [];
 
   const supabase = createSupabaseServiceClient();
 
@@ -158,6 +164,7 @@ export async function POST(request: Request) {
       name,
       style_dna: styleDna,
       archetype,
+      default_vibe_tags: defaultVibeTags,
     })
     .select("*")
     .single();
@@ -181,6 +188,7 @@ export async function POST(request: Request) {
     styleDna: inserted.style_dna,
     archetype: inserted.archetype,
     logoPath: inserted.logo_path ?? null,
+    defaultVibeTags: Array.isArray(inserted.default_vibe_tags) ? inserted.default_vibe_tags : [],
     createdAt: inserted.created_at,
     updatedAt: inserted.updated_at,
   };

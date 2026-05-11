@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui";
+import { VIBE_TAGS } from "@/lib/vibe-tags";
 
 // --- Validation ---
 
@@ -31,6 +32,7 @@ export type ArchetypeValues = {
 export type CompanyFormValues = {
   id: string;
   name: string;
+  defaultVibeTags: string[];
   styleDna: StyleDnaValues;
   archetype: ArchetypeValues;
 };
@@ -62,6 +64,7 @@ const EMPTY_ARCHETYPE: ArchetypeValues = {
 const EMPTY_VALUES: CompanyFormValues = {
   id: "",
   name: "",
+  defaultVibeTags: [],
   styleDna: EMPTY_STYLE_DNA,
   archetype: EMPTY_ARCHETYPE,
 };
@@ -89,6 +92,7 @@ export function CompanyForm({ mode, initialValues, onSuccess }: CompanyFormProps
     return {
       id: initialValues.id ?? "",
       name: initialValues.name ?? "",
+      defaultVibeTags: initialValues.defaultVibeTags ?? [],
       styleDna: initialValues.styleDna ?? EMPTY_STYLE_DNA,
       archetype: initialValues.archetype ?? EMPTY_ARCHETYPE,
     };
@@ -121,6 +125,16 @@ export function CompanyForm({ mode, initialValues, onSuccess }: CompanyFormProps
     if (serverError) setServerError("");
   }
 
+  function handleVibeTagToggle(tag: string) {
+    setValues((prev) => {
+      const tags = prev.defaultVibeTags.includes(tag)
+        ? prev.defaultVibeTags.filter((t) => t !== tag)
+        : [...prev.defaultVibeTags, tag];
+      return { ...prev, defaultVibeTags: tags };
+    });
+    if (serverError) setServerError("");
+  }
+
   function validate(): FieldErrors {
     const errors: FieldErrors = {};
     if (mode === "create") {
@@ -149,6 +163,7 @@ export function CompanyForm({ mode, initialValues, onSuccess }: CompanyFormProps
     const payload = {
       id: values.id.trim(),
       name: values.name.trim(),
+      defaultVibeTags: values.defaultVibeTags,
       styleDna: {
         tone: toArray(values.styleDna.tone),
         colors: toArray(values.styleDna.colors),
@@ -238,6 +253,38 @@ export function CompanyForm({ mode, initialValues, onSuccess }: CompanyFormProps
           error={fieldErrors.name}
           placeholder="e.g. Netflix"
         />
+      </fieldset>
+
+      {/* Default Vibe Tags */}
+      <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
+        <legend className="px-2 text-base font-semibold text-ink">Default Vibe Tags</legend>
+        <p className="text-xs text-muted">
+          Tags automatically applied to generations from this company.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {VIBE_TAGS.map((tag) => {
+            const checked = values.defaultVibeTags.includes(tag);
+            return (
+              <label
+                key={tag}
+                className={
+                  "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors " +
+                  (checked
+                    ? "border-ink bg-ink text-white"
+                    : "border-line-strong bg-panel text-ink hover:border-ink")
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => handleVibeTagToggle(tag)}
+                  className="sr-only"
+                />
+                {tag}
+              </label>
+            );
+          })}
+        </div>
       </fieldset>
 
       {/* Style DNA */}

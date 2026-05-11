@@ -52,7 +52,10 @@ export function GenerationCard({
   const label = formatCardLabel(item.builder, item.target);
   const score = formatCompactCount(item.netScore);
   const paperTitle = `${item.builder} × ${item.target}`;
-  const toneLabel = (item.tone && item.tone.trim()) || "Wild";
+  const toneLabel =
+    (item.vibeTags && item.vibeTags.length > 0 ? item.vibeTags[0] : null) ||
+    (item.tone && item.tone.trim()) ||
+    "Wild";
   const screenLabel = (item.screenType && item.screenType.trim()) || "Screenshot";
 
   const handleImageError = useCallback(() => {

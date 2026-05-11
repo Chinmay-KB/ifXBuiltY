@@ -35,6 +35,7 @@ type Company = {
   styleDna: StyleDna;
   archetype: Archetype;
   logoPath: string | null;
+  defaultVibeTags: string[];
 };
 
 type Screenshot = {
@@ -282,6 +283,7 @@ export default function CompanyDetailPage() {
           initialValues={{
             id: company.id,
             name: company.name,
+            defaultVibeTags: company.defaultVibeTags ?? [],
             styleDna: {
               tone: (company.styleDna.tone ?? []).join(", "),
               colors: (company.styleDna.colors ?? []).join(", "),

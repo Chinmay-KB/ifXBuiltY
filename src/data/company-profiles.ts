@@ -25,6 +25,7 @@ export type CompanyProfile = {
   archetype: Archetype;
   /** Path in company-logos bucket, or null if no logo uploaded */
   logoPath: string | null;
+  defaultVibeTags: string[];
 };
 
 const EMPTY_STYLE_DNA: StyleDna = {
@@ -76,6 +77,7 @@ function mapRow(row: Record<string, unknown>): CompanyProfile {
         }
       : EMPTY_ARCHETYPE,
     logoPath: (row.logo_path as string) ?? null,
+    defaultVibeTags: Array.isArray(row.default_vibe_tags) ? (row.default_vibe_tags as string[]) : [],
   };
 }
 
