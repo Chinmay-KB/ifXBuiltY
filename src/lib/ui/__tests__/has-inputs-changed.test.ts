@@ -19,6 +19,7 @@ const generationInputsArb: fc.Arbitrary<GenerationInputs> = fc.record({
   builder: fc.string(),
   target: fc.string(),
   extraDetails: fc.string(),
+  tone: fc.option(fc.string(), { nil: undefined }),
 });
 
 describe("hasInputsChanged — Property 14: Regenerate enabled on input change", () => {
@@ -39,6 +40,7 @@ describe("hasInputsChanged — Property 14: Regenerate enabled on input change",
       "builder",
       "target",
       "extraDetails",
+      "tone",
     ];
 
     fc.assert(
@@ -50,7 +52,11 @@ describe("hasInputsChanged — Property 14: Regenerate enabled on input change",
           const last: GenerationInputs = { ...base };
           const current: GenerationInputs = { ...base };
           // Mutate exactly one field to guarantee it differs
-          current[field] = base[field] + suffix;
+          if (field === "tone") {
+            current.tone = (base.tone ?? "") + suffix;
+          } else {
+            current[field] = base[field] + suffix;
+          }
           expect(hasInputsChanged(current, last)).toBe(true);
         }
       ),

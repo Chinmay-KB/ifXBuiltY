@@ -10,6 +10,7 @@ type UseFeedOptions = {
   sort: FeedSort;
   builders?: string[];
   targets?: string[];
+  tones?: string[];
   initialItems?: FeedItem[];
   pageSize?: number;
 };
@@ -30,14 +31,14 @@ type UseFeedReturn = {
  * Resets when sort/builders/targets change.
  */
 export function useFeed(options: UseFeedOptions): UseFeedReturn {
-  const { sort, builders = [], targets = [], initialItems, pageSize = DEFAULT_PAGE_SIZE } = options;
+  const { sort, builders = [], targets = [], tones = [], initialItems, pageSize = DEFAULT_PAGE_SIZE } = options;
 
   const [items, setItems] = useState<FeedItem[]>(initialItems ?? []);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const filterKey = `${sort}|${builders.join(",")}|${targets.join(",")}`;
+  const filterKey = `${sort}|${builders.join(",")}|${targets.join(",")}|${tones.join(",")}`;
   const prevFilterKeyRef = useRef(filterKey);
 
   useEffect(() => {
@@ -72,6 +73,9 @@ export function useFeed(options: UseFeedOptions): UseFeedReturn {
     if (targets.length > 0) {
       params.set("target", targets.join(","));
     }
+    if (tones.length > 0) {
+      params.set("tone", tones.join(","));
+    }
 
     fetch(`/api/feed?${params.toString()}`)
       .then((res) => {
@@ -91,7 +95,7 @@ export function useFeed(options: UseFeedOptions): UseFeedReturn {
         setIsLoading(false);
         isFetchingRef.current = false;
       });
-  }, [hasMore, isLoading, items.length, sort, pageSize, builders, targets]);
+  }, [hasMore, isLoading, items.length, sort, pageSize, builders, targets, tones]);
 
   return { items, isLoading, hasMore, loadMore, error };
 }

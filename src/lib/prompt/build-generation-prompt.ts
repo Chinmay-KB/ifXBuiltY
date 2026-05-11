@@ -2,6 +2,7 @@ type GenerationFields = {
   builder: string;
   target: string;
   extraDetails: string;
+  tone?: string;
 };
 
 /**
@@ -26,6 +27,11 @@ export function buildGenerationPrompt(fields: GenerationFields): string {
     `Layer 1 — Visual Recognition: Use "${builder}"'s exact color palette, component shapes, density, typography weight, and layout rhythm so the style is instantly recognizable.`,
     `Layer 2 — UX Recognition: Include stereotypical UX anti-patterns associated with "${builder}" — things like captchas, popup overload, weird navigation, forced onboarding flows, unnecessary confirmations, dark patterns, loading states, or permission dialogs that feel absurdly on-brand.`,
     `Layer 3 — Cultural Recognition (MOST IMPORTANT): Include exact wording, fake notices, stereotypical CTAs, and emotionally recognizable frustrations that people associate with "${builder}". The microcopy should make people say "oh god they would actually write that." Use culturally specific phrases, passive-aggressive notifications, guilt-trip copy, or corporate-speak that is immediately recognizable as something "${builder}" would do.`,
+
+    // Optional user-specified vibe label (legacy / future use)
+    fields.tone?.trim()
+      ? `Overall vibe: ${fields.tone.trim()} — make microcopy, density, and UI personality match this register (satirical).`
+      : "",
 
     // Extra details from company profile data
     fields.extraDetails.trim()

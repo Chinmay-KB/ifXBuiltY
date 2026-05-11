@@ -13,7 +13,7 @@ export function AdminShell({ children }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Fixed top header */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-line bg-canvas px-6">
+      <header className="fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between border-b border-line bg-canvas px-6">
         <h1 className="text-lg font-semibold text-ink">Admin Panel</h1>
         <Link
           href="/"
@@ -24,7 +24,7 @@ export function AdminShell({ children }: AdminShellProps) {
       </header>
 
       {/* Content area below header */}
-      <main className="pt-16">
+      <main className="pt-20">
         <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
       </main>
     </div>

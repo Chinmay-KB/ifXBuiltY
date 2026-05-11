@@ -13,6 +13,8 @@ vi.mock("@/data/company-profiles", () => ({
           ux_traits: ["habit loops", "gentle guilt-trip microcopy"],
           meme_exaggeration: ["passive-aggressive owl", "streak anxiety"],
           iconic_elements: ["green owl mascot", "heart lives", "streak flame"],
+          behavioral_stereotypes: [],
+          satirical_patterns: [],
         },
         archetype: {
           type: "language learning platform",
@@ -32,6 +34,8 @@ vi.mock("@/data/company-profiles", () => ({
           ux_traits: ["ribbon navigation", "dense settings"],
           meme_exaggeration: ["clippy returns", "update restart loops"],
           iconic_elements: ["Windows logo", "blue screen", "Office ribbon"],
+          behavioral_stereotypes: [],
+          satirical_patterns: [],
         },
         archetype: {
           type: "productivity suite",
@@ -51,6 +55,8 @@ vi.mock("@/data/company-profiles", () => ({
           ux_traits: ["keyboard-first", "instant transitions"],
           meme_exaggeration: ["everything is a keyboard shortcut", "speed obsession"],
           iconic_elements: ["purple gradient", "linear logo mark"],
+          behavioral_stereotypes: [],
+          satirical_patterns: [],
         },
         archetype: {
           type: "project management for software teams",

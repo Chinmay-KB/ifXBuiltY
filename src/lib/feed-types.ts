@@ -1,4 +1,4 @@
-export type FeedSort = "newest" | "trending" | "top";
+export type FeedSort = "newest" | "trending" | "top" | "remixes";
 
 export type FeedItem = {
   id: number;
@@ -22,5 +22,7 @@ export type FeedResponse = {
   sort: FeedSort;
   items: FeedItem[];
   hasMore: boolean;
+  /** Published generations created in the trailing 7 days (global, ignores page filters). */
+  ideasThisWeek?: number;
   warning?: string;
 };

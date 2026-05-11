@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import Zoom from "@/components/image-zoom";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
@@ -15,17 +16,24 @@ import type {
   RemixSource,
 } from "@/lib/ui/types";
 
+export type GeneratorCompanyOption = { id: string; name: string };
+
 type GeneratorFormProps = {
   signedIn: boolean;
   initialValues?: Partial<GenerationInputs>;
   remixSource?: RemixSource | null;
   onGenerated: (result: GenerationResult) => void;
-  /** Called when generation starts — allows parent to show loading state */
   onGenerating?: (inputs: GenerationInputs) => void;
-  /** Called when generation fails — allows parent to handle error phase */
   onError?: (error: string, inputs: GenerationInputs) => void;
-  /** Called when the API returns insufficient_credits — parent shows modal */
   onInsufficientCredits?: () => void;
+  /** Paper Desktop Generate (v2) chrome */
+  variant?: "default" | "paper";
+  /** Tighter Paper layout to fit one viewport (Generate page) */
+  paperDensity?: "comfortable" | "flush";
+  /** When set (e.g. from DB), builder/target selects use this list instead of static JSON */
+  companyOptions?: GeneratorCompanyOption[];
+  /** Parent can call `abortControlRef.current?.()` to cancel the in-flight `/api/generate` request */
+  abortControlRef?: MutableRefObject<(() => void) | null>;
 };
 
 const defaults: GenerationInputs = {
@@ -42,6 +50,10 @@ export function GeneratorForm({
   onGenerating,
   onError,
   onInsufficientCredits,
+  variant = "default",
+  paperDensity = "comfortable",
+  companyOptions,
+  abortControlRef,
 }: GeneratorFormProps) {
   const { openSignIn } = useSignInModal();
   const merged = { ...defaults, ...initialValues };
@@ -50,9 +62,21 @@ export function GeneratorForm({
   const [target, setTarget] = useState(merged.target);
   const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
 
-  const { generate, result, isLoading, error, errorCode } = useGenerate();
+  const builderList = companyOptions ?? BUILDER_OPTIONS;
+  const targetList = companyOptions ?? TARGET_OPTIONS;
+
+  const { generate, cancelInflight, result, isLoading, error, errorCode } = useGenerate();
+
+  useLayoutEffect(() => {
+    if (!abortControlRef) return;
+    abortControlRef.current = cancelInflight;
+    return () => {
+      abortControlRef.current = null;
+    };
+  }, [abortControlRef, cancelInflight]);
 
   const canGenerate = isGenerateEnabled(builder, target);
+  const flushPaper = variant === "paper" && paperDensity === "flush";
 
   const onGeneratedRef = useRef(onGenerated);
   const onGeneratingRef = useRef(onGenerating);
@@ -74,7 +98,6 @@ export function GeneratorForm({
 
   useEffect(() => {
     if (error) {
-      // If insufficient credits, trigger the modal instead of showing inline error
       if (errorCode === "insufficient_credits") {
         onInsufficientCreditsRef.current?.();
         return;
@@ -86,7 +109,6 @@ export function GeneratorForm({
       };
       onErrorRef.current?.(error, inputs);
     }
-    // Only fire when error changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error, errorCode]);
 
@@ -100,9 +122,8 @@ export function GeneratorForm({
     await generate(inputs, remixSource?.id ? { remixParentId: remixSource.id } : undefined);
   }, [builder, target, extraDetails, generate, remixSource]);
 
-  return (
-    <Surface variant="composer" className="flex flex-col gap-4">
-      {/* Remix attribution strip */}
+  const inner = (
+    <>
       {remixSource && (
         <div className="flex items-center gap-3 rounded-lg bg-panel px-3 py-2">
           {remixSource.imageUrl && (
@@ -119,130 +140,273 @@ export function GeneratorForm({
           )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-muted">Remixing from</p>
-            <p className="truncate text-sm font-semibold text-ink">
-              {remixSource.label}
-            </p>
+            <p className="truncate text-sm font-semibold text-ink">{remixSource.label}</p>
           </div>
         </div>
       )}
 
-      {/* Primary inputs — Builder and Target dropdowns */}
-      <div className="flex flex-col gap-4 md:flex-row md:gap-3">
-        <div className="flex flex-1 flex-col gap-1.5">
-          <MicroLabel htmlFor="gen-builder">Builder (the who)</MicroLabel>
-          <FieldShell>
-            <select
-              id="gen-builder"
-              value={builder}
-              onChange={(e) => setBuilder(e.target.value)}
-              className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
-            >
-              <option value="">Select a company...</option>
-              {BUILDER_OPTIONS.map((b) => (
-                <option key={b.id} value={b.name}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="shrink-0 text-muted"
-              aria-hidden="true"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </FieldShell>
-        </div>
-        <div className="flex flex-1 flex-col gap-1.5">
-          <MicroLabel htmlFor="gen-target">Target (the what)</MicroLabel>
-          <FieldShell>
-            <select
-              id="gen-target"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
-            >
-              <option value="">Select a product...</option>
-              {TARGET_OPTIONS.map((t) => (
-                <option key={t.id} value={t.name}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="shrink-0 text-muted"
-              aria-hidden="true"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </FieldShell>
-        </div>
-      </div>
+      {variant === "paper" ? (
+        <>
+          <div className={cn("flex flex-col", flushPaper ? "gap-3" : "gap-4")}>
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                Builder (the who)
+              </p>
+              <div className="flex items-baseline gap-3.5 rounded-[14px] bg-panel py-3.5 pl-5 pr-4">
+                <span className="font-display text-[32px] font-black italic leading-none text-ink">
+                  If
+                </span>
+                <select
+                  id="gen-builder"
+                  value={builder}
+                  onChange={(e) => setBuilder(e.target.value)}
+                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent font-display text-[28px] font-medium leading-[120%] tracking-[-0.02em] text-ink outline-none"
+                >
+                  <option value="">Select…</option>
+                  {builderList.map((b) => (
+                    <option key={b.id} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="shrink-0 text-muted"
+                  aria-hidden
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                Target (the what)
+              </p>
+              <div className="flex items-baseline gap-3.5 rounded-[14px] bg-panel py-3.5 pl-5 pr-4">
+                <span className="font-display text-[32px] font-black italic leading-none text-ink">
+                  built
+                </span>
+                <select
+                  id="gen-target"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent font-display text-[28px] font-medium leading-[120%] tracking-[-0.02em] text-ink outline-none"
+                >
+                  <option value="">Select…</option>
+                  {targetList.map((t) => (
+                    <option key={t.id} value={t.name}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="shrink-0 text-muted"
+                  aria-hidden
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-      {/* Extra details (optional) */}
-      <div className="flex flex-col gap-1.5">
-        <MicroLabel htmlFor="gen-extra">Extra details (optional)</MicroLabel>
-        <label className="flex min-h-[80px] flex-col rounded-[10px] border-2 border-line-strong bg-panel p-3">
-          <textarea
-            id="gen-extra"
-            value={extraDetails}
-            onChange={(e) => setExtraDetails(e.target.value)}
-            rows={3}
-            placeholder="Add specific jokes, references, or details you want included..."
-            className="w-full resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-muted/50"
-          />
-        </label>
-      </div>
+          <div className="flex flex-col gap-1.5">
+            <MicroLabel htmlFor="gen-extra">Extra details (optional)</MicroLabel>
+            <label className="flex min-h-[80px] flex-col rounded-[10px] border-2 border-line-strong bg-panel p-3">
+              <textarea
+                id="gen-extra"
+                value={extraDetails}
+                onChange={(e) => setExtraDetails(e.target.value)}
+                rows={3}
+                placeholder="Add specific jokes, references, or details…"
+                className="w-full resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-muted/50"
+              />
+            </label>
+          </div>
 
-      {/* Generate button or sign-in prompt */}
-      {signedIn ? (
-        <Button
-          variant="chrome"
-          size="lg"
-          className="w-full font-black"
-          disabled={!canGenerate || isLoading}
-          onClick={() => void handleSubmit()}
-        >
-          {isLoading ? "Generating…" : "Generate"}
-        </Button>
+          <div className="flex flex-wrap items-center gap-3.5">
+            {signedIn ? (
+              <button
+                type="button"
+                disabled={!canGenerate || isLoading}
+                onClick={() => void handleSubmit()}
+                className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2.5 rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic tracking-tight text-chrome transition-opacity disabled:opacity-40"
+              >
+                {isLoading ? "Generating…" : "Generate"}
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="shrink-0 text-chrome"
+                  aria-hidden
+                >
+                  <path
+                    d="M5 12h14M12 5l7 7-7 7"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={openSignIn}
+                className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic text-chrome"
+              >
+                Sign in to generate
+              </button>
+            )}
+            <div className="flex flex-col gap-0.5 text-left">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-ink">
+                Uses 1 credit
+              </p>
+              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted">
+                ~14 seconds
+              </p>
+            </div>
+          </div>
+        </>
       ) : (
-        <button
-          type="button"
-          onClick={openSignIn}
-          className={cn(
-            "inline-flex w-full items-center justify-center rounded-lg border-2 border-ink bg-chrome px-4 py-3.5 text-base font-black text-ink transition-[background-color,filter,color]",
-            "hover:brightness-[0.98] active:brightness-95",
+        <>
+          <div className="flex flex-col gap-4 md:flex-row md:gap-3">
+            <div className="flex flex-1 flex-col gap-1.5">
+              <MicroLabel htmlFor="gen-builder">Builder (the who)</MicroLabel>
+              <FieldShell>
+                <select
+                  id="gen-builder"
+                  value={builder}
+                  onChange={(e) => setBuilder(e.target.value)}
+                  className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
+                >
+                  <option value="">Select a company...</option>
+                  {builderList.map((b) => (
+                    <option key={b.id} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="shrink-0 text-muted"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </FieldShell>
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5">
+              <MicroLabel htmlFor="gen-target">Target (the what)</MicroLabel>
+              <FieldShell>
+                <select
+                  id="gen-target"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
+                >
+                  <option value="">Select a product...</option>
+                  {targetList.map((t) => (
+                    <option key={t.id} value={t.name}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className="shrink-0 text-muted"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </FieldShell>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <MicroLabel htmlFor="gen-extra">Extra details (optional)</MicroLabel>
+            <label className="flex min-h-[80px] flex-col rounded-[10px] border-2 border-line-strong bg-panel p-3">
+              <textarea
+                id="gen-extra"
+                value={extraDetails}
+                onChange={(e) => setExtraDetails(e.target.value)}
+                rows={3}
+                placeholder="Add specific jokes, references, or details you want included..."
+                className="w-full resize-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-muted/50"
+              />
+            </label>
+          </div>
+
+          {signedIn ? (
+            <Button
+              variant="chrome"
+              size="lg"
+              className="w-full font-black"
+              disabled={!canGenerate || isLoading}
+              onClick={() => void handleSubmit()}
+            >
+              {isLoading ? "Generating…" : "Generate"}
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={openSignIn}
+              className={cn(
+                "inline-flex w-full items-center justify-center rounded-lg border-2 border-ink bg-chrome px-4 py-3.5 text-base font-black text-ink transition-[background-color,filter,color]",
+                "hover:brightness-[0.98] active:brightness-95",
+              )}
+            >
+              Sign in to generate
+            </button>
           )}
-        >
-          Sign in to generate
-        </button>
+        </>
       )}
 
-      {/* Inline error display */}
       {error && (
         <p className="text-sm font-medium text-barrier" role="alert">
           {error}
         </p>
       )}
-    </Surface>
+    </>
   );
+
+  if (variant === "paper") {
+    return (
+      <div
+        className={cn(
+          "flex w-full flex-col",
+          flushPaper ? "min-h-0 max-w-none flex-1 gap-6" : "max-w-[560px] gap-8",
+        )}
+      >
+        {inner}
+      </div>
+    );
+  }
+
+  return <Surface variant="composer" className="flex flex-col gap-4">{inner}</Surface>;
 }

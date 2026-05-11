@@ -12,6 +12,7 @@ type FeedPageClientProps = {
   initialSort: FeedSort;
   initialBuilders: string[];
   initialTargets: string[];
+  initialTones: string[];
   availableBuilders: string[];
   availableTargets: string[];
 };
@@ -28,6 +29,7 @@ export function FeedPageClient({
   initialSort,
   initialBuilders,
   initialTargets,
+  initialTones,
   availableBuilders,
   availableTargets,
 }: FeedPageClientProps) {
@@ -36,6 +38,7 @@ export function FeedPageClient({
     useState<string[]>(initialBuilders);
   const [selectedTargets, setSelectedTargets] =
     useState<string[]>(initialTargets);
+  const [selectedTones, setSelectedTones] = useState<string[]>(initialTones);
 
   const handleSortChange = useCallback((newSort: FeedSort) => {
     setSort(newSort);
@@ -49,26 +52,36 @@ export function FeedPageClient({
     setSelectedTargets(newTargets);
   }, []);
 
+  const handleTonesChange = useCallback((next: string[]) => {
+    setSelectedTones(next);
+  }, []);
+
   // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
-    selectedBuilders.length > 0 || selectedTargets.length > 0;
+    selectedBuilders.length > 0 ||
+    selectedTargets.length > 0 ||
+    selectedTones.length > 0;
 
   return (
     <>
-      {/* Filter Bar */}
-      <FeedFilterBar
-        currentSort={sort}
-        builders={availableBuilders}
-        targets={availableTargets}
-        selectedBuilders={selectedBuilders}
-        selectedTargets={selectedTargets}
-        onSortChange={handleSortChange}
-        onBuildersChange={handleBuildersChange}
-        onTargetsChange={handleTargetsChange}
-      />
+      <div className="px-0">
+        <FeedFilterBar
+          variant="paper"
+          currentSort={sort}
+          builders={availableBuilders}
+          targets={availableTargets}
+          selectedBuilders={selectedBuilders}
+          selectedTargets={selectedTargets}
+          selectedTones={selectedTones}
+          onSortChange={handleSortChange}
+          onBuildersChange={handleBuildersChange}
+          onTargetsChange={handleTargetsChange}
+          onTonesChange={handleTonesChange}
+        />
+      </div>
 
       {/* Masonry Grid with empty state handling */}
-      <div className="mt-6 flex-1">
+      <div className="mt-7 flex-1 px-6 lg:px-10">
         {initialItems.length === 0 && hasActiveFilters ? (
           <EmptyFilterState />
         ) : (
@@ -79,6 +92,7 @@ export function FeedPageClient({
               selectedBuilders.length > 0 ? selectedBuilders : undefined
             }
             targets={selectedTargets.length > 0 ? selectedTargets : undefined}
+            tones={selectedTones.length > 0 ? selectedTones : undefined}
           />
         )}
       </div>

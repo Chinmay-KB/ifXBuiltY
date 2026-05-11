@@ -1,26 +1,88 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CreditsModal } from "@/components/credits-modal";
 import { GenerationResultView } from "@/components/generation-result-view";
-import { GeneratorForm } from "@/components/generator-form";
+import { GeneratorForm, type GeneratorCompanyOption } from "@/components/generator-form";
+import { useNavigationGenerating } from "@/components/navigation-generating-context";
+import { getAllFunFacts, getLoadingMessages } from "@/data/loading-entertainment";
 import { useCredits } from "@/hooks/use-credits";
-import {
-  getLoadingMessages,
-  getAllFunFacts,
-} from "@/data/loading-entertainment";
+import { cn } from "@/lib/cn";
 import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
 
-/**
- * Loading state for the right preview panel.
- * Matches Paper design: dark area with dots + cycling message + progress bar + fun fact.
- */
-function LoadingPreview({ builder }: { builder: string }) {
-  const messages = getLoadingMessages(builder);
-  const facts = useRef(getAllFunFacts(builder));
+type Starter = {
+  builder: string;
+  target: string;
+  label: string;
+  swatchClass: string;
+  labelClass: string;
+};
+
+const STARTER_SWATCHES: { swatchClass: string; labelClass: string }[] = [
+  { swatchClass: "from-ink to-ink/80", labelClass: "text-chrome" },
+  { swatchClass: "from-ink to-emerald-950", labelClass: "text-white" },
+  { swatchClass: "bg-chrome", labelClass: "text-ink" },
+  { swatchClass: "from-barrier to-red-800", labelClass: "text-white" },
+  { swatchClass: "bg-[#1A2238]", labelClass: "text-[#A0B4D4]" },
+  { swatchClass: "bg-[#3A2A4E]", labelClass: "text-chrome" },
+];
+
+function buildCompanyPairPool(companies: GeneratorCompanyOption[]): { builder: string; target: string }[] {
+  if (companies.length < 2) return [];
+  const pairs: { builder: string; target: string }[] = [];
+  for (let i = 0; i < companies.length; i++) {
+    for (let j = 0; j < companies.length; j++) {
+      if (i === j) continue;
+      pairs.push({
+        builder: companies[i]!.name,
+        target: companies[j]!.name,
+      });
+    }
+  }
+  return pairs;
+}
+
+function pairToStarter(p: { builder: string; target: string }, styleIndex: number): Starter {
+  const sw = STARTER_SWATCHES[styleIndex % STARTER_SWATCHES.length]!;
+  return {
+    builder: p.builder,
+    target: p.target,
+    label: `${p.builder} × ${p.target}`,
+    swatchClass: sw.swatchClass,
+    labelClass: sw.labelClass,
+  };
+}
+
+function shuffle<T>(arr: T[], seed: number): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = (seed + i * 17) % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function starterHref(s: Starter) {
+  const q = new URLSearchParams();
+  q.set("builder", s.builder);
+  q.set("target", s.target);
+  return `/generate?${q.toString()}`;
+}
+
+function PaperGeneratingPanel({
+  inputs,
+  compact,
+}: {
+  inputs: GenerationInputs;
+  compact?: boolean;
+}) {
+  const messages = getLoadingMessages(inputs.builder);
+  const facts = useMemo(() => getAllFunFacts(inputs.builder), [inputs.builder]);
   const [msgIndex, setMsgIndex] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
+  const [pct, setPct] = useState(18);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -29,52 +91,126 @@ function LoadingPreview({ builder }: { builder: string }) {
     return () => clearInterval(id);
   }, [messages.length]);
 
-  // Cycle fun facts every 6 seconds
   useEffect(() => {
-    if (facts.current.length <= 1) return;
+    if (facts.length <= 1) return;
     const id = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % facts.current.length);
+      setFactIndex((prev) => (prev + 1) % facts.length);
     }, 6000);
+    return () => clearInterval(id);
+  }, [facts.length]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPct((p) => (p >= 94 ? p : p + 3));
+    }, 900);
     return () => clearInterval(id);
   }, []);
 
+  const b = inputs.builder || "your builder";
+  const t = inputs.target || "your target";
+  const step = Math.min(4, Math.max(1, Math.ceil((pct / 100) * 4)));
+  const etaSec = Math.max(0, Math.round(((100 - pct) / 100) * 14));
+
   return (
-    <div className="flex w-full flex-col gap-4">
-      {/* Dark preview area */}
-      <div className="flex flex-col items-center justify-center rounded-xl bg-ink px-10 py-20 gap-6">
-        {/* Animated dots */}
-        <div className="flex gap-1.5">
-          <div className="size-2 rounded-full bg-chrome animate-pulse" />
-          <div className="size-2 rounded-full bg-chrome animate-pulse opacity-60" style={{ animationDelay: "150ms" }} />
-          <div className="size-2 rounded-full bg-chrome animate-pulse opacity-30" style={{ animationDelay: "300ms" }} />
+    <div className={cn("flex w-full flex-col", compact ? "min-h-0 flex-1 gap-3" : "gap-5 lg:max-w-none")}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-[20px] border border-line bg-canvas",
+          compact ? "min-h-0 flex-1" : "min-h-[280px] lg:min-h-[320px]",
+        )}
+        style={{
+          backgroundImage:
+            "linear-gradient(180deg, oklab(96.9% -0.002 0.006) 0%, oklab(93.9% -0.002 0.011) 100%)",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle farthest-corner at 20% 30% in oklab, oklab(88.5% -0.016 0.181 / 15%) 0%, oklab(0% 0 0 / 0%) 40%), radial-gradient(circle farthest-corner at 80% 70% in oklab, oklab(65.4% 0.204 0.111 / 8%) 0%, oklab(0% 0 0 / 0%) 40%)",
+          }}
+        />
+        <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-chrome/15 px-3 py-1.5">
+          <span className="size-2 rounded-full bg-chrome" />
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-chrome">
+            Rendering
+          </span>
         </div>
+        <div className={cn("absolute inset-x-10 flex flex-col", compact ? "top-6 gap-2" : "top-10 gap-4")}>
+          {(compact ? [48, 70, 40, 62] : [48, 74, 36, 66, 52, 80, 42]).map((w, i) => (
+            <div
+              key={`sk-${i}-${w}`}
+              className={cn("rounded-sm bg-ink/[0.06]", compact ? "h-3" : "h-4")}
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </div>
+        <div
+          className="pointer-events-none absolute inset-x-[18%] h-[2px] rounded-full bg-chrome shadow-[0_0_10px_rgba(234,179,8,0.55)] motion-safe:transition-[top] motion-safe:duration-700"
+          style={{ top: `${22 + (pct % 38)}%` }}
+          aria-hidden
+        />
+      </div>
 
-        {/* Cycling funny message */}
-        <p className="text-center text-lg font-semibold text-white">
-          {messages[msgIndex]}
-        </p>
-
-        {/* Subtitle */}
-        <p className="text-sm text-white/40">
-          This usually takes 15–30 seconds
-        </p>
-
-        {/* Progress bar */}
-        <div className="h-1 w-80 max-w-full overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-1/3 rounded-full bg-chrome animate-[indeterminate_1.5s_ease-in-out_infinite]" />
+      <div className={cn("flex flex-col", compact ? "shrink-0 gap-2" : "gap-3")}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "shrink-0 rounded-full border-[2.5px] border-ink",
+                compact ? "size-3" : "size-[18px]",
+              )}
+            />
+            <p
+              className={cn(
+                "min-w-0 font-sans font-semibold text-ink",
+                compact ? "line-clamp-2 text-xs" : "text-base",
+              )}
+            >
+              {messages[msgIndex]}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-baseline sm:gap-1.5">
+            <span
+              className={cn("font-display font-black text-ink", compact ? "text-base" : "text-xl")}
+            >
+              {pct}%
+            </span>
+            <span className="text-right font-mono text-[10px] tracking-[0.05em] text-muted">
+              <span className="font-semibold text-ink">Step {step} of 4</span>
+              {" · "}
+              <span>{etaSec}s left</span>
+            </span>
+          </div>
+        </div>
+        <div className={cn("overflow-hidden rounded-full bg-ink/10", compact ? "h-0.5" : "h-1")}>
+          <div
+            className="h-full rounded-full bg-ink transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
         </div>
       </div>
 
-      {/* While you wait — cycling fun facts */}
-      {facts.current.length > 0 && (
-        <div className="mx-4 mb-4 rounded-xl border border-line bg-canvas px-5 py-4">
-          <p className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.04em] text-muted">
-            While you wait
-          </p>
-          <p className="text-[14px] leading-relaxed text-ink">
-            {facts.current[factIndex]}
-          </p>
+      {facts.length > 0 && !compact && (
+        <div className="flex gap-3.5 rounded-r-xl border-l-2 border-chrome bg-[#FFF9E0] py-4 pl-5 pr-4">
+          <span className="font-display text-[28px] font-black italic leading-none text-chrome">
+            †
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-chrome">
+              Did you know
+            </p>
+            <p className="text-[14px] leading-[145%] text-[#333]">
+              {facts[factIndex]}
+            </p>
+          </div>
         </div>
+      )}
+
+      {!compact && (
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+          Now composing · {b} → {t}
+        </p>
       )}
     </div>
   );
@@ -92,12 +228,14 @@ type GeneratePageClientProps = {
   signedIn: boolean;
   initialBuilder?: string;
   initialTarget?: string;
+  companies: GeneratorCompanyOption[];
 };
 
 export function GeneratePageClient({
   signedIn,
   initialBuilder,
   initialTarget,
+  companies,
 }: GeneratePageClientProps) {
   const [phase, setPhase] = useState<Phase>("input");
   const [currentInputs, setCurrentInputs] = useState<GenerationInputs>({
@@ -106,15 +244,39 @@ export function GeneratePageClient({
     target: initialTarget ?? "",
   });
   const [lastInputs, setLastInputs] = useState<GenerationInputs>(defaultInputs);
-  const [generationResult, setGenerationResult] =
-    useState<GenerationResult | null>(null);
+  const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [shuffleKey, setShuffleKey] = useState(0);
 
+  const startersRef = useRef<HTMLDivElement | null>(null);
+  const abortGenRef = useRef<(() => void) | null>(null);
   const { refresh: refreshCredits } = useCredits(signedIn);
+  const { setGenerating, clearGenerating } = useNavigationGenerating();
 
-  // Track the inputs that were submitted for the current generation
   const submittedInputsRef = useRef<GenerationInputs>(defaultInputs);
+
+  useEffect(() => {
+    if (phase !== "loading") {
+      clearGenerating();
+      return;
+    }
+    setGenerating(() => {
+      abortGenRef.current?.();
+      setPhase("input");
+      clearGenerating();
+    });
+    return () => {
+      clearGenerating();
+    };
+  }, [phase, setGenerating, clearGenerating]);
+
+  const starters = useMemo(() => {
+    const pool = buildCompanyPairPool(companies);
+    if (pool.length === 0) return [];
+    const shuffled = shuffle(pool, shuffleKey);
+    return shuffled.slice(0, 4).map((p, i) => pairToStarter(p, i));
+  }, [companies, shuffleKey]);
 
   const handleGenerating = useCallback((inputs: GenerationInputs) => {
     submittedInputsRef.current = inputs;
@@ -128,20 +290,16 @@ export function GeneratePageClient({
       setGenerationResult(result);
       setLastInputs(submittedInputsRef.current);
       setPhase("result");
-      // Refresh credits after successful generation
       void refreshCredits();
     },
     [refreshCredits],
   );
 
-  const handleError = useCallback(
-    (errorMsg: string, inputs: GenerationInputs) => {
-      setError(errorMsg);
-      setCurrentInputs(inputs);
-      setPhase("error");
-    },
-    [],
-  );
+  const handleError = useCallback((errorMsg: string, inputs: GenerationInputs) => {
+    setError(errorMsg);
+    setCurrentInputs(inputs);
+    setPhase("error");
+  }, []);
 
   const handleInsufficientCredits = useCallback(() => {
     setPhase("input");
@@ -178,8 +336,7 @@ export function GeneratePageClient({
             return;
           }
           const message =
-            (body as { error?: string }).error ||
-            `Generation failed (${res.status})`;
+            (body as { error?: string }).error || `Generation failed (${res.status})`;
           setError(message);
           setPhase("error");
           return;
@@ -206,13 +363,14 @@ export function GeneratePageClient({
     [refreshCredits],
   );
 
-  // Result phase uses a full-width centered layout instead of the two-panel split
   if (phase === "result" && generationResult) {
     return (
       <>
-        <div className="flex flex-1 flex-col items-center px-4 py-8 sm:px-12 sm:py-10">
-          <div className="w-full max-w-[860px]">
+        <div className="flex w-full flex-1 min-h-0 flex-col px-3 py-2 sm:px-8 lg:px-10 lg:py-3">
+          <div className="mx-auto flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
             <GenerationResultView
+              variant="paper"
+              viewportContained
               result={generationResult}
               currentInputs={currentInputs}
               lastInputs={lastInputs}
@@ -232,90 +390,203 @@ export function GeneratePageClient({
 
   return (
     <>
-      <div className="flex flex-1 gap-8 px-4 py-8 sm:px-12 sm:py-10 lg:gap-10">
-        {/* Left panel — Form */}
-        <div className="w-full max-w-[480px] shrink-0">
-          <div className="mb-6">
-            <h1 className="font-display text-[32px] font-black tracking-tight text-ink">
-              Cook something up
-            </h1>
+      <div className="flex w-full flex-1 min-h-0 flex-col px-4 py-2 sm:px-8 md:px-10 lg:flex-row lg:gap-10 lg:px-16 lg:py-4">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col lg:max-w-[560px] lg:shrink-0">
+          <div className="shrink-0 lg:mb-2">
+            {phase === "loading" ? (
+              <>
+                <div className="hidden lg:block">
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                    Now composing
+                  </p>
+                  <p className="mt-3 font-display text-[clamp(2.25rem,4.5vw,3.25rem)] font-black leading-[0.95] tracking-[-0.04em]">
+                    <span className="text-chrome">If</span>{" "}
+                    <span className="text-ink">{currentInputs.builder || "…"}</span>{" "}
+                    <span className="text-chrome">built</span>{" "}
+                    <span className="text-ink">
+                      {currentInputs.target ? `${currentInputs.target}.` : "…"}
+                    </span>
+                  </p>
+                </div>
+                <div className="lg:hidden">
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                    One prompt. Infinite timelines.
+                  </p>
+                  <h1 className="mt-2 font-display text-[clamp(2.5rem,5.8vw,4.25rem)] font-black leading-[0.88] tracking-[-0.045em] text-ink">
+                    What if X
+                    <br />
+                    built Y?
+                  </h1>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                  One prompt. Infinite timelines.
+                </p>
+                <h1 className="mt-2 font-display text-[clamp(2.5rem,5.8vw,4.25rem)] font-black leading-[0.88] tracking-[-0.045em] text-ink lg:text-[clamp(2.75rem,6vw,4.75rem)]">
+                  What if X
+                  <br />
+                  built Y?
+                </h1>
+              </>
+            )}
           </div>
 
           {phase === "error" && error ? (
-            <p
-              className="mb-4 text-sm font-medium text-barrier"
-              role="alert"
-            >
+            <p className="mb-2 shrink-0 text-xs font-medium text-barrier" role="alert">
               {error}
             </p>
           ) : null}
 
-          {/* Mobile loading indicator (right panel is hidden below lg) */}
           {phase === "loading" && (
-            <div className="mb-4 lg:hidden">
-              <LoadingPreview builder={currentInputs.builder} />
+            <div className="mb-3 min-h-0 shrink lg:hidden">
+              <PaperGeneratingPanel
+                key={`${currentInputs.builder}-${currentInputs.target}-m`}
+                compact
+                inputs={currentInputs}
+              />
             </div>
           )}
 
-          <div className={phase === "loading" ? "pointer-events-none opacity-60" : ""}>
+          <div
+            className={cn(
+              "mt-auto flex min-h-0 w-full flex-col pt-4",
+              phase === "loading" ? "pointer-events-none opacity-60" : "",
+            )}
+          >
             <GeneratorForm
               signedIn={signedIn}
+              variant="paper"
+              paperDensity="flush"
+              companyOptions={companies}
               initialValues={
                 phase === "error"
                   ? currentInputs
-                  : { builder: currentInputs.builder, target: currentInputs.target }
+                  : {
+                      builder: currentInputs.builder,
+                      target: currentInputs.target,
+                      extraDetails: currentInputs.extraDetails,
+                    }
               }
               onGenerating={handleGenerating}
               onGenerated={handleGenerated}
               onError={handleError}
               onInsufficientCredits={handleInsufficientCredits}
+              abortControlRef={abortGenRef}
             />
           </div>
         </div>
 
-        {/* Right panel — Preview (input/loading only) */}
-        <div className="hidden flex-1 lg:flex">
-          <div className="flex w-full flex-col rounded-2xl bg-panel p-6">
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between">
-              {phase === "loading" ? (
-                <div className="flex items-center gap-2">
-                  <div className="size-2 animate-pulse rounded-full bg-chrome" />
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
-                    Generating...
-                  </span>
-                </div>
-              ) : (
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
-                  Preview
-                </span>
-              )}
+        <div className="hidden min-h-0 min-w-0 flex-1 flex-col gap-3 lg:flex">
+          {phase === "loading" ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <PaperGeneratingPanel
+                key={`${currentInputs.builder}-${currentInputs.target}-d`}
+                compact
+                inputs={currentInputs}
+              />
             </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div
+                className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-hidden rounded-[20px] p-8 lg:p-10"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(145deg, oklab(96.9% -0.002 0.006) 0%, oklab(91.6% -0.0002 0.019) 100%)",
+                }}
+              >
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(circle farthest-corner at 20% 30% in oklab, oklab(88.5% -0.016 0.181 / 15%) 0%, oklab(0% 0 0 / 0%) 40%), radial-gradient(circle farthest-corner at 80% 70% in oklab, oklab(65.4% 0.204 0.111 / 8%) 0%, oklab(0% 0 0 / 0%) 40%)",
+                  }}
+                />
+                <svg
+                  width="56"
+                  height="56"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#999"
+                  strokeWidth="1.5"
+                  className="relative shrink-0 opacity-50"
+                  aria-hidden
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+                <div className="relative flex max-w-[400px] flex-col items-center gap-1.5 text-center">
+                  <p className="font-display text-[clamp(1.35rem,2.4vw,1.75rem)] font-black italic text-ink lg:text-[28px]">
+                    Your mockup lives here.
+                  </p>
+                  <p className="text-[13px] leading-[145%] text-muted lg:text-[14px]">
+                    Pick a builder and a target company, then hit Generate. We&apos;ll dream up the UI
+                    for the timeline where this product shipped.
+                  </p>
+                </div>
+              </div>
 
-            {/* Preview area */}
-            <div className="flex flex-1 items-center justify-center rounded-xl bg-ink">
-              {phase === "loading" ? (
-                <LoadingPreview builder={currentInputs.builder} />
-              ) : (
-                <div className="flex flex-col items-center gap-3 p-8">
-                  <span className="text-[15px] font-medium text-white/40">
-                    Your creation will appear here
-                  </span>
-                  <span className="text-[13px] text-white/25">
-                    Hit generate to see the magic
-                  </span>
+              {starters.length > 0 ? (
+                <div ref={startersRef} id="starters" className="flex shrink-0 flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                      Or try one of these
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShuffleKey((k) => k + 1)}
+                      className="flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-ink"
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        aria-hidden
+                      >
+                        <path d="M21 12a9 9 0 0 1-9 9m0-18a9 9 0 0 1 9 9M3 12a9 9 0 0 1 9-9m0 18a9 9 0 0 1-9-9" />
+                        <path d="m16 12-4-4-4 4M12 16V8" />
+                      </svg>
+                      Shuffle
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                    {starters.map((s) => (
+                      <Link
+                        key={`${s.builder}×${s.target}-${shuffleKey}`}
+                        href={starterHref(s)}
+                        className="flex flex-col"
+                      >
+                        <div
+                          className={cn(
+                            "flex h-[76px] items-center justify-center rounded-[10px] bg-gradient-to-br px-2 text-center lg:h-[84px]",
+                            s.swatchClass,
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "font-display text-[12px] font-black italic leading-tight lg:text-[13px]",
+                              s.labelClass,
+                            )}
+                          >
+                            {s.label}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Credits Modal */}
-      <CreditsModal
-        open={showCreditsModal}
-        onClose={() => setShowCreditsModal(false)}
-      />
+      <CreditsModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
     </>
   );
 }

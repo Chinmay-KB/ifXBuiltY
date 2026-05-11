@@ -42,9 +42,9 @@ export function CreditsBadge() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5">
-        <div className="size-3.5 animate-pulse rounded-full bg-line" />
-        <div className="h-3 w-5 animate-pulse rounded bg-line" />
+      <div className="flex items-center gap-1.5 rounded-full border border-ink py-2 px-3">
+        <div className="size-1.5 animate-pulse rounded-full bg-chrome" />
+        <div className="h-3 w-14 animate-pulse rounded bg-line" />
       </div>
     );
   }
@@ -53,23 +53,13 @@ export function CreditsBadge() {
 
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full bg-panel px-3 py-1.5 text-xs font-semibold text-ink"
+      className="flex items-center gap-1.5 rounded-full border border-ink py-2 px-3 font-mono text-[11px] font-bold text-ink"
       title={`${credits} credit${credits === 1 ? "" : "s"} remaining`}
     >
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 22 22"
-        fill="none"
-        aria-hidden="true"
-        className="text-chrome"
-      >
-        <path
-          d="M11 2L13.5 7.5L19 8.5L15 12.5L16 18L11 15.5L6 18L7 12.5L3 8.5L8.5 7.5L11 2Z"
-          fill="currentColor"
-        />
-      </svg>
-      <span>{credits}</span>
+      <span className="size-1.5 shrink-0 rounded-full bg-chrome" aria-hidden />
+      <span>
+        {credits} credit{credits === 1 ? "" : "s"}
+      </span>
     </div>
   );
 }

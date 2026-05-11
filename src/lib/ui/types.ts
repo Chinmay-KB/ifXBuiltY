@@ -21,12 +21,14 @@ export type FeedItem = {
   downvoteCount?: number;
 };
 
-export type FeedSort = "trending" | "newest" | "top";
+export type FeedSort = "trending" | "newest" | "top" | "remixes";
 
 export type GenerationInputs = {
   builder: string;
   target: string;
   extraDetails: string;
+  /** Visual vibe / tone label (e.g. Chaotic, Scammy) — folded into prompt + stored on row */
+  tone?: string;
 };
 
 export type GenerationResult = {

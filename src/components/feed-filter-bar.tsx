@@ -14,9 +14,13 @@ type FeedFilterBarProps = {
   targets: string[];
   selectedBuilders: string[];
   selectedTargets: string[];
+  selectedTones: string[];
   onSortChange: (sort: FeedSort) => void;
   onBuildersChange: (builders: string[]) => void;
   onTargetsChange: (targets: string[]) => void;
+  onTonesChange: (tones: string[]) => void;
+  /** Paper signage styling (Desktop Feed v2) */
+  variant?: "default" | "paper";
 };
 
 /* ─── Sort Tabs ─── */
@@ -24,8 +28,18 @@ type FeedFilterBarProps = {
 const sortOptions: { value: FeedSort; label: string }[] = [
   { value: "trending", label: "Trending" },
   { value: "newest", label: "Newest" },
-  { value: "top", label: "Top" },
+  { value: "remixes", label: "Most remixed" },
+  { value: "top", label: "Staff picks" },
 ];
+
+export const FEED_VIBE_OPTIONS = [
+  "Chaotic",
+  "Scammy",
+  "Premium",
+  "Wholesome",
+  "Bureaucratic",
+  "Cursed",
+] as const;
 
 /* ─── Chevron Icon ─── */
 
@@ -216,15 +230,23 @@ export function FeedFilterBar({
   targets,
   selectedBuilders,
   selectedTargets,
+  selectedTones,
   onSortChange,
   onBuildersChange,
   onTargetsChange,
+  onTonesChange,
+  variant = "default",
 }: FeedFilterBarProps) {
   const router = useRouter();
 
   // Sync filter state to URL search params
   const syncToUrl = useCallback(
-    (sort: FeedSort, builderList: string[], targetList: string[]) => {
+    (
+      sort: FeedSort,
+      builderList: string[],
+      targetList: string[],
+      toneList: string[],
+    ) => {
       const params = new URLSearchParams();
       params.set("sort", sort);
       if (builderList.length > 0) {
@@ -232,6 +254,9 @@ export function FeedFilterBar({
       }
       if (targetList.length > 0) {
         params.set("target", targetList.join(","));
+      }
+      if (toneList.length > 0) {
+        params.set("tone", toneList.join(","));
       }
       router.push(`/feed?${params.toString()}`, { scroll: false });
     },
@@ -241,59 +266,132 @@ export function FeedFilterBar({
   const handleSortChange = useCallback(
     (sort: FeedSort) => {
       onSortChange(sort);
-      syncToUrl(sort, selectedBuilders, selectedTargets);
+      syncToUrl(sort, selectedBuilders, selectedTargets, selectedTones);
     },
-    [onSortChange, syncToUrl, selectedBuilders, selectedTargets],
+    [onSortChange, syncToUrl, selectedBuilders, selectedTargets, selectedTones],
   );
 
   const handleBuildersChange = useCallback(
     (newBuilders: string[]) => {
       onBuildersChange(newBuilders);
-      syncToUrl(currentSort, newBuilders, selectedTargets);
+      syncToUrl(currentSort, newBuilders, selectedTargets, selectedTones);
     },
-    [onBuildersChange, syncToUrl, currentSort, selectedTargets],
+    [onBuildersChange, syncToUrl, currentSort, selectedTargets, selectedTones],
   );
 
   const handleTargetsChange = useCallback(
     (newTargets: string[]) => {
       onTargetsChange(newTargets);
-      syncToUrl(currentSort, selectedBuilders, newTargets);
+      syncToUrl(currentSort, selectedBuilders, newTargets, selectedTones);
     },
-    [onTargetsChange, syncToUrl, currentSort, selectedBuilders],
+    [onTargetsChange, syncToUrl, currentSort, selectedBuilders, selectedTones],
   );
 
+  const handleToneToggle = useCallback(
+    (tone: string) => {
+      const next = selectedTones.includes(tone)
+        ? selectedTones.filter((t) => t !== tone)
+        : [...selectedTones, tone];
+      onTonesChange(next);
+      syncToUrl(currentSort, selectedBuilders, selectedTargets, next);
+    },
+    [
+      selectedTones,
+      onTonesChange,
+      syncToUrl,
+      currentSort,
+      selectedBuilders,
+      selectedTargets,
+    ],
+  );
+
+  const isPaper = variant === "paper";
+
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      {/* Sort Tabs */}
+    <div
+      className={cn(
+        "flex flex-col gap-4",
+        isPaper && "border-b border-t border-line py-3.5 lg:px-10",
+      )}
+    >
       <div
-        className="flex items-center gap-1 rounded-[7px] bg-panel p-1"
-        role="tablist"
-        aria-label="Sort options"
+        className={cn(
+          "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between",
+          isPaper && "px-6 lg:px-0",
+        )}
       >
-        {sortOptions.map((option) => {
-          const isActive = currentSort === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => handleSortChange(option.value)}
-              className={cn(
-                "rounded-md px-3.5 py-1.5 text-sm transition-colors duration-200 min-h-[44px] sm:min-h-0",
-                isActive
-                  ? "bg-canvas text-ink font-semibold shadow-sm"
-                  : "text-muted hover:text-ink",
-              )}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+        {/* Sort row */}
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-1.5",
+            !isPaper &&
+              "gap-1 rounded-[7px] bg-panel p-1 sm:rounded-[7px]",
+          )}
+          role="tablist"
+          aria-label="Sort options"
+        >
+          {sortOptions.map((option) => {
+            const isActive = currentSort === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handleSortChange(option.value)}
+                className={cn(
+                  "min-h-[44px] rounded-full px-3.5 py-1.75 transition-colors duration-200 sm:min-h-0",
+                  isPaper &&
+                    (isActive
+                      ? "bg-ink font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-chrome"
+                      : "font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-muted hover:text-ink"),
+                  !isPaper &&
+                    (isActive
+                      ? "rounded-md bg-canvas font-sans text-sm font-semibold text-ink shadow-sm"
+                      : "rounded-md font-sans text-sm text-muted hover:text-ink"),
+                )}
+              >
+                {isPaper ? option.label.toUpperCase() : option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Vibe chips (Paper) */}
+        {isPaper && (
+          <div className="flex flex-wrap items-center gap-1.5 lg:max-w-[55%] lg:justify-end">
+            <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+              Vibe
+            </span>
+            {FEED_VIBE_OPTIONS.map((tone) => {
+              const on = selectedTones.includes(tone);
+              return (
+                <button
+                  key={tone}
+                  type="button"
+                  onClick={() => handleToneToggle(tone)}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] transition-colors",
+                    on
+                      ? "bg-ink text-chrome"
+                      : "bg-panel text-ink hover:bg-line",
+                  )}
+                >
+                  {tone}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Filter Dropdowns */}
-      <div className="flex items-center gap-2">
+      {/* Builder / target */}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2",
+          isPaper && "border-t border-line px-6 pt-3.5 lg:border-t-0 lg:px-0 lg:pt-0",
+        )}
+      >
         <MultiSelectDropdown
           label="Builder"
           options={builders}

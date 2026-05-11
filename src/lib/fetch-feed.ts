@@ -6,6 +6,7 @@ export async function fetchFeedServer(opts: {
   limit: number;
   builders?: string[];
   targets?: string[];
+  tones?: string[];
 }): Promise<FeedResponse> {
   const base = await getServerBaseUrl();
   const params = new URLSearchParams();
@@ -17,11 +18,14 @@ export async function fetchFeedServer(opts: {
   if (opts.targets && opts.targets.length > 0) {
     params.set("target", opts.targets.join(","));
   }
+  if (opts.tones && opts.tones.length > 0) {
+    params.set("tone", opts.tones.join(","));
+  }
   const res = await fetch(`${base}/api/feed?${params.toString()}`, {
     cache: "no-store",
   });
   if (!res.ok) {
-    return { sort: opts.sort, items: [], hasMore: false };
+    return { sort: opts.sort, items: [], hasMore: false, ideasThisWeek: 0 };
   }
   return (await res.json()) as FeedResponse;
 }

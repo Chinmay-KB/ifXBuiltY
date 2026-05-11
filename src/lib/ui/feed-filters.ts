@@ -91,6 +91,15 @@ export function sortFeedItems(items: FeedItem[], sort: FeedSort): FeedItem[] {
     case "top":
       sorted.sort((a, b) => b.netScore - a.netScore);
       break;
+
+    case "remixes":
+      sorted.sort((a, b) => {
+        if (b.remixCount !== a.remixCount) {
+          return b.remixCount - a.remixCount;
+        }
+        return b.createdAt.localeCompare(a.createdAt);
+      });
+      break;
   }
 
   return sorted;

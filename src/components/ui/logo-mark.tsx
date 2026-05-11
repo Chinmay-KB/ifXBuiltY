@@ -18,7 +18,7 @@ type Props = {
   className?: string;
 };
 
-/** Yellow "X" mark — matches Paper nav / system header. */
+/** Yellow "x" mark — matches Paper nav / system header. */
 export function LogoMark({ size = "md", className }: Props) {
   const s = sizes[size];
   return (
@@ -30,7 +30,7 @@ export function LogoMark({ size = "md", className }: Props) {
       )}
       aria-hidden
     >
-      <span className={cn("font-display text-ink", s.text)}>X</span>
+      <span className={cn("font-display text-ink", s.text)}>x</span>
     </div>
   );
 }

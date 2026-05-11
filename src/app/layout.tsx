@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 
+import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { isSuperadmin } from "@/lib/admin-constants";
@@ -106,18 +107,21 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${fraunces.variable} ${spaceMono.variable} h-full antialiased`}
+      className={`${outfit.variable} ${fraunces.variable} ${spaceMono.variable} min-h-dvh antialiased`}
     >
-      <body className="flex min-h-full flex-col overflow-x-hidden bg-canvas font-sans text-ink">
+      <body className="flex min-h-dvh flex-col bg-canvas font-sans text-ink">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SignInModalProvider>
-          <NavigationShellWrapper user={navUser} isSuperadmin={isSuperadmin(user?.email)} />
-          <main className="flex flex-1 flex-col pt-16 pb-14 md:pb-0">
-            {children}
-          </main>
+          <NavigationGeneratingProvider>
+            <NavigationShellWrapper user={navUser} isSuperadmin={isSuperadmin(user?.email)} />
+            {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
+            <main className="flex min-h-0 w-full flex-1 flex-col pt-20 pb-14 md:pb-0">
+              {children}
+            </main>
+          </NavigationGeneratingProvider>
         </SignInModalProvider>
       </body>
     </html>

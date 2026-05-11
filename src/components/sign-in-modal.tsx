@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LogoMark, Wordmark } from "@/components/ui";
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function SignInModal({ open, onClose }: Props) {
+  const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export function SignInModal({ open, onClose }: Props) {
         </div>
 
         {/* Google button */}
-        <GoogleSignInButton nextPath={typeof window !== "undefined" ? window.location.pathname : "/"} />
+        <GoogleSignInButton nextPath={pathname} />
 
         {/* Footer */}
         <p className="text-xs leading-relaxed text-muted">

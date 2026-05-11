@@ -11,6 +11,7 @@ type FeedMasonryGridProps = {
   sort: FeedSort;
   builders?: string[];
   targets?: string[];
+  tones?: string[];
 };
 
 /**
@@ -33,11 +34,13 @@ export function FeedMasonryGrid({
   sort,
   builders,
   targets,
+  tones,
 }: FeedMasonryGridProps) {
   const { items, isLoading, hasMore, loadMore, error } = useFeed({
     sort,
     builders,
     targets,
+    tones,
     initialItems,
   });
 
@@ -47,7 +50,7 @@ export function FeedMasonryGrid({
       <div className="masonry-feed gap-4">
         {items.map((item) => (
           <div key={item.id} className="mb-4 break-inside-avoid">
-            <GenerationCard item={item} />
+            <GenerationCard item={item} variant="paper" />
           </div>
         ))}
       </div>

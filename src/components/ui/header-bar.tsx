@@ -10,7 +10,7 @@ export function HeaderBar({ children, className }: Props) {
   return (
     <header
       className={cn(
-        "flex h-[72px] w-full shrink-0 items-center justify-between border-b border-line bg-canvas px-12",
+        "flex h-20 w-full shrink-0 items-center justify-between border-b border-line bg-canvas px-12",
         className,
       )}
     >

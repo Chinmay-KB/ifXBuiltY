@@ -17,8 +17,12 @@ type User = {
 
 type NavigationShellProps = {
   user: User;
-  activeSection: "home" | "feed" | "generate" | "admin";
+  activeSection: "home" | "feed" | "generate" | "admin" | "about";
   isSuperadmin: boolean;
+  /** Marketing (home/about) vs full Paper app chrome (feed, generate, detail, …) */
+  variant: "marketing" | "app";
+  /** Desktop Generate flow — Paper header “Generating” + Cancel */
+  generatingChrome?: { onCancel: () => void } | null;
 };
 
 /* ─── Icons (inline SVG, no emoji) ─── */
@@ -102,14 +106,19 @@ function AdminIcon({ className }: { className?: string }) {
   );
 }
 
-/* ─── Desktop Nav Links ─── */
-
-const navItems = [
+const marketingNavItems = [
   { section: "generate" as const, label: "Generate", href: "/generate" },
   { section: "feed" as const, label: "Feed", href: "/feed" },
 ];
 
-/* ─── User Avatar (kept for mobile) ─── */
+const appNavItems: {
+  label: string;
+  href: string;
+  activeMatch: "generate" | "feed" | "admin" | null;
+}[] = [
+  { label: "Generate", href: "/generate", activeMatch: "generate" },
+  { label: "Feed", href: "/feed", activeMatch: "feed" },
+];
 
 function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
   const displayName = user.display_name ?? user.email ?? "User";
@@ -132,79 +141,162 @@ function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
   );
 }
 
-/* ─── Main Component ─── */
+function AppNavLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "relative text-sm font-medium transition-colors",
+        active ? "text-ink" : "text-muted hover:text-ink",
+      )}
+      aria-current={active ? "page" : undefined}
+    >
+      {label}
+      {active ? (
+        <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-chrome" />
+      ) : null}
+    </Link>
+  );
+}
 
-export function NavigationShell({ user, activeSection, isSuperadmin }: NavigationShellProps) {
+export function NavigationShell({
+  user,
+  activeSection,
+  isSuperadmin,
+  variant,
+  generatingChrome = null,
+}: NavigationShellProps) {
   const { openSignIn } = useSignInModal();
   const isSuperadminUser = isSuperadmin;
 
   return (
     <>
-      {/* Desktop top nav — hidden below md (768px) */}
-      <header className="fixed inset-x-0 top-0 z-50 hidden h-16 border-b border-line bg-canvas md:block">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo + Wordmark */}
-          <Link href="/" className="flex items-center gap-2.5">
+      {/* Desktop */}
+      <header className="fixed inset-x-0 top-0 z-50 hidden h-20 border-b border-line bg-canvas md:block">
+        <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-4 px-6 lg:gap-6 lg:px-10">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <LogoMark size="sm" />
-            <Wordmark className="text-lg" />
+            <Wordmark className="text-[22px] leading-7" />
           </Link>
 
-          {/* Nav Links */}
-          <nav className="flex items-center gap-6" aria-label="Main navigation">
-            {navItems.map((item) => (
-              <Link
-                key={item.section}
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors duration-200",
-                  activeSection === item.section
-                    ? "font-semibold text-ink"
-                    : "text-muted hover:text-ink",
-                )}
-                aria-current={
-                  activeSection === item.section ? "page" : undefined
-                }
-              >
-                {item.label}
-              </Link>
-            ))}
-            {isSuperadminUser && (
-              <Link
-                href="/admin"
-                className={cn(
-                  "text-sm font-medium transition-colors duration-200",
-                  activeSection === "admin"
-                    ? "font-semibold text-ink"
-                    : "text-muted hover:text-ink",
-                )}
-                aria-current={activeSection === "admin" ? "page" : undefined}
-              >
-                Admin
-              </Link>
-            )}
-          </nav>
+          {variant === "marketing" ? (
+            <nav
+              className="flex flex-1 items-center justify-center gap-9"
+              aria-label="Main navigation"
+            >
+              {marketingNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors duration-200",
+                    activeSection === item.section
+                      ? "text-ink"
+                      : "text-muted hover:text-ink",
+                  )}
+                  aria-current={activeSection === item.section ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {isSuperadminUser && (
+                <Link
+                  href="/admin"
+                  className={cn(
+                    "text-sm font-medium transition-colors duration-200",
+                    activeSection === "admin"
+                      ? "text-ink"
+                      : "text-muted hover:text-ink",
+                  )}
+                  aria-current={activeSection === "admin" ? "page" : undefined}
+                >
+                  Admin
+                </Link>
+              )}
+            </nav>
+          ) : generatingChrome ? (
+            <div className="flex flex-1 justify-center">
+              <div className="flex items-center gap-2 rounded-full border border-chrome/35 bg-chrome/12 px-4 py-2">
+                <span className="size-2 shrink-0 rounded-full bg-chrome" aria-hidden />
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-chrome">
+                  Generating
+                </span>
+              </div>
+            </div>
+          ) : (
+            <nav
+              className="flex flex-1 items-center justify-center gap-9"
+              aria-label="Main navigation"
+            >
+              {appNavItems.map((item) => {
+                const active =
+                  item.activeMatch != null && activeSection === item.activeMatch;
+                return (
+                  <AppNavLink
+                    key={item.label + item.href}
+                    href={item.href}
+                    label={item.label}
+                    active={active}
+                  />
+                );
+              })}
+              {isSuperadminUser && (
+                <AppNavLink
+                  href="/admin"
+                  label="Admin"
+                  active={activeSection === "admin"}
+                />
+              )}
+            </nav>
+          )}
 
-          {/* User area */}
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {variant === "app" && generatingChrome ? (
+              <button
+                type="button"
+                onClick={generatingChrome.onCancel}
+                className="rounded-full border border-line bg-panel px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-ink transition-colors hover:bg-line"
+              >
+                Cancel
+              </button>
+            ) : null}
+
+
             {user ? (
               <>
                 <CreditsBadge />
                 <UserMenu user={user} />
               </>
             ) : (
-              <button
-                type="button"
-                onClick={openSignIn}
-                className="inline-flex items-center justify-center rounded-lg bg-ink px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-ink/90"
-              >
-                Sign in
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink lg:px-4"
+                >
+                  Sign in
+                </button>
+                <Link
+                  href="/generate"
+                  className="rounded-full bg-ink px-4 py-2.5 text-[13px] font-bold text-chrome transition-opacity hover:opacity-90 lg:px-[18px]"
+                >
+                  Get started →
+                </Link>
+              </>
             )}
           </div>
         </div>
       </header>
 
-      {/* Mobile bottom tab bar — visible below md (768px) */}
+      {/* Mobile bottom tab bar */}
       <nav
         className="fixed inset-x-0 bottom-0 z-50 flex h-14 items-center justify-around border-t border-line bg-canvas md:hidden"
         aria-label="Mobile navigation"

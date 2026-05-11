@@ -23,6 +23,7 @@ type GenerateBody = {
   builder?: unknown;
   target?: unknown;
   extraDetails?: unknown;
+  tone?: unknown;
   remixParentId?: unknown;
 };
 
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
       builder: String(body.builder ?? ""),
       target: String(body.target ?? ""),
       extraDetails: String(body.extraDetails ?? ""),
+      tone: typeof body.tone === "string" ? body.tone : "",
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Invalid prompt fields";
@@ -282,7 +284,7 @@ export async function POST(request: Request) {
         slug,
         builder: String(body.builder ?? ""),
         target: String(body.target ?? ""),
-        tone: "",
+        tone: typeof body.tone === "string" ? body.tone.slice(0, 80) : "",
         screen_type: "",
         region: "",
         extra_details: String(body.extraDetails ?? ""),

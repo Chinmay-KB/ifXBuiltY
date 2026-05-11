@@ -9,12 +9,17 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-type SortKey = "newest" | "trending" | "top";
+type SortKey = "newest" | "trending" | "top" | "remixes";
 
 function parseSort(raw: string | null): SortKey {
   if (raw === "trending") return "trending";
   if (raw === "top") return "top";
+  if (raw === "remixes") return "remixes";
   return "newest";
+}
+
+function sanitizeIlikeFragment(s: string): string {
+  return s.replace(/[%*,]/g, "").trim();
 }
 
 function parseLimit(raw: string | null): number {
@@ -46,6 +51,9 @@ export async function GET(request: Request) {
   const offset = parseOffset(url.searchParams.get("offset"));
   const builders = parseCommaSeparated(url.searchParams.get("builder"));
   const targets = parseCommaSeparated(url.searchParams.get("target"));
+  const tones = parseCommaSeparated(url.searchParams.get("tone"))
+    .map(sanitizeIlikeFragment)
+    .filter((s) => s.length > 0);
 
   const supabase = await createSupabaseServerClient();
 
@@ -69,6 +77,12 @@ export async function GET(request: Request) {
     q = q.in("target", targets);
   }
 
+  // Tone / vibe filter (substring match, case-insensitive)
+  if (tones.length > 0) {
+    const orExpr = tones.map((t) => `tone.ilike.%${t}%`).join(",");
+    q = q.or(orExpr);
+  }
+
   // Apply sort order
   if (sort === "trending") {
     q = q
@@ -76,12 +90,27 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false });
   } else if (sort === "top") {
     q = q.order("net_score", { ascending: false });
+  } else if (sort === "remixes") {
+    q = q
+      .order("remix_count", { ascending: false })
+      .order("created_at", { ascending: false });
   } else {
     // newest
     q = q.order("created_at", { ascending: false });
   }
 
-  const { data: rows, error } = await q;
+  const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const countPromise = supabase
+    .from("generations")
+    .select("*", { count: "exact", head: true })
+    .eq("visibility", "published")
+    .eq("moderation_status", "visible")
+    .gte("created_at", weekAgoIso);
+
+  const [{ data: rows, error }, countResult] = await Promise.all([q, countPromise]);
+
+  const ideasThisWeek = countResult.count ?? 0;
 
   if (error) {
     return NextResponse.json(
@@ -97,7 +126,7 @@ export async function GET(request: Request) {
   const list = hasMore ? allRows.slice(0, limit) : allRows;
 
   if (list.length === 0) {
-    return NextResponse.json({ sort, items: [], hasMore: false });
+    return NextResponse.json({ sort, items: [], hasMore: false, ideasThisWeek });
   }
 
   const items = list.map((r) => ({
@@ -118,5 +147,5 @@ export async function GET(request: Request) {
     createdAt: r.created_at,
   }));
 
-  return NextResponse.json({ sort, items, hasMore });
+  return NextResponse.json({ sort, items, hasMore, ideasThisWeek });
 }

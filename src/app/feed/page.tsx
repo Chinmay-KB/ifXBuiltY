@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { FeedPaperHero } from "@/components/feed-paper-hero";
 import { FeedPageClient } from "@/components/feed-page-client";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import type { FeedSort } from "@/lib/feed-types";
@@ -13,12 +14,13 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ sort?: string; builder?: string; target?: string }>;
+  searchParams: Promise<{ sort?: string; builder?: string; target?: string; tone?: string }>;
 };
 
 function parseSort(raw: string | undefined): FeedSort {
   if (raw === "trending") return "trending";
   if (raw === "top") return "top";
+  if (raw === "remixes") return "remixes";
   return "newest";
 }
 
@@ -35,6 +37,7 @@ export default async function FeedPage({ searchParams }: Props) {
   const sort = parseSort(params.sort);
   const builders = parseCommaSeparated(params.builder);
   const targets = parseCommaSeparated(params.target);
+  const tones = parseCommaSeparated(params.tone);
 
   // Server-fetch initial feed items with the parsed params
   const feed = await fetchFeedServer({
@@ -42,6 +45,7 @@ export default async function FeedPage({ searchParams }: Props) {
     limit: 24,
     builders: builders.length > 0 ? builders : undefined,
     targets: targets.length > 0 ? targets : undefined,
+    tones: tones.length > 0 ? tones : undefined,
   });
 
   // Extract distinct builder/target values from initial items for filter dropdowns
@@ -54,28 +58,23 @@ export default async function FeedPage({ searchParams }: Props) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
-      {/* Page Header */}
-      <div className="flex flex-col gap-6 border-b border-line px-4 py-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:px-12 sm:py-8">
-        <div className="min-w-0 max-w-3xl">
-          <h1 className="font-display text-3xl leading-tight text-ink sm:text-[42px] sm:leading-[2.75rem]">
-            The wall of questionable taste
-          </h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-            Vote with your whole chest. Fork without shame.
-          </p>
-        </div>
-      </div>
+      <FeedPaperHero ideasThisWeek={feed.ideasThisWeek ?? 0} />
 
-      {/* Feed Content */}
-      <div className="flex flex-1 flex-col px-4 py-6 sm:px-12 sm:py-8">
-        {feed.items.length === 0 && builders.length === 0 && targets.length === 0 ? (
-          <EmptyFeedState />
+      <div className="flex flex-1 flex-col pb-10 pt-0">
+        {feed.items.length === 0 &&
+        builders.length === 0 &&
+        targets.length === 0 &&
+        tones.length === 0 ? (
+          <div className="px-6 lg:px-10">
+            <EmptyFeedState />
+          </div>
         ) : (
           <FeedPageClient
             initialItems={feed.items}
             initialSort={sort}
             initialBuilders={builders}
             initialTargets={targets}
+            initialTones={tones}
             availableBuilders={availableBuilders}
             availableTargets={availableTargets}
           />

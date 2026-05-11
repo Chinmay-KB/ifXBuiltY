@@ -14,7 +14,7 @@ type Props = {
 
 export function SiteHeader({ user, active, primaryAction }: Props) {
   return (
-    <header className="flex h-[72px] w-full shrink-0 items-center justify-between gap-4 border-b border-line bg-canvas px-4 sm:px-12">
+    <header className="flex h-20 w-full shrink-0 items-center justify-between gap-4 border-b border-line bg-canvas px-4 sm:px-12">
       <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
         <LogoMark />
         <Wordmark className="truncate" />

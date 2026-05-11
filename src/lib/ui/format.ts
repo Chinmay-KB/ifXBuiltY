@@ -65,6 +65,7 @@ export function hasInputsChanged(
   return (
     current.builder !== last.builder ||
     current.target !== last.target ||
-    current.extraDetails !== last.extraDetails
+    current.extraDetails !== last.extraDetails ||
+    (current.tone ?? "") !== (last.tone ?? "")
   );
 }

@@ -15,6 +15,9 @@ type GenerationResultViewProps = {
   lastInputs: GenerationInputs;
   onReset: () => void;
   onRegenerate: (inputs: GenerationInputs) => void;
+  variant?: "default" | "paper";
+  /** Fit image + actions inside a fixed viewport (Generate page layout) */
+  viewportContained?: boolean;
 };
 
 /**
@@ -29,6 +32,8 @@ export function GenerationResultView({
   lastInputs,
   onReset,
   onRegenerate,
+  variant = "default",
+  viewportContained = false,
 }: GenerationResultViewProps) {
   const [publishState, setPublishState] = useState<
     "idle" | "loading" | "success" | "error"
@@ -104,6 +109,180 @@ export function GenerationResultView({
   const handleRegenerate = useCallback(() => {
     onRegenerate(currentInputs);
   }, [onRegenerate, currentInputs]);
+
+  if (variant === "paper") {
+    const vc = viewportContained;
+    return (
+      <div
+        className={cn(
+          "flex flex-col",
+          vc
+            ? "h-full min-h-0 gap-3 overflow-hidden lg:flex-row lg:gap-5"
+            : "gap-6 lg:flex-row lg:gap-12",
+        )}
+      >
+        <div
+          className={cn(
+            "min-w-0 flex-1 overflow-hidden bg-gradient-to-br from-panel to-canvas",
+            vc
+              ? "flex min-h-0 items-center justify-center rounded-2xl"
+              : "min-h-[320px] rounded-3xl lg:min-h-[480px]",
+          )}
+        >
+          {result.imageUrl ? (
+            <Zoom>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={result.imageUrl}
+                alt={title}
+                className={cn("object-contain", vc ? "max-h-full max-w-full" : "h-full w-full")}
+                style={vc ? undefined : { maxHeight: "min(72vh, 640px)" }}
+              />
+            </Zoom>
+          ) : (
+            <div className={cn("flex items-center justify-center", vc ? "h-36" : "h-80")}>
+              <span className="text-muted">Image unavailable</span>
+            </div>
+          )}
+        </div>
+
+        <div
+          className={cn(
+            "flex w-full shrink-0 flex-col",
+            vc ? "min-h-0 gap-3 lg:w-[260px]" : "gap-6 lg:w-[380px]",
+          )}
+        >
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-panel py-1.5 pl-2.5 pr-3 lg:gap-2.5 lg:py-2 lg:pl-3 lg:pr-3.5">
+            <span className="size-2 rounded-full bg-[#58CC02]" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink lg:text-[11px]">
+              Generated
+            </span>
+          </div>
+
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-widest text-muted lg:text-[10px]">
+              Fresh from the multiverse
+            </p>
+            <h2
+              className={cn(
+                "mt-1 font-display font-black leading-[0.94] tracking-[-0.04em] text-ink lg:mt-2",
+                vc
+                  ? "text-[clamp(1.15rem,2.4vw,1.65rem)]"
+                  : "text-[clamp(2rem,4vw,3.25rem)]",
+              )}
+            >
+              If {result.builder}
+              <br />
+              built {result.target}.
+            </h2>
+            {currentInputs.tone ? (
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted lg:mt-2 lg:text-[11px]">
+                {currentInputs.tone} vibe
+              </p>
+            ) : null}
+          </div>
+
+          <div className={cn("flex flex-col", vc ? "gap-2" : "gap-2.5")}>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void handleDownload()}
+                disabled={!result.imageUrl}
+                className={cn(
+                  "inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-chrome font-sans font-bold text-ink transition-opacity disabled:opacity-40",
+                  vc ? "px-3 py-2.5 text-sm" : "py-4 px-4 text-base",
+                )}
+              >
+                <DownloadIcon />
+                Save image
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleShare()}
+                className={cn(
+                  "flex shrink-0 items-center justify-center rounded-full bg-ink text-white",
+                  vc ? "size-11" : "size-14",
+                )}
+                aria-label="Share"
+              >
+                <ShareIcon />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 lg:gap-2">
+              {publishState === "success" ? (
+                <Link
+                  href={`/g/${publishedSlug}`}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
+                    vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
+                  )}
+                >
+                  View live
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void handlePublish()}
+                  disabled={publishState === "loading"}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line disabled:opacity-50",
+                    vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
+                  )}
+                >
+                  {publishState === "loading" ? "Publishing…" : "Publish"}
+                </button>
+              )}
+              <Link
+                href={`/remix/${result.id}`}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
+                  vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
+                )}
+              >
+                Remix
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleShare()}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
+                  vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
+                )}
+              >
+                Link
+              </button>
+            </div>
+          </div>
+
+          {publishState === "error" && publishError && (
+            <p className="text-sm font-medium text-barrier" role="alert">
+              {publishError}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="chrome"
+              size="lg"
+              className={cn("font-black", vc && "h-10 px-4 text-sm")}
+              onClick={onReset}
+            >
+              Generate another
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className={cn("font-black", !inputsChanged && "opacity-50", vc && "h-10 px-4 text-sm")}
+              disabled={!inputsChanged}
+              onClick={handleRegenerate}
+            >
+              Regenerate
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">

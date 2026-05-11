@@ -90,7 +90,7 @@ export default async function OGImage({
     .jpeg({ quality: 80 })
     .toBuffer();
 
-  return new Response(jpeg, {
+  return new Response(new Uint8Array(jpeg), {
     headers: {
       "Content-Type": "image/jpeg",
       "Cache-Control": "public, max-age=31536000, stale-while-revalidate=86400",

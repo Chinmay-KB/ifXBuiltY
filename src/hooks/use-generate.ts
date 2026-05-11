@@ -6,6 +6,8 @@ import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
 
 type UseGenerateReturn = {
   generate: (inputs: GenerationInputs, options?: { remixParentId?: number }) => Promise<void>;
+  /** Aborts the in-flight `/api/generate` request (no-op if idle). */
+  cancelInflight: () => void;
   result: GenerationResult | null;
   isLoading: boolean;
   error: string | null;
@@ -28,12 +30,19 @@ export function useGenerate(): UseGenerateReturn {
 
   // Guard against concurrent requests
   const inflightRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const cancelInflight = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   const generate = useCallback(async (inputs: GenerationInputs, options?: { remixParentId?: number }) => {
     // Prevent concurrent generation requests
     if (inflightRef.current) return;
 
     inflightRef.current = true;
+    const ac = new AbortController();
+    abortRef.current = ac;
     setIsLoading(true);
     setError(null);
     setErrorCode(null);
@@ -43,6 +52,7 @@ export function useGenerate(): UseGenerateReturn {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: ac.signal,
         body: JSON.stringify({
           ...inputs,
           ...(options?.remixParentId ? { remixParentId: options.remixParentId } : {}),
@@ -67,11 +77,20 @@ export function useGenerate(): UseGenerateReturn {
         builder: inputs.builder,
         target: inputs.target,
       });
-    } catch {
+    } catch (e) {
+      const aborted =
+        (e instanceof DOMException && e.name === "AbortError") ||
+        (e instanceof Error && e.name === "AbortError");
+      if (aborted) {
+        setError(null);
+        setErrorCode(null);
+        return;
+      }
       setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
       inflightRef.current = false;
+      abortRef.current = null;
     }
   }, []);
 
@@ -81,5 +100,5 @@ export function useGenerate(): UseGenerateReturn {
     setErrorCode(null);
   }, []);
 
-  return { generate, result, isLoading, error, errorCode, reset };
+  return { generate, cancelInflight, result, isLoading, error, errorCode, reset };
 }
