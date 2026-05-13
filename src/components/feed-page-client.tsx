@@ -64,7 +64,7 @@ export function FeedPageClient({
 
   return (
     <>
-      <div className="px-0">
+      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
         <FeedFilterBar
           variant="paper"
           currentSort={sort}
@@ -114,13 +114,13 @@ function EmptyFilterState() {
         <div className="mt-4 flex items-center justify-center gap-3">
           <Link
             href="/feed"
-            className="inline-flex items-center justify-center rounded-[7px] border border-line bg-canvas px-4 py-2 text-sm font-medium text-ink transition-colors duration-200 hover:bg-panel"
+            className="inline-flex items-center justify-center rounded-tile border border-line bg-canvas px-4 py-2 text-sm font-medium text-ink transition-colors duration-200 hover:bg-panel"
           >
             Clear filters
           </Link>
           <Link
             href="/generate"
-            className="inline-flex items-center justify-center rounded-[7px] bg-ink px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-ink/90"
+            className="inline-flex items-center justify-center rounded-tile bg-ink px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-ink/90"
           >
             Generate one
           </Link>

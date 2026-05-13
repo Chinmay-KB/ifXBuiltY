@@ -52,10 +52,6 @@ export function GenerationCard({
   const label = formatCardLabel(item.builder, item.target);
   const score = formatCompactCount(item.netScore);
   const paperTitle = `${item.builder} × ${item.target}`;
-  const toneLabel =
-    (item.vibeTags && item.vibeTags.length > 0 ? item.vibeTags[0] : null) ||
-    (item.tone && item.tone.trim()) ||
-    "Wild";
   const screenLabel = (item.screenType && item.screenType.trim()) || "Screenshot";
 
   const handleImageError = useCallback(() => {
@@ -94,10 +90,6 @@ export function GenerationCard({
                 </p>
               </div>
             )}
-
-            <span className="absolute left-2 top-2 rounded-full bg-chrome px-2 py-[3px] font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-ink sm:left-3.5 sm:top-3.5 sm:px-2.5 sm:py-1 sm:text-[10px]">
-              {toneLabel}
-            </span>
 
             <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 backdrop-blur-md sm:bottom-3.5 sm:left-3.5 sm:gap-1.5 sm:px-2.5 sm:py-1.5">
               <svg
