@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { HomepageHero } from "@/components/homepage-hero";
 import { HomepageFeed } from "@/components/homepage-feed";
+import { getFeedFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import { getHomepageFeaturedGenerations } from "@/lib/homepage-featured-generations";
 import { getTotalPublishedCount } from "@/lib/homepage-stats";
@@ -18,10 +19,11 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   // Fetch featured generations for hero thumbnails + initial feed items in parallel
-  const [featuredGenerations, feed, totalPublished] = await Promise.all([
+  const [featuredGenerations, feed, totalPublished, filterOptions] = await Promise.all([
     getHomepageFeaturedGenerations(),
     fetchFeedServer({ sort: "trending", limit: 24 }),
     getTotalPublishedCount(),
+    getFeedFilterOptions(),
   ]);
 
   // Build hero thumbnails — use featured first, supplement with feed items if needed
@@ -48,14 +50,6 @@ export default async function HomePage() {
 
   const heroThumbnails = [...featuredThumbs, ...supplementThumbs];
 
-  // Extract distinct builder/target values for filter dropdowns
-  const availableBuilders = Array.from(
-    new Set(feed.items.map((item) => item.builder)),
-  ).sort();
-  const availableTargets = Array.from(
-    new Set(feed.items.map((item) => item.target)),
-  ).sort();
-
   return (
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
       <HomepageHero
@@ -65,8 +59,8 @@ export default async function HomePage() {
       />
       <HomepageFeed
         initialItems={feed.items}
-        availableBuilders={availableBuilders}
-        availableTargets={availableTargets}
+        availableBuilders={filterOptions.builders}
+        availableTargets={filterOptions.targets}
       />
     </div>
   );

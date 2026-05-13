@@ -45,6 +45,7 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
 
   const activeSection = getActiveSection(pathname);
   const navVariant = getNavVariant(pathname);
+  const isGenerationDetail = pathname.startsWith("/g/");
 
   const generatingChrome =
     generatingNavState.mode === "generating"
@@ -56,6 +57,7 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
       user={user}
       activeSection={activeSection}
       isSuperadmin={isSuperadmin}
+      isGenerationDetail={isGenerationDetail}
       variant={navVariant}
       generatingChrome={generatingChrome}
     />

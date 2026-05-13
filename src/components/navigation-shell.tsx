@@ -19,6 +19,7 @@ type NavigationShellProps = {
   user: User;
   activeSection: "home" | "feed" | "generate" | "admin" | "about";
   isSuperadmin: boolean;
+  isGenerationDetail?: boolean;
   /** Marketing (home/about) vs full Paper app chrome (feed, generate, detail, …) */
   variant: "marketing" | "app";
   /** Desktop Generate flow — Paper header “Generating” + Cancel */
@@ -124,7 +125,11 @@ function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
   const displayName = user.display_name ?? user.email ?? "User";
 
   return (
-    <Link href="/profile" className="flex items-center gap-2">
+    <Link
+      href="/profile"
+      className="flex min-h-[44px] min-w-[44px] items-center justify-center"
+      aria-label={`Open ${displayName}'s profile`}
+    >
       {user.avatar_url ? (
         // eslint-disable-next-line @next/next/no-img-element -- arbitrary OAuth avatar URLs
         <img
@@ -171,11 +176,21 @@ export function NavigationShell({
   user,
   activeSection,
   isSuperadmin,
+  isGenerationDetail = false,
   variant,
   generatingChrome = null,
 }: NavigationShellProps) {
   const { openSignIn } = useSignInModal();
   const isSuperadminUser = isSuperadmin;
+
+  function returnToPreviousFeed() {
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    window.location.assign("/feed");
+  }
 
   return (
     <>
@@ -319,16 +334,12 @@ export function NavigationShell({
                   ? AdminIcon
                   : GenerateIcon;
 
-          return (
-            <Link
-              key={item.section}
-              href={item.href}
-              className={cn(
-                "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 transition-colors duration-200",
-                isActive ? "text-ink" : "text-muted",
-              )}
-              aria-current={isActive ? "page" : undefined}
-            >
+          const className = cn(
+            "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 transition-colors duration-200",
+            isActive ? "text-ink" : "text-muted",
+          );
+          const content = (
+            <>
               <Icon className={isActive ? "stroke-[2.5]" : undefined} />
               <span
                 className={cn(
@@ -338,6 +349,31 @@ export function NavigationShell({
               >
                 {item.label}
               </span>
+            </>
+          );
+
+          if (isGenerationDetail && item.section === "feed") {
+            return (
+              <button
+                key={item.section}
+                type="button"
+                onClick={returnToPreviousFeed}
+                className={className}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {content}
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={item.section}
+              href={item.href}
+              className={className}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {content}
             </Link>
           );
         })}

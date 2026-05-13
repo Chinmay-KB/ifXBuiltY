@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 type FloatingThumb = {
@@ -38,6 +39,19 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
     <section className="relative flex flex-col items-center">
       {/* Hero area with floating thumbnails */}
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden px-5 pb-10 pt-12 md:min-h-[600px] md:px-12 md:pb-14 md:pt-16">
+        <Link
+          href="/"
+          className={cn(
+            "mb-7 flex items-center gap-2.5 transition-all duration-700 md:hidden",
+            mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
+          )}
+          style={{ transitionDelay: "50ms" }}
+          aria-label="ifXBuiltY home"
+        >
+          <LogoMark size="sm" />
+          <Wordmark className="text-[24px] leading-7" />
+        </Link>
+
         {/* Floating thumbnails — desktop */}
         <div className="pointer-events-none absolute inset-0 hidden md:block">
           {thumbnails.slice(0, DESKTOP_POSITIONS.length).map((thumb, i) => (

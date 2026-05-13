@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { GenerationCard } from "@/components/generation-card";
@@ -9,6 +8,8 @@ import { getPublishedGenerationBySlug } from "@/lib/public-generation";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
+import { FeedReturnLink } from "./feed-return-link";
+import { GenerationDetailActions } from "./generation-detail-actions";
 import { PublishedGenerationHero } from "./published-generation-hero";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -69,29 +70,27 @@ export default async function GenerationDetailPage({ params }: Props) {
     if (related.length >= 4) break;
   }
 
-  const tone = (gen.tone && gen.tone.trim()) || "Wild";
+  const tone = gen.tone?.trim();
+  const screenType = gen.screenType?.trim() || "UI screenshot";
 
   return (
     <div className="flex flex-col bg-canvas pb-12">
-      <div className="flex items-center gap-2 px-6 pt-5 font-mono text-[11px] uppercase tracking-[0.06em] text-muted lg:px-14">
-        <Link href="/feed" className="transition-colors hover:text-ink">
-          Feed
-        </Link>
+      <div className="flex items-center gap-2 px-5 pt-4 font-mono text-[10px] uppercase tracking-[0.06em] text-muted sm:px-6 sm:pt-5 sm:text-[11px] lg:px-14">
+        <FeedReturnLink className="transition-colors hover:text-ink">
+          Back to feed
+        </FeedReturnLink>
         <span aria-hidden>/</span>
         <span className="text-ink">
           {gen.builder} × {gen.target}
         </span>
       </div>
 
-      <div className="mt-5 flex flex-col gap-10 px-6 lg:flex-row lg:gap-12 lg:px-14">
+      <div className="mt-4 grid gap-7 px-5 sm:mt-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:gap-12 lg:px-14">
         <div className="min-w-0 flex-1">
           {gen.imageUrl ? (
             <PublishedGenerationHero
               imageUrl={gen.imageUrl}
               title={title}
-              generationId={gen.id}
-              slug={gen.slug}
-              imageDownloadUrl={gen.imageDownloadUrl ?? null}
               variant="paper"
             />
           ) : (
@@ -101,75 +100,44 @@ export default async function GenerationDetailPage({ params }: Props) {
           )}
         </div>
 
-        <aside className="flex w-full shrink-0 flex-col gap-7 lg:w-[400px]">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
-              From the feed
-            </p>
-            <h1 className="mt-2 font-display text-[clamp(2rem,4vw,3rem)] font-black leading-[0.94] tracking-[-0.035em] text-ink">
+        <aside className="flex w-full shrink-0 flex-col gap-5 sm:gap-6 lg:sticky lg:top-28 lg:self-start">
+          <div className="border-b border-line pb-4 sm:pb-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-chrome px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink">
+                Published specimen
+              </span>
+              <span className="rounded-full bg-panel px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+                {screenType}
+              </span>
+            </div>
+            <h1 className="mt-2 font-display text-[clamp(2.15rem,10vw,3rem)] font-black leading-[0.9] tracking-[-0.04em] text-ink sm:leading-[0.94] sm:tracking-[-0.035em]">
               If {gen.builder}
               <br />
               built {gen.target}.
             </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.04em] text-muted">
-              {gen.screenType ? <span>{gen.screenType}</span> : <span>UI</span>}
-              <span className="h-1 w-1 shrink-0 rounded-full bg-muted" aria-hidden />
-              <span>Published</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+              {tone ? <span>{tone}</span> : null}
+              {tone ? <span className="h-1 w-1 rounded-full bg-muted" aria-hidden /> : null}
+              <span>Built for the feed</span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            <div className="flex flex-wrap gap-2.5">
-              {gen.imageDownloadUrl ? (
-                <a
-                  href={gen.imageDownloadUrl}
-                  download
-                  className="inline-flex flex-1 min-w-[140px] items-center justify-center gap-2 rounded-full bg-chrome py-4 px-4 font-sans text-base font-bold text-ink transition-opacity hover:opacity-90"
-                >
-                  Download
-                </a>
-              ) : null}
-              <Link
-                href={`/remix/${gen.id}`}
-                className="inline-flex size-14 items-center justify-center rounded-full bg-ink text-white"
-                aria-label="Remix"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden
-                >
-                  <path d="M12 2v13M7 7l5-5 5 5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
-                </svg>
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Link
-                href={`/feed?sort=trending`}
-                className="flex items-center justify-center rounded-full bg-panel py-3 text-[13px] font-semibold text-ink"
-              >
-                Save
-              </Link>
-              <Link
-                href={`/remix/${gen.id}`}
-                className="flex items-center justify-center rounded-full bg-panel py-3 text-[13px] font-semibold text-ink"
-              >
-                Remix
-              </Link>
-              <Link
-                href="/about"
-                className="flex items-center justify-center rounded-full bg-panel py-3 text-[13px] font-semibold text-ink"
-              >
-                Report
-              </Link>
-            </div>
-          </div>
+          <GenerationDetailActions
+            generationId={gen.id}
+            slug={gen.slug}
+            title={title}
+            imageDownloadUrl={gen.imageDownloadUrl ?? null}
+          />
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center justify-between gap-4 rounded-[18px] border border-line bg-canvas px-4 py-3">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+                Crowd signal
+              </p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Vote if the timeline checks out.
+              </p>
+            </div>
             <VoteControls
               generationId={gen.id}
               initialScore={netScore}
@@ -178,33 +146,21 @@ export default async function GenerationDetailPage({ params }: Props) {
             />
           </div>
 
-          <div className="rounded-[14px] bg-panel py-4.5 px-5">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
-              The seed
-            </p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-display text-[22px] font-black italic text-chrome">If</span>
-              <span className="font-display text-base font-medium text-ink">{gen.builder}</span>
-            </div>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="font-display text-[22px] font-black italic text-chrome">built</span>
-              <span className="font-display text-base font-medium text-ink">{gen.target}</span>
-            </div>
-            {tone ? (
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted">
-                {tone}
-              </p>
-            ) : null}
-          </div>
-
           {gen.extraDetails ? (
-            <p className="text-sm leading-relaxed text-muted-foreground">{gen.extraDetails}</p>
+            <div className="border-l-4 border-chrome py-1 pl-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+                Prompt note
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {gen.extraDetails}
+              </p>
+            </div>
           ) : null}
         </aside>
       </div>
 
       {related.length > 0 && (
-        <section className="mt-14 border-t border-line px-6 pt-10 lg:px-14">
+        <section className="mt-12 border-t border-line px-5 pt-8 sm:px-6 sm:pt-10 lg:mt-14 lg:px-14">
           <h2 className="font-display text-xl font-bold text-ink">More like this</h2>
           <div className="mt-6 masonry-feed gap-4">
             {related.map((item) => (

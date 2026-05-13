@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { FeedPaperHero } from "@/components/feed-paper-hero";
 import { FeedPageClient } from "@/components/feed-page-client";
+import { getFeedFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import type { FeedSort } from "@/lib/feed-types";
 
@@ -39,22 +40,16 @@ export default async function FeedPage({ searchParams }: Props) {
   const targets = parseCommaSeparated(params.target);
   const tones = parseCommaSeparated(params.tone);
 
-  // Server-fetch initial feed items with the parsed params
-  const feed = await fetchFeedServer({
-    sort,
-    limit: 24,
-    builders: builders.length > 0 ? builders : undefined,
-    targets: targets.length > 0 ? targets : undefined,
-    tones: tones.length > 0 ? tones : undefined,
-  });
-
-  // Extract distinct builder/target values from initial items for filter dropdowns
-  const availableBuilders = Array.from(
-    new Set(feed.items.map((item) => item.builder)),
-  ).sort();
-  const availableTargets = Array.from(
-    new Set(feed.items.map((item) => item.target)),
-  ).sort();
+  const [feed, filterOptions] = await Promise.all([
+    fetchFeedServer({
+      sort,
+      limit: 24,
+      builders: builders.length > 0 ? builders : undefined,
+      targets: targets.length > 0 ? targets : undefined,
+      tones: tones.length > 0 ? tones : undefined,
+    }),
+    getFeedFilterOptions(),
+  ]);
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
@@ -75,8 +70,8 @@ export default async function FeedPage({ searchParams }: Props) {
             initialBuilders={builders}
             initialTargets={targets}
             initialTones={tones}
-            availableBuilders={availableBuilders}
-            availableTargets={availableTargets}
+            availableBuilders={filterOptions.builders}
+            availableTargets={filterOptions.targets}
           />
         )}
       </div>
@@ -95,7 +90,7 @@ function EmptyFeedState() {
         </p>
         <Link
           href="/generate"
-          className="mt-4 inline-flex items-center justify-center rounded-[7px] bg-ink px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-ink/90"
+          className="mt-4 inline-flex items-center justify-center rounded-tile bg-ink px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-ink/90"
         >
           Generate one
         </Link>

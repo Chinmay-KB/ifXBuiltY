@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     title: "ifXBuiltY — Parody screenshot generator",
     description:
       "What if X built Y? AI-generated parody UI screenshots. Vote, remix, and share.",
-    images: ["/icon.png"],
+    images: ["/card-smol.png"],
   },
   robots: {
     index: true,
@@ -118,7 +118,7 @@ export default async function RootLayout({
           <NavigationGeneratingProvider>
             <NavigationShellWrapper user={navUser} isSuperadmin={isSuperadmin(user?.email)} />
             {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
-            <main className="flex min-h-0 w-full flex-1 flex-col pt-20 pb-14 md:pb-0">
+            <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
               {children}
             </main>
           </NavigationGeneratingProvider>
