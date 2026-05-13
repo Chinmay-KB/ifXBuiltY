@@ -76,7 +76,7 @@ export function GenerationCard({
         />
 
         <div className="relative z-10 flex flex-col pointer-events-none">
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink">
+          <div className="relative aspect-4/5 w-full overflow-hidden bg-ink">
             {item.imageUrl && !imageError ? (
               <Image
                 src={item.imageUrl}
@@ -88,18 +88,18 @@ export function GenerationCard({
                 onError={handleImageError}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink to-ink/80 p-4">
+              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-ink to-ink/80 p-4">
                 <p className="text-center font-display text-lg leading-tight text-white/80">
                   {label}
                 </p>
               </div>
             )}
 
-            <span className="absolute left-3.5 top-3.5 rounded-full bg-chrome px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-ink">
+            <span className="absolute left-2 top-2 rounded-full bg-chrome px-2 py-[3px] font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-ink sm:left-3.5 sm:top-3.5 sm:px-2.5 sm:py-1 sm:text-[10px]">
               {toneLabel}
             </span>
 
-            <div className="absolute bottom-3.5 left-3.5 flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 backdrop-blur-md">
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 backdrop-blur-md sm:bottom-3.5 sm:left-3.5 sm:gap-1.5 sm:px-2.5 sm:py-1.5">
               <svg
                 width="12"
                 height="12"
@@ -113,13 +113,13 @@ export function GenerationCard({
               >
                 <path d="M12 20V4M5 11l7-7 7 7" />
               </svg>
-              <span className="font-mono text-[11px] font-bold text-white">{score}</span>
+              <span className="font-mono text-[9px] font-bold text-white sm:text-[11px]">{score}</span>
             </div>
 
             {showActions && (
               <div
                 className={cn(
-                  "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-gradient-to-t from-ink/70 to-transparent px-3 py-3 transition-opacity lg:flex",
+                  "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-linear-to-t from-ink/70 to-transparent px-3 py-3 transition-opacity lg:flex",
                   isHovered
                     ? "pointer-events-auto opacity-100 duration-200"
                     : "pointer-events-none opacity-0 duration-150",
@@ -171,11 +171,11 @@ export function GenerationCard({
             )}
           </div>
 
-          <div className="flex flex-col gap-0.5 px-1 py-3">
-            <p className="font-display text-[17px] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
+          <div className="flex flex-col gap-0.5 px-0.5 py-2 sm:py-2.5 md:px-1 md:py-3">
+            <p className="line-clamp-2 font-sans text-[13px] font-semibold leading-[1.14] tracking-[-0.01em] text-ink sm:text-[14px] md:font-display md:text-[17px] md:font-bold md:leading-[1.1] md:tracking-[-0.02em]">
               {paperTitle}
             </p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted">
+            <p className="truncate font-mono text-[8.5px] uppercase tracking-[0.06em] text-muted sm:text-[10px]">
               <span suppressHydrationWarning>
                 {screenLabel} · {formatRelativeShort(item.createdAt)}
               </span>
@@ -188,20 +188,20 @@ export function GenerationCard({
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-[7px] bg-canvas shadow-sm transition-all duration-200 hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-tile bg-canvas shadow-sm transition-all duration-200 hover:shadow-md"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Full-card hit target; content uses pointer-events-none so Remix/Download/Share stay usable */}
       <Link
         href={`/g/${item.slug}`}
-        className="absolute inset-0 z-0 rounded-[7px]"
+        className="absolute inset-0 z-0 rounded-tile"
         aria-label={`Open ${label}`}
       />
 
       <div className="relative z-10 flex flex-col pointer-events-none">
         {/* Image area — ≥70% of card height */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <div className="relative aspect-4/5 w-full overflow-hidden">
           {item.imageUrl && !imageError ? (
             <Image
               src={item.imageUrl}
@@ -232,7 +232,7 @@ export function GenerationCard({
           {showActions && (
             <div
               className={cn(
-                "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-gradient-to-t from-ink/60 to-transparent px-3 py-3 transition-opacity lg:flex",
+                "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-linear-to-t from-ink/60 to-transparent px-3 py-3 transition-opacity lg:flex",
                 isHovered
                   ? "pointer-events-auto opacity-100 duration-200"
                   : "pointer-events-none opacity-0 duration-150",

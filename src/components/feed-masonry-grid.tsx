@@ -17,11 +17,12 @@ type FeedMasonryGridProps = {
 /**
  * FeedMasonryGrid — responsive masonry layout for the feed page.
  *
- * Uses CSS columns via the `.masonry-feed` class (defined in globals.css):
- *   - 1 column  (<640px)
- *   - 2 columns (640–1023px)
- *   - 3 columns (1024–1279px)
- *   - 5 columns (≥1280px)
+ * Uses `.masonry-feed` / `.feed-masonry-item` utilities (defined in globals.css):
+ *   - 2-column grid  (<480px)
+ *   - 3-column grid  (480–639px)
+ *   - 2 masonry columns (640–1023px)
+ *   - 3 masonry columns (1024–1279px)
+ *   - 5 masonry columns (≥1280px)
  *
  * Cards use `break-inside-avoid` to prevent splitting across columns.
  * Includes an InfiniteScrollSentinel (IntersectionObserver at 300px threshold)
@@ -47,9 +48,9 @@ export function FeedMasonryGrid({
   return (
     <div>
       {/* Masonry grid */}
-      <div className="masonry-feed gap-4">
+      <div className="masonry-feed">
         {items.map((item) => (
-          <div key={item.id} className="mb-4 break-inside-avoid">
+          <div key={item.id} className="feed-masonry-item">
             <GenerationCard item={item} variant="paper" />
           </div>
         ))}

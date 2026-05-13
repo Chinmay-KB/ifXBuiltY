@@ -94,15 +94,36 @@ body {
 }
 
 /*
-  Masonry grid utilities — Tailwind v4 includes columns-* natively,
-  but we define a convenience class for the feed masonry pattern.
+  Feed grid utilities — compact grid on phones, masonry columns from tablet up.
+  The mobile breakpoints keep the homepage scannable: 2-up on narrow widths,
+  3-up once the viewport has room.
 */
 .masonry-feed {
-  columns: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+.feed-masonry-item {
+  min-width: 0;
+}
+
+@media (min-width: 480px) {
+  .masonry-feed {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
 }
 @media (min-width: 640px) {
   .masonry-feed {
+    display: block;
     columns: 2;
+    column-gap: 1rem;
+  }
+
+  .feed-masonry-item {
+    margin-bottom: 1rem;
+    break-inside: avoid;
   }
 }
 @media (min-width: 1024px) {

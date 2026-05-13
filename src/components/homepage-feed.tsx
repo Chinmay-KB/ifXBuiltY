@@ -47,7 +47,7 @@ export function HomepageFeed({
   return (
     <div id="feed" className="relative flex flex-1 flex-col">
       {/* Filter bar — sticky on scroll */}
-      <div className="sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-sm md:top-[80px]">
+      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
         <FeedFilterBar
           variant="paper"
           currentSort={sort}
@@ -77,8 +77,8 @@ export function HomepageFeed({
       {/* Mobile FAB — generate button */}
       <Link
         href="/generate"
-        className="fixed bottom-6 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-chrome shadow-[0_4px_20px_rgba(0,0,0,0.15)] transition-transform hover:scale-105 active:scale-95 md:hidden"
-        aria-label="Generate"
+        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-chrome text-ink shadow-[0_10px_30px_rgba(0,0,0,0.18)] ring-1 ring-ink/10 transition-transform hover:scale-105 active:scale-95 md:hidden"
+        aria-label="Start generating"
       >
         <svg
           width="24"
@@ -88,7 +88,6 @@ export function HomepageFeed({
           stroke="currentColor"
           strokeWidth="2.5"
           strokeLinecap="round"
-          className="text-ink"
         >
           <path d="M12 5v14M5 12h14" />
         </svg>

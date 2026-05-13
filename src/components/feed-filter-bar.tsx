@@ -137,12 +137,12 @@ function MultiSelectDropdown({
         : `${selected.length} selected`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
-          "inline-flex min-h-[44px] items-center gap-1.5 rounded-[7px] border px-3 py-2 text-sm transition-colors duration-200 sm:min-h-0",
+          "inline-flex min-h-[44px] items-center gap-1.5 rounded-tile border px-3 py-2 text-sm transition-colors duration-200 sm:min-h-0",
           selected.length > 0
             ? "border-ink bg-ink text-white"
             : "border-line bg-panel text-ink hover:border-line-strong",
@@ -161,7 +161,7 @@ function MultiSelectDropdown({
 
       {open && (
         <div
-          className="absolute left-0 top-full z-40 mt-1.5 min-w-[180px] max-h-60 overflow-y-auto rounded-[7px] border border-line bg-panel p-1 shadow-modal"
+          className="absolute left-0 top-full z-40 mt-1.5 min-w-[180px] max-h-60 overflow-y-auto rounded-tile border border-line bg-panel p-1 shadow-modal"
           role="listbox"
           aria-multiselectable="true"
           aria-label={`${label} filter options`}
@@ -286,22 +286,25 @@ export function FeedFilterBar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4",
-        isPaper && "border-b border-t border-line py-3.5 lg:px-10",
+        "flex flex-col gap-3 sm:gap-4",
+        isPaper && "border-b border-t border-line py-3 lg:px-10",
       )}
     >
       <div
         className={cn(
-          "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between",
-          isPaper && "px-6 lg:px-0",
+          "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between",
+          isPaper && "px-4 sm:px-6 lg:px-0",
         )}
       >
         {/* Sort row */}
         <div
           className={cn(
-            "flex flex-wrap items-center gap-1.5",
+            "flex items-center gap-1.5",
+            isPaper
+              ? "overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              : "flex-wrap",
             !isPaper &&
-              "gap-1 rounded-[7px] bg-panel p-1 sm:rounded-[7px]",
+              "gap-1 rounded-tile bg-panel p-1 sm:rounded-tile",
           )}
           role="tablist"
           aria-label="Sort options"
@@ -317,6 +320,8 @@ export function FeedFilterBar({
                 onClick={() => handleSortChange(option.value)}
                 className={cn(
                   "min-h-[44px] rounded-full px-3.5 py-1.75 transition-colors duration-200 sm:min-h-0",
+                  isPaper &&
+                    "shrink-0 whitespace-nowrap",
                   isPaper &&
                     (isActive
                       ? "bg-ink font-mono text-[11px] font-bold uppercase tracking-[0.06em] text-chrome"
@@ -338,7 +343,7 @@ export function FeedFilterBar({
       <div
         className={cn(
           "flex flex-wrap items-center gap-2",
-          isPaper && "border-t border-line px-6 pt-3.5 lg:border-t-0 lg:px-0 lg:pt-0",
+          isPaper && "border-t border-line px-4 pt-3 sm:px-6 lg:border-t-0 lg:px-0 lg:pt-0",
         )}
       >
         <MultiSelectDropdown
