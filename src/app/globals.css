@@ -148,6 +148,21 @@ body {
   }
 }
 
+/* Homepage hero — subtle floating bob for thumbnails */
+@keyframes hero-float {
+  0%, 100% {
+    transform: var(--float-base) translateY(0);
+  }
+  50% {
+    transform: var(--float-base) translateY(var(--float-y, -6px));
+  }
+}
+
+.hero-thumb-float {
+  animation: hero-float var(--float-duration, 5s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+}
+
 /*
   Wall card hover — layered scrim: smooth perceptual fade (no muddy band).
   Uses ink + oklab mixing to stay on-brand; stacks two soft ramps like film overlays.
@@ -166,6 +181,38 @@ body {
       color-mix(in oklab, var(--color-ink) 38%, transparent) 0%,
       transparent 62%
     );
+}
+
+/*
+  Homepage hero fan — transform-only spread so the generation cards stay cheap to animate.
+  The cards default to a tight stack, then fan out on pointer hover or keyboard focus.
+*/
+.hero-generation-fan {
+  isolation: isolate;
+}
+
+.hero-fan-card {
+  transform: translate(var(--rest-x), var(--rest-y)) rotate(var(--rest-r));
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    box-shadow 220ms ease;
+  will-change: transform;
+}
+
+.hero-generation-fan:hover .hero-fan-card,
+.hero-generation-fan:focus-within .hero-fan-card {
+  opacity: 1;
+  transform: translate(var(--fan-x), var(--fan-y)) rotate(var(--fan-r));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fan-card {
+    opacity: 1;
+    transform: translate(var(--fan-x), var(--fan-y)) rotate(var(--fan-r));
+    transition: none;
+    will-change: auto;
+  }
 }
 
 /* Homepage floating prompt: word cycle (no View Transitions — avoids snapshot ghosting) */

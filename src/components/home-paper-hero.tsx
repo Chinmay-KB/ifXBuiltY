@@ -1,11 +1,71 @@
+import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { cn } from "@/lib/cn";
+import { formatCompactCount } from "@/lib/format-count";
+import type { HomepageFeaturedGeneration } from "@/lib/homepage-featured-generations";
 
-const redCardBg =
-  "linear-gradient(160deg, oklab(65.4% 0.204 0.111) 0%, oklab(53.4% 0.169 0.092) 100%)";
-const darkCardBg =
-  "linear-gradient(165deg, oklab(24.1% -0.017 0.014) 0%, oklab(16.1% -0.011 0.008) 100%)";
+type FanCardPlacement = {
+  restX: string;
+  restY: string;
+  restR: string;
+  fanX: string;
+  fanY: string;
+  fanR: string;
+  z: number;
+  opacity?: number;
+};
+
+const DESKTOP_FAN_PLACEMENTS: FanCardPlacement[] = [
+  {
+    restX: "-82%",
+    restY: "-63%",
+    restR: "-4deg",
+    fanX: "-92%",
+    fanY: "-70%",
+    fanR: "-7deg",
+    z: 40,
+  },
+  {
+    restX: "4%",
+    restY: "-58%",
+    restR: "3deg",
+    fanX: "14%",
+    fanY: "-66%",
+    fanR: "6deg",
+    z: 42,
+  },
+  {
+    restX: "-69%",
+    restY: "5%",
+    restR: "3deg",
+    fanX: "-86%",
+    fanY: "13%",
+    fanR: "5deg",
+    z: 30,
+  },
+  {
+    restX: "17%",
+    restY: "9%",
+    restR: "-4deg",
+    fanX: "31%",
+    fanY: "17%",
+    fanR: "-6deg",
+    z: 32,
+  },
+];
+
+const MOBILE_STRIP_PLACEMENTS = [
+  { x: "-4%", y: "2%", r: "-5deg", z: 30 },
+  { x: "-20%", y: "13%", r: "4deg", z: 20 },
+  { x: "-36%", y: "4%", r: "-9deg", z: 10 },
+  { x: "-52%", y: "18%", r: "8deg", z: 0 },
+] as const;
+
+type HomePaperHeroProps = {
+  featuredGenerations: HomepageFeaturedGeneration[];
+};
 
 function ArrowRightIcon({ className }: { className?: string }) {
   return (
@@ -25,28 +85,6 @@ function ArrowRightIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function MascotIllustration({ size = 70 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 80 80"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0"
-      aria-hidden
-    >
-      <ellipse cx="40" cy="42" rx="26" ry="30" fill="#58CC02" />
-      <ellipse cx="40" cy="38" rx="20" ry="22" fill="#89E219" />
-      <circle cx="32" cy="34" r="6" fill="#FFFFFF" />
-      <circle cx="48" cy="34" r="6" fill="#FFFFFF" />
-      <circle cx="32" cy="34" r="3" fill="#0A0A0A" />
-      <circle cx="48" cy="34" r="3" fill="#0A0A0A" />
-      <path d="M34 46 L40 52 L46 46 Z" fill="#FF9600" />
     </svg>
   );
 }
@@ -77,8 +115,177 @@ function SocialAvatarStack({ className }: { className?: string }) {
   );
 }
 
+function fanCardStyle(placement: FanCardPlacement): CSSProperties {
+  return {
+    "--rest-x": placement.restX,
+    "--rest-y": placement.restY,
+    "--rest-r": placement.restR,
+    "--fan-x": placement.fanX,
+    "--fan-y": placement.fanY,
+    "--fan-r": placement.fanR,
+    zIndex: placement.z,
+    opacity: placement.opacity,
+  } as CSSProperties;
+}
+
+function mobileCardStyle(
+  placement: (typeof MOBILE_STRIP_PLACEMENTS)[number],
+): CSSProperties {
+  return {
+    transform: `translate(${placement.x}, ${placement.y}) rotate(${placement.r})`,
+    zIndex: placement.z,
+  };
+}
+
+function HeroGenerationCard({
+  item,
+  index,
+  className,
+  style,
+  priority = false,
+}: {
+  item: HomepageFeaturedGeneration;
+  index?: number;
+  className?: string;
+  style?: CSSProperties;
+  priority?: boolean;
+}) {
+  const label = `${item.builder} built ${item.target}`;
+  const score = formatCompactCount(item.netScore);
+  const remixLabel =
+    item.remixCount > 0
+      ? `${formatCompactCount(item.remixCount)} remix${item.remixCount === 1 ? "" : "es"}`
+      : "Fresh";
+
+  return (
+    <Link
+      href={`/g/${item.slug}`}
+      aria-label={`Open ${label}`}
+      className={cn(
+        "group/card block aspect-4/5 overflow-hidden rounded-[20px] border border-line bg-panel p-2 shadow-[0_18px_44px_rgba(0,0,0,0.14)] outline-none transition-shadow duration-200 ease-out hover:shadow-[0_30px_70px_rgba(0,0,0,0.24)] focus-visible:ring-4 focus-visible:ring-chrome/80",
+        className,
+      )}
+      style={style}
+    >
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-[14px] bg-canvas">
+        <div className="relative min-h-0 flex-1 bg-canvas">
+          {typeof index === "number" ? (
+            <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-chrome px-2 py-1 font-mono text-[9px] font-bold leading-none text-ink shadow-sm">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          ) : null}
+          <Image
+            src={item.imageUrl}
+            alt={label}
+            fill
+            sizes="(max-width: 768px) 46vw, (max-width: 1280px) 23vw, 280px"
+            className="object-contain p-2 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:group-hover/card:scale-[1.015]"
+            priority={priority}
+          />
+        </div>
+        <div className="pointer-events-none border-t border-line bg-canvas px-3 py-2.5">
+          <p className="line-clamp-2 font-display text-[14px] font-black leading-[1.02] tracking-[-0.03em] text-ink">
+            <span>{item.builder}</span>
+            <span className="mx-1 font-sans text-[13px] font-semibold text-muted">
+              ×
+            </span>
+            <span>{item.target}</span>
+          </p>
+          <div className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.06em] text-muted">
+            <span>↑ {score}</span>
+            <span>{remixLabel}</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function HeroFanFallback({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center rounded-[24px] border border-line bg-panel p-4 text-center",
+        compact ? "min-h-[150px]" : "h-full min-h-[320px]",
+      )}
+    >
+      <div className="max-w-[220px]">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+          Featured feed
+        </p>
+        <p className="mt-3 font-display text-3xl font-black italic leading-[0.9] tracking-[-0.04em] text-ink">
+          Fresh generations brewing
+        </p>
+        <p className="mt-3 text-sm leading-snug text-subtle">
+          Publish a few public generations and this stack turns into the real feed.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function DesktopGenerationFan({
+  items,
+}: {
+  items: HomepageFeaturedGeneration[];
+}) {
+  const displayItems = items.slice(0, DESKTOP_FAN_PLACEMENTS.length);
+
+  if (displayItems.length < 3) {
+    return <HeroFanFallback />;
+  }
+
+  return (
+    <div
+      className="hero-generation-fan group relative h-[min(420px,40vw)] w-full min-w-0 max-w-[420px] flex-1 xl:max-w-[520px]"
+      aria-label="Popular generations"
+    >
+      <div className="pointer-events-none absolute -inset-6 bg-[radial-gradient(circle_at_50%_50%,rgba(255,214,0,0.11),transparent_44%)]" />
+      {displayItems.map((item, index) => (
+        <HeroGenerationCard
+          key={item.id}
+          item={item}
+          index={index}
+          priority={index < 2}
+          className="hero-fan-card absolute left-1/2 top-1/2 w-[168px] hover:z-80 focus-visible:z-80 lg:w-[184px] xl:w-[min(232px,19vw)]"
+          style={fanCardStyle(DESKTOP_FAN_PLACEMENTS[index]!)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function MobileGenerationStrip({
+  items,
+}: {
+  items: HomepageFeaturedGeneration[];
+}) {
+  const displayItems = items.slice(0, MOBILE_STRIP_PLACEMENTS.length);
+
+  if (displayItems.length < 3) {
+    return <HeroFanFallback compact />;
+  }
+
+  return (
+    <div
+      className="relative mt-6 h-[210px] overflow-visible"
+      aria-label="Popular generations"
+    >
+      {displayItems.map((item, index) => (
+        <HeroGenerationCard
+          key={item.id}
+          item={item}
+          priority={index === 0}
+          className="absolute left-[42%] top-0 w-[43vw] max-w-[170px] rounded-[16px] p-1.5 shadow-[0_18px_42px_rgba(0,0,0,0.16)]"
+          style={mobileCardStyle(MOBILE_STRIP_PLACEMENTS[index]!)}
+        />
+      ))}
+    </div>
+  );
+}
+
 /** Paper “Desktop — Home” + “Mobile — Home” (no status bar), signage palette. */
-export function HomePaperHero() {
+export function HomePaperHero({ featuredGenerations }: HomePaperHeroProps) {
   return (
     <section className="bg-canvas text-ink antialiased">
       {/* ─── Mobile (Paper Mobile — Home, simplified top: no duplicate nav) ─── */}
@@ -89,7 +296,7 @@ export function HomePaperHero() {
             Product design · parallel universes
           </p>
         </div>
-        <h1 className="mt-5 font-display text-[clamp(2.75rem,17vw,4.25rem)] font-black leading-[0.86] tracking-[-0.05em]">
+        <h1 className="mt-5 font-display text-[clamp(2.75rem,17vw,4.25rem)] font-black leading-[0.86] tracking-tighter">
           What if X
           <br />
           built Y?
@@ -99,35 +306,7 @@ export function HomePaperHero() {
           little world.
         </p>
 
-        <div className="mt-6 flex gap-2.5">
-          <div
-            className="flex aspect-[0.7/1] flex-1 flex-col items-center justify-center rounded-[14px] p-3 motion-safe:-rotate-3"
-            style={{ backgroundImage: redCardBg }}
-          >
-            <p className="text-center font-display text-[28px] font-black italic leading-[85%] tracking-[-0.04em] text-white">
-              ITR-
-              <br />
-              FÄRM
-            </p>
-          </div>
-          <div
-            className="flex flex-1 flex-col items-center justify-center gap-2.5 rounded-[14px] p-3"
-            style={{ backgroundImage: darkCardBg }}
-          >
-            <MascotIllustration size={46} />
-            <p className="text-center font-mono text-[7px] uppercase tracking-[0.15em] text-chrome">
-              Gate B-14
-            </p>
-          </div>
-          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-chrome p-3 motion-safe:rotate-3">
-            <p className="font-mono text-[7px] uppercase tracking-[0.15em] text-muted">Now Serving</p>
-            <p className="font-display text-2xl font-black italic text-ink">A-0042</p>
-            <div className="flex gap-0.5">
-              <span className="bg-ink px-1 py-px font-mono text-[6px] text-chrome">/page</span>
-              <span className="bg-ink px-1 py-px font-mono text-[6px] text-chrome">/tbl</span>
-            </div>
-          </div>
-        </div>
+        <MobileGenerationStrip items={featuredGenerations} />
 
         <div className="mt-8 flex flex-col gap-2.5">
           <Link
@@ -155,9 +334,9 @@ export function HomePaperHero() {
 
       {/* ─── Desktop (Paper Desktop — Home) ─── */}
       <div className="mx-auto hidden min-h-[calc(100dvh-5rem)] max-w-[1440px] flex-col justify-center md:flex">
-        <div className="flex flex-1 items-center gap-12 px-8 pb-10 pt-6 lg:gap-16 lg:px-12 xl:px-20">
-          <div className="flex w-full max-w-[640px] shrink-0 flex-col gap-7">
-            <h1 className="font-display text-[clamp(3.25rem,7.2vw,7.75rem)] font-black leading-[0.84] tracking-[-0.05em]">
+        <div className="flex flex-1 items-center gap-12 px-8 pb-10 pt-6 lg:px-12 xl:gap-16 xl:px-20">
+          <div className="flex w-full max-w-[470px] shrink-0 flex-col gap-7 xl:max-w-[640px]">
+            <h1 className="font-display text-[clamp(3.25rem,7.2vw,7.75rem)] font-black leading-[0.84] tracking-tighter">
               What if X built Y?
             </h1>
             <p className="max-w-[520px] text-[19px] leading-[145%] text-subtle">
@@ -187,56 +366,7 @@ export function HomePaperHero() {
             </div>
           </div>
 
-          <div className="relative mx-auto h-[min(388px,42vw)] w-full min-w-0 max-w-[520px] flex-1">
-            <div
-              className="absolute right-[12%] top-8 w-[260px] overflow-hidden rounded-[20px] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.18)] motion-safe:-rotate-6 max-lg:right-[4%] max-lg:w-[220px]"
-              style={{ backgroundImage: darkCardBg }}
-            >
-              <span className="inline-block rounded-full bg-chrome px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-ink">
-                Chaotic
-              </span>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <MascotIllustration />
-                <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-chrome">
-                  Gate B-14
-                  <br />→ 5 day streak
-                </p>
-              </div>
-            </div>
-            <div
-              className="absolute bottom-6 left-[6%] w-[300px] overflow-hidden rounded-[20px] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.22)] motion-safe:rotate-[4deg] max-lg:left-0 max-lg:w-[240px]"
-              style={{ backgroundImage: redCardBg }}
-            >
-              <span className="inline-block rounded-full bg-white px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-barrier">
-                Scammy
-              </span>
-              <div className="flex flex-col items-center justify-center gap-4 px-5 py-10">
-                <p className="text-center font-display text-[60px] font-black italic leading-[85%] tracking-[-0.05em] text-white max-lg:text-5xl">
-                  ITR-
-                  <br />
-                  FÄRM
-                </p>
-                <div className="flex w-full flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-[18px] shrink-0 items-center justify-center rounded-sm bg-white font-mono text-[10px] font-bold text-barrier">
-                      1
-                    </span>
-                    <span className="font-sans text-[11px] font-medium text-white">
-                      Ikke assemble · 47 parts
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-[18px] shrink-0 items-center justify-center rounded-sm bg-white font-mono text-[10px] font-bold text-barrier">
-                      2
-                    </span>
-                    <span className="font-sans text-[11px] font-medium text-white">
-                      Ingen refund · 2 hex key
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DesktopGenerationFan items={featuredGenerations} />
         </div>
       </div>
     </section>

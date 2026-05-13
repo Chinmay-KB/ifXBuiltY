@@ -281,24 +281,6 @@ export function FeedFilterBar({
     [onTargetsChange, syncToUrl, currentSort, selectedBuilders, selectedTones],
   );
 
-  const handleToneToggle = useCallback(
-    (tone: string) => {
-      const next = selectedTones.includes(tone)
-        ? selectedTones.filter((t) => t !== tone)
-        : [...selectedTones, tone];
-      onTonesChange(next);
-      syncToUrl(currentSort, selectedBuilders, selectedTargets, next);
-    },
-    [
-      selectedTones,
-      onTonesChange,
-      syncToUrl,
-      currentSort,
-      selectedBuilders,
-      selectedTargets,
-    ],
-  );
-
   const isPaper = variant === "paper";
 
   return (
@@ -350,33 +332,6 @@ export function FeedFilterBar({
             );
           })}
         </div>
-
-        {/* Vibe chips (Paper) */}
-        {isPaper && (
-          <div className="flex flex-wrap items-center gap-1.5 lg:max-w-[55%] lg:justify-end">
-            <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
-              Vibe
-            </span>
-            {FEED_VIBE_OPTIONS.map((tone) => {
-              const on = selectedTones.includes(tone);
-              return (
-                <button
-                  key={tone}
-                  type="button"
-                  onClick={() => handleToneToggle(tone)}
-                  className={cn(
-                    "rounded-full px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] transition-colors",
-                    on
-                      ? "bg-ink text-chrome"
-                      : "bg-panel text-ink hover:bg-line",
-                  )}
-                >
-                  {tone}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Builder / target */}

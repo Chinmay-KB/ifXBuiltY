@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-import { HomePaperHero } from "@/components/home-paper-hero";
+import { HomepageHero } from "@/components/homepage-hero";
+import { HomepageFeed } from "@/components/homepage-feed";
+import { fetchFeedServer } from "@/lib/fetch-feed";
+import { getHomepageFeaturedGenerations } from "@/lib/homepage-featured-generations";
+import { getTotalPublishedCount } from "@/lib/homepage-stats";
 
 export const metadata: Metadata = {
   title: {
@@ -8,14 +12,62 @@ export const metadata: Metadata = {
       "ifXBuiltY — What if X built Y? AI parody screenshots from parallel universes",
   },
   description:
-    "Crossbreed any company with any product. Watch the UI write itself. One prompt, one weird little world. Browse the feed, vote, remix, and share.",
+    "The world's worst product ideas. Crossbreed any company with any product. Watch the UI write itself. Browse the wall, vote, remix, and share.",
   alternates: { canonical: "/" },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Fetch featured generations for hero thumbnails + initial feed items in parallel
+  const [featuredGenerations, feed, totalPublished] = await Promise.all([
+    getHomepageFeaturedGenerations(),
+    fetchFeedServer({ sort: "trending", limit: 24 }),
+    getTotalPublishedCount(),
+  ]);
+
+  // Build hero thumbnails — use featured first, supplement with feed items if needed
+  const featuredThumbs = featuredGenerations.map((g) => ({
+    id: g.id,
+    slug: g.slug,
+    builder: g.builder,
+    target: g.target,
+    imageUrl: g.imageUrl,
+  }));
+
+  // Fill remaining slots from feed items not already in featured
+  const featuredIds = new Set(featuredThumbs.map((t) => t.id));
+  const supplementThumbs = feed.items
+    .filter((item) => !featuredIds.has(item.id) && item.imageUrl)
+    .slice(0, 15 - featuredThumbs.length)
+    .map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      builder: item.builder,
+      target: item.target,
+      imageUrl: item.imageUrl!,
+    }));
+
+  const heroThumbnails = [...featuredThumbs, ...supplementThumbs];
+
+  // Extract distinct builder/target values for filter dropdowns
+  const availableBuilders = Array.from(
+    new Set(feed.items.map((item) => item.builder)),
+  ).sort();
+  const availableTargets = Array.from(
+    new Set(feed.items.map((item) => item.target)),
+  ).sort();
+
   return (
-    <div className="flex flex-col">
-      <HomePaperHero />
+    <div className="flex min-h-full flex-1 flex-col bg-canvas">
+      <HomepageHero
+        thumbnails={heroThumbnails}
+        ideasThisWeek={feed.ideasThisWeek ?? 0}
+        totalPublished={totalPublished}
+      />
+      <HomepageFeed
+        initialItems={feed.items}
+        availableBuilders={availableBuilders}
+        availableTargets={availableTargets}
+      />
     </div>
   );
 }
