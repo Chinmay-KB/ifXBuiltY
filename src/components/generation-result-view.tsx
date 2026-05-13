@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Zoom from "@/components/image-zoom";
 import { Button } from "@/components/ui";
@@ -40,9 +40,32 @@ export function GenerationResultView({
   >("idle");
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
+  const [downloadState, setDownloadState] = useState<"idle" | "saved">("idle");
+  const shareResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const downloadResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const title = formatResultTitle(result.builder, result.target);
   const inputsChanged = hasInputsChanged(currentInputs, lastInputs);
+
+  useEffect(() => {
+    return () => {
+      if (shareResetRef.current) clearTimeout(shareResetRef.current);
+      if (downloadResetRef.current) clearTimeout(downloadResetRef.current);
+    };
+  }, []);
+
+  const flashShareState = useCallback((state: "copied" | "shared") => {
+    setShareState(state);
+    if (shareResetRef.current) clearTimeout(shareResetRef.current);
+    shareResetRef.current = setTimeout(() => setShareState("idle"), 1800);
+  }, []);
+
+  const flashDownloadState = useCallback(() => {
+    setDownloadState("saved");
+    if (downloadResetRef.current) clearTimeout(downloadResetRef.current);
+    downloadResetRef.current = setTimeout(() => setDownloadState("idle"), 1800);
+  }, []);
 
   const handlePublish = useCallback(async () => {
     setPublishState("loading");
@@ -79,13 +102,23 @@ export function GenerationResultView({
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch {
-        // User cancelled or share failed — fall through to clipboard
+        flashShareState("shared");
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        // Native share failed — fall through to clipboard.
       }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
     }
-  }, [result.slug, title]);
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      flashShareState("copied");
+    } catch {
+      // Clipboard may be blocked; the visible action simply stays idle.
+    }
+  }, [flashShareState, result.slug, title]);
 
   const handleDownload = useCallback(async () => {
     if (!result.imageUrl) return;
@@ -101,10 +134,11 @@ export function GenerationResultView({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      flashDownloadState();
     } catch {
       // Silently fail on download error
     }
-  }, [result.imageUrl, result.builder, result.target]);
+  }, [flashDownloadState, result.imageUrl, result.builder, result.target]);
 
   const handleRegenerate = useCallback(() => {
     onRegenerate(currentInputs);
@@ -112,30 +146,48 @@ export function GenerationResultView({
 
   if (variant === "paper") {
     const vc = viewportContained;
+    const liveSlug = publishedSlug ?? result.slug;
+    const actionMotion =
+      "transition-[transform,background-color,color,filter,border-color] duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.98]";
+    const quietActionClass = cn(
+      "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-panel px-4 py-2.5 text-[13px] font-bold text-ink hover:bg-line",
+      actionMotion,
+    );
     return (
       <div
         className={cn(
           "flex flex-col",
           vc
-            ? "h-full min-h-0 gap-3 overflow-hidden lg:flex-row lg:gap-5"
+            ? "min-h-0 gap-4 overflow-y-auto px-1 pb-4 lg:h-full lg:overflow-hidden lg:px-0 lg:pb-0 lg:flex-row lg:gap-5"
             : "gap-6 lg:flex-row lg:gap-12",
         )}
       >
-        <div
+        <figure
           className={cn(
-            "min-w-0 flex-1 overflow-hidden bg-gradient-to-br from-panel to-canvas",
+            "relative isolate flex min-w-0 flex-col items-center justify-center overflow-hidden border border-line bg-linear-to-br from-panel to-canvas",
             vc
-              ? "flex min-h-0 items-center justify-center rounded-2xl"
+              ? "rounded-[22px] lg:min-h-0 lg:flex-1"
               : "min-h-[320px] rounded-3xl lg:min-h-[480px]",
           )}
         >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-55"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle farthest-corner at 20% 20% in oklab, oklab(88.5% -0.016 0.181 / 18%) 0%, oklab(0% 0 0 / 0%) 36%), linear-gradient(135deg, oklab(100% 0 0 / 0%) 0%, oklab(0% 0 0 / 4%) 100%)",
+            }}
+            aria-hidden
+          />
           {result.imageUrl ? (
             <Zoom>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={result.imageUrl}
                 alt={title}
-                className={cn("object-contain", vc ? "max-h-full max-w-full" : "h-full w-full")}
+                className={cn(
+                  "relative z-10 object-contain",
+                  vc ? "max-h-[54vh] w-full lg:max-h-full lg:max-w-full" : "h-full w-full",
+                )}
                 style={vc ? undefined : { maxHeight: "min(72vh, 640px)" }}
               />
             </Zoom>
@@ -144,30 +196,28 @@ export function GenerationResultView({
               <span className="text-muted">Image unavailable</span>
             </div>
           )}
-        </div>
+          <figcaption className="sr-only">{title}</figcaption>
+        </figure>
 
-        <div
+        <aside
           className={cn(
             "flex w-full shrink-0 flex-col",
-            vc ? "min-h-0 gap-3 lg:w-[260px]" : "gap-6 lg:w-[380px]",
+            vc ? "min-h-0 gap-4 lg:w-[320px] lg:overflow-y-auto lg:pr-1" : "gap-6 lg:w-[380px]",
           )}
+          aria-label="Generated image actions"
         >
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-panel py-1.5 pl-2.5 pr-3 lg:gap-2.5 lg:py-2 lg:pl-3 lg:pr-3.5">
-            <span className="size-2 rounded-full bg-[#58CC02]" />
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink lg:text-[11px]">
-              Generated
-            </span>
-          </div>
-
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-widest text-muted lg:text-[10px]">
-              Fresh from the multiverse
-            </p>
+          <div className="flex flex-col gap-3">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-panel py-1.5 pl-2.5 pr-3 lg:gap-2.5 lg:py-2 lg:pl-3 lg:pr-3.5">
+              <span className="size-2 rounded-full bg-[#58CC02]" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink lg:text-[11px]">
+                Draft ready
+              </span>
+            </div>
             <h2
               className={cn(
-                "mt-1 font-display font-black leading-[0.94] tracking-[-0.04em] text-ink lg:mt-2",
+                "font-display font-black leading-[0.92] tracking-[-0.04em] text-ink",
                 vc
-                  ? "text-[clamp(1.15rem,2.4vw,1.65rem)]"
+                  ? "text-[clamp(2rem,8vw,3rem)] lg:text-[clamp(1.9rem,2.9vw,2.6rem)]"
                   : "text-[clamp(2rem,4vw,3.25rem)]",
               )}
             >
@@ -175,6 +225,9 @@ export function GenerationResultView({
               <br />
               built {result.target}.
             </h2>
+            <p className="max-w-136 text-sm leading-[1.45] text-muted">
+              Save the artifact, publish a public link, or remix the premise while the joke is still warm.
+            </p>
             {currentInputs.tone ? (
               <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted lg:mt-2 lg:text-[11px]">
                 {currentInputs.tone} vibe
@@ -182,41 +235,29 @@ export function GenerationResultView({
             ) : null}
           </div>
 
-          <div className={cn("flex flex-col", vc ? "gap-2" : "gap-2.5")}>
-            <div className="flex gap-2">
+          <div className={cn("flex flex-col", vc ? "gap-2.5" : "gap-3")}>
+            <div>
               <button
                 type="button"
                 onClick={() => void handleDownload()}
                 disabled={!result.imageUrl}
                 className={cn(
-                  "inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-chrome font-sans font-bold text-ink transition-opacity disabled:opacity-40",
-                  vc ? "px-3 py-2.5 text-sm" : "py-4 px-4 text-base",
+                  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-chrome px-5 py-3 font-sans text-base font-black text-ink disabled:opacity-40",
+                  actionMotion,
                 )}
               >
-                <DownloadIcon />
-                Save image
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleShare()}
-                className={cn(
-                  "flex shrink-0 items-center justify-center rounded-full bg-ink text-white",
-                  vc ? "size-11" : "size-14",
-                )}
-                aria-label="Share"
-              >
-                <ShareIcon />
+                {downloadState === "saved" ? <CheckIcon /> : <DownloadIcon />}
+                {downloadState === "saved" ? "Saved" : "Save image"}
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 lg:gap-2">
+
+            <div className="grid grid-cols-2 gap-2">
               {publishState === "success" ? (
                 <Link
-                  href={`/g/${publishedSlug}`}
-                  className={cn(
-                    "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
-                    vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
-                  )}
+                  href={`/g/${liveSlug}`}
+                  className={quietActionClass}
                 >
+                  <CheckIcon />
                   View live
                 </Link>
               ) : (
@@ -224,34 +265,46 @@ export function GenerationResultView({
                   type="button"
                   onClick={() => void handlePublish()}
                   disabled={publishState === "loading"}
-                  className={cn(
-                    "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line disabled:opacity-50",
-                    vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
-                  )}
+                  className={cn(quietActionClass, "disabled:opacity-50")}
                 >
+                  <PublishIcon />
                   {publishState === "loading" ? "Publishing…" : "Publish"}
                 </button>
               )}
               <Link
                 href={`/remix/${result.id}`}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
-                  vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
-                )}
+                className={quietActionClass}
               >
+                <RemixIcon />
                 Remix
               </Link>
               <button
                 type="button"
                 onClick={() => void handleShare()}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 rounded-full bg-panel font-sans font-semibold text-ink transition-colors hover:bg-line",
-                  vc ? "py-2 text-[11px]" : "py-3 text-[13px]",
-                )}
+                className={cn(quietActionClass, "col-span-2")}
               >
-                Link
+                {shareState === "idle" ? <ShareIcon /> : <CheckIcon />}
+                {shareState === "copied"
+                  ? "Copied link"
+                  : shareState === "shared"
+                    ? "Shared"
+                    : "Share link"}
               </button>
             </div>
+          </div>
+
+          <div className="min-h-5" aria-live="polite">
+            {publishState === "success" ? (
+              <p className="rounded-r-xl border-l-2 border-chrome bg-[#FFF9E0] py-2 pl-3 pr-2 text-xs font-semibold leading-snug text-ink">
+                Live link unlocked. Go make the internet worse.
+              </p>
+            ) : shareState !== "idle" ? (
+              <p className="text-xs font-semibold text-muted">
+                {shareState === "copied" ? "Link copied to clipboard." : "Shared from this timeline."}
+              </p>
+            ) : downloadState === "saved" ? (
+              <p className="text-xs font-semibold text-muted">Image handed to your downloads folder.</p>
+            ) : null}
           </div>
 
           {publishState === "error" && publishError && (
@@ -260,11 +313,11 @@ export function GenerationResultView({
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className={cn("mt-auto border-t border-line pt-4", vc ? "flex flex-col gap-2" : "flex flex-wrap items-center gap-2")}>
             <Button
               variant="chrome"
               size="lg"
-              className={cn("font-black", vc && "h-10 px-4 text-sm")}
+              className={cn("font-black transition-transform duration-150 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98]", vc && "h-11 px-5 text-sm")}
               onClick={onReset}
             >
               Generate another
@@ -272,14 +325,13 @@ export function GenerationResultView({
             <Button
               variant="outline"
               size="lg"
-              className={cn("font-black", !inputsChanged && "opacity-50", vc && "h-10 px-4 text-sm")}
-              disabled={!inputsChanged}
+              className={cn("font-black transition-transform duration-150 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:scale-[0.98]", vc && "h-11 px-5 text-sm")}
               onClick={handleRegenerate}
             >
-              Regenerate
+              Reroll same prompt
             </Button>
           </div>
-        </div>
+        </aside>
       </div>
     );
   }
@@ -412,6 +464,24 @@ export function GenerationResultView({
 }
 
 /* ─── Inline SVG Icons ─── */
+
+function CheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
 
 function PublishIcon() {
   return (

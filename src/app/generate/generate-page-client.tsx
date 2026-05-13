@@ -29,6 +29,13 @@ const STARTER_SWATCHES: { swatchClass: string; labelClass: string }[] = [
   { swatchClass: "bg-[#3A2A4E]", labelClass: "text-chrome" },
 ];
 
+const GENERATING_STEPS = [
+  "Reading the room",
+  "Sketching the product",
+  "Rendering the interface",
+  "Polishing the joke",
+];
+
 function buildCompanyPairPool(companies: GeneratorCompanyOption[]): { builder: string; target: string }[] {
   if (companies.length < 2) return [];
   const pairs: { builder: string; target: string }[] = [];
@@ -71,6 +78,20 @@ function starterHref(s: Starter) {
   return `/generate?${q.toString()}`;
 }
 
+function usePrefersReducedMotion() {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  return reducedMotion;
+}
+
 function PaperGeneratingPanel({
   inputs,
   compact,
@@ -80,43 +101,52 @@ function PaperGeneratingPanel({
 }) {
   const messages = getLoadingMessages(inputs.builder);
   const facts = useMemo(() => getAllFunFacts(inputs.builder), [inputs.builder]);
+  const reducedMotion = usePrefersReducedMotion();
   const [msgIndex, setMsgIndex] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
   const [pct, setPct] = useState(18);
 
   useEffect(() => {
+    if (reducedMotion || messages.length <= 1) return;
     const id = setInterval(() => {
       setMsgIndex((prev) => (prev + 1) % messages.length);
     }, 3500);
     return () => clearInterval(id);
-  }, [messages.length]);
+  }, [messages.length, reducedMotion]);
 
   useEffect(() => {
-    if (facts.length <= 1) return;
+    if (reducedMotion || facts.length <= 1) return;
     const id = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % facts.length);
     }, 6000);
     return () => clearInterval(id);
-  }, [facts.length]);
+  }, [facts.length, reducedMotion]);
 
   useEffect(() => {
+    if (reducedMotion) return;
     const id = setInterval(() => {
       setPct((p) => (p >= 94 ? p : p + 3));
     }, 900);
     return () => clearInterval(id);
-  }, []);
+  }, [reducedMotion]);
 
   const b = inputs.builder || "your builder";
   const t = inputs.target || "your target";
-  const step = Math.min(4, Math.max(1, Math.ceil((pct / 100) * 4)));
-  const etaSec = Math.max(0, Math.round(((100 - pct) / 100) * 14));
+  const visiblePct = reducedMotion ? 72 : pct;
+  const step = Math.min(4, Math.max(1, Math.ceil((visiblePct / 100) * 4)));
+  const message = messages[msgIndex % messages.length] ?? "Composing the alternate timeline.";
 
   return (
-    <div className={cn("flex w-full flex-col", compact ? "min-h-0 flex-1 gap-3" : "gap-5 lg:max-w-none")}>
+    <div
+      className={cn("flex w-full flex-col", compact ? "min-h-0 flex-1 gap-3" : "gap-4 lg:max-w-none")}
+      role="status"
+      aria-live="polite"
+      aria-label={`Generating a parody screenshot: if ${b} built ${t}`}
+    >
       <div
         className={cn(
           "relative overflow-hidden rounded-[20px] border border-line bg-canvas",
-          compact ? "min-h-0 flex-1" : "min-h-[280px] lg:min-h-[320px]",
+          compact ? "min-h-0 flex-1" : "min-h-[280px] lg:min-h-[360px]",
         )}
         style={{
           backgroundImage:
@@ -140,21 +170,48 @@ function PaperGeneratingPanel({
           {(compact ? [48, 70, 40, 62] : [48, 74, 36, 66, 52, 80, 42]).map((w, i) => (
             <div
               key={`sk-${i}-${w}`}
-              className={cn("rounded-sm bg-ink/[0.06]", compact ? "h-3" : "h-4")}
+              className={cn("rounded-sm bg-ink/6", compact ? "h-3" : "h-4")}
               style={{ width: `${w}%` }}
             />
           ))}
         </div>
         <div
           className="pointer-events-none absolute inset-x-[18%] h-[2px] rounded-full bg-chrome shadow-[0_0_10px_rgba(234,179,8,0.55)] motion-safe:transition-[top] motion-safe:duration-700"
-          style={{ top: `${22 + (pct % 38)}%` }}
+          style={{ top: `${22 + (visiblePct % 38)}%` }}
           aria-hidden
         />
       </div>
 
+      {!compact ? (
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" aria-label="Generation steps">
+          {GENERATING_STEPS.map((label, index) => {
+            const isDone = index + 1 < step;
+            const isActive = index + 1 === step;
+            return (
+              <div
+                key={label}
+                className={cn(
+                  "rounded-[14px] border px-3.5 py-3",
+                  isActive
+                    ? "border-ink bg-chrome text-ink"
+                    : isDone
+                      ? "border-ink bg-ink text-chrome"
+                      : "border-line bg-panel text-muted",
+                )}
+              >
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]">
+                  {`0${index + 1}`}
+                </p>
+                <p className="mt-1.5 text-[13px] font-bold leading-[1.15]">{label}</p>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className={cn("flex flex-col", compact ? "shrink-0 gap-2" : "gap-3")}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span
               className={cn(
                 "shrink-0 rounded-full border-[2.5px] border-ink",
@@ -167,27 +224,12 @@ function PaperGeneratingPanel({
                 compact ? "line-clamp-2 text-xs" : "text-base",
               )}
             >
-              {messages[msgIndex]}
+              {message}
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-0.5 sm:flex-row sm:items-baseline sm:gap-1.5">
-            <span
-              className={cn("font-display font-black text-ink", compact ? "text-base" : "text-xl")}
-            >
-              {pct}%
-            </span>
-            <span className="text-right font-mono text-[10px] tracking-[0.05em] text-muted">
-              <span className="font-semibold text-ink">Step {step} of 4</span>
-              {" · "}
-              <span>{etaSec}s left</span>
-            </span>
-          </div>
-        </div>
-        <div className={cn("overflow-hidden rounded-full bg-ink/10", compact ? "h-0.5" : "h-1")}>
-          <div
-            className="h-full rounded-full bg-ink transition-[width] duration-500"
-            style={{ width: `${pct}%` }}
-          />
+          <p className="shrink-0 rounded-full bg-panel px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink">
+            Step {step} of 4
+          </p>
         </div>
       </div>
 
@@ -212,6 +254,33 @@ function PaperGeneratingPanel({
           Now composing · {b} → {t}
         </p>
       )}
+    </div>
+  );
+}
+
+function MobileGeneratingDock({ onCancel }: { onCancel: () => void }) {
+  return (
+    <div className="fixed inset-x-3 bottom-16 z-40 rounded-[18px] border border-line bg-canvas/95 p-2 shadow-[0_14px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="size-2.5 shrink-0 rounded-full bg-chrome ring-4 ring-chrome/20" />
+          <div className="min-w-0">
+            <p className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink">
+              Generating
+            </p>
+            <p className="truncate text-[12px] font-medium text-muted">
+              Keep this open while the mockup renders.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="shrink-0 rounded-full border border-line bg-panel px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-ink"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
@@ -483,7 +552,6 @@ export function GeneratePageClient({
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               <PaperGeneratingPanel
                 key={`${currentInputs.builder}-${currentInputs.target}-d`}
-                compact
                 inputs={currentInputs}
               />
             </div>
@@ -563,7 +631,7 @@ export function GeneratePageClient({
                       >
                         <div
                           className={cn(
-                            "flex h-[76px] items-center justify-center rounded-[10px] bg-gradient-to-br px-2 text-center lg:h-[84px]",
+                            "flex h-[76px] items-center justify-center rounded-[10px] bg-linear-to-br px-2 text-center lg:h-[84px]",
                             s.swatchClass,
                           )}
                         >
@@ -585,6 +653,16 @@ export function GeneratePageClient({
           )}
         </div>
       </div>
+
+      {phase === "loading" ? (
+        <MobileGeneratingDock
+          onCancel={() => {
+            abortGenRef.current?.();
+            setPhase("input");
+            clearGenerating();
+          }}
+        />
+      ) : null}
 
       <CreditsModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
     </>
