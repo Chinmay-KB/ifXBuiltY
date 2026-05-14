@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
@@ -125,6 +126,7 @@ export default async function RootLayout({
             </main>
           </NavigationGeneratingProvider>
         </SignInModalProvider>
+        <Analytics />
       </body>
     </html>
   );
