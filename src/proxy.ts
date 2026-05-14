@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 /**
@@ -8,6 +9,10 @@ import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
  * @see https://supabase.com/docs/guides/auth/server-side/nextjs
  */
 export async function proxy(request: NextRequest) {
+  if (!hasSupabaseAuthCookie(request.cookies.getAll())) {
+    return NextResponse.next({ request });
+  }
+
   const env = tryGetSupabasePublicEnv();
   if (!env) {
     return NextResponse.next({ request });

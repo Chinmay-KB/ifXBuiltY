@@ -4,9 +4,8 @@ import {
   FEED_DEFAULT_LIMIT,
   FEED_MAX_LIMIT,
 } from "@/lib/constants";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { queryFeed } from "@/lib/feed-query";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
 export const runtime = "nodejs";
 
@@ -52,98 +51,24 @@ export async function GET(request: Request) {
 
   const supabase = await createSupabaseServerClient();
 
-  // Fetch limit+1 to determine if more records exist beyond this page
-  let q = supabase
-    .from("generations")
-    .select(
-      "id, slug, builder, target, tone, vibe_tags, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
-    )
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible")
-    .range(offset, offset + limit); // fetches limit+1 rows (range is inclusive)
+  try {
+    const feed = await queryFeed(supabase, {
+      sort,
+      limit,
+      offset,
+      builders,
+      targets,
+      tones,
+    });
 
-  // Apply builder filter
-  if (builders.length > 0) {
-    q = q.in("builder", builders);
-  }
-
-  // Apply target filter
-  if (targets.length > 0) {
-    q = q.in("target", targets);
-  }
-
-  // Tone / vibe filter (array overlap on vibe_tags column)
-  if (tones.length > 0) {
-    const sanitized = sanitizeVibeTags(tones);
-    if (sanitized.length > 0) {
-      q = q.overlaps("vibe_tags", sanitized);
-    }
-  }
-
-  // Apply sort order
-  if (sort === "trending") {
-    q = q
-      .order("net_score", { ascending: false })
-      .order("created_at", { ascending: false });
-  } else if (sort === "top") {
-    q = q.order("net_score", { ascending: false });
-  } else if (sort === "remixes") {
-    q = q
-      .order("remix_count", { ascending: false })
-      .order("created_at", { ascending: false });
-  } else {
-    // newest
-    q = q.order("created_at", { ascending: false });
-  }
-
-  const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-  const countPromise = supabase
-    .from("generations")
-    .select("*", { count: "exact", head: true })
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible")
-    .gte("created_at", weekAgoIso);
-
-  const [{ data: rows, error }, countResult] = await Promise.all([q, countPromise]);
-
-  const ideasThisWeek = countResult.count ?? 0;
-
-  if (error) {
+    return NextResponse.json(feed);
+  } catch (error) {
     return NextResponse.json(
-      { error: "Could not load feed", detail: error.message },
+      {
+        error: "Could not load feed",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }
-
-  const allRows = rows ?? [];
-
-  // Determine hasMore: if we got more than `limit` rows, there are more pages
-  const hasMore = allRows.length > limit;
-  const list = hasMore ? allRows.slice(0, limit) : allRows;
-
-  if (list.length === 0) {
-    return NextResponse.json({ sort, items: [], hasMore: false, ideasThisWeek });
-  }
-
-  const items = list.map((r) => ({
-    id: r.id,
-    slug: r.slug,
-    builder: r.builder,
-    target: r.target,
-    tone: r.tone,
-    vibeTags: r.vibe_tags ?? [],
-    screenType: r.screen_type,
-    region: r.region,
-    extraDetails: r.extra_details,
-    imageUrl: r.image_path ? generationMediaPath(r.slug, "card") : null,
-    imagePath: r.image_path,
-    upvoteCount: r.upvote_count,
-    downvoteCount: r.downvote_count,
-    netScore: r.net_score,
-    remixCount: r.remix_count,
-    createdAt: r.created_at,
-  }));
-
-  return NextResponse.json({ sort, items, hasMore, ideasThisWeek });
 }

@@ -20,6 +20,7 @@ type FeedFilterBarProps = {
   onBuildersChange: (builders: string[]) => void;
   onTargetsChange: (targets: string[]) => void;
   onTonesChange: (tones: string[]) => void;
+  syncUrl?: boolean;
   /** Paper signage styling (Desktop Feed v2) */
   variant?: "default" | "paper";
 };
@@ -229,6 +230,7 @@ export function FeedFilterBar({
   onBuildersChange,
   onTargetsChange,
   onTonesChange,
+  syncUrl = true,
   variant = "default",
 }: FeedFilterBarProps) {
   const router = useRouter();
@@ -241,6 +243,8 @@ export function FeedFilterBar({
       targetList: string[],
       toneList: string[],
     ) => {
+      if (!syncUrl) return;
+
       const params = new URLSearchParams();
       params.set("sort", sort);
       if (builderList.length > 0) {
@@ -254,7 +258,7 @@ export function FeedFilterBar({
       }
       router.push(`/feed?${params.toString()}`, { scroll: false });
     },
-    [router],
+    [router, syncUrl],
   );
 
   const handleSortChange = useCallback(

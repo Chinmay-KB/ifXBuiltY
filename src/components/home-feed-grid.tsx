@@ -70,9 +70,9 @@ export function HomeFeedGrid({ initialItems }: HomeFeedGridProps) {
     <div>
       {/* Masonry grid — uses .masonry-feed from globals.css for responsive columns */}
       <div className="masonry-feed gap-4">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div key={item.id} className="mb-4 break-inside-avoid">
-            <GenerationCard item={item} />
+            <GenerationCard item={item} imagePriority={index === 0} />
           </div>
         ))}
       </div>

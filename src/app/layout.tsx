@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { cookies } from "next/headers";
 
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { isSuperadmin } from "@/lib/admin-constants";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -82,10 +84,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const hasAuthCookie = hasSupabaseAuthCookie(cookieStore.getAll());
+  const user = hasAuthCookie
+    ? (await (await createSupabaseServerClient()).auth.getUser()).data.user
+    : null;
 
   // Map Supabase user to the shape NavigationShell expects
   const navUser = user

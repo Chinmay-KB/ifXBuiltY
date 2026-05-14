@@ -49,9 +49,13 @@ export function FeedMasonryGrid({
     <div>
       {/* Masonry grid */}
       <div className="masonry-feed">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div key={item.id} className="feed-masonry-item">
-            <GenerationCard item={item} variant="paper" />
+            <GenerationCard
+              item={item}
+              variant="paper"
+              imagePriority={index === 0}
+            />
           </div>
         ))}
       </div>

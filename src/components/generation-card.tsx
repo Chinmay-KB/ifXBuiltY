@@ -1,9 +1,8 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import type { ReactNode } from "react";
 
+import { CardShareAction } from "@/components/card-share-action";
 import { cn } from "@/lib/cn";
 import { GENERATION_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
 import { generationMediaPath } from "@/lib/generation-media-url";
@@ -28,6 +27,8 @@ type GenerationCardProps = {
   showActions?: boolean;
   /** Paper feed card — tall frame, mono meta, vote chip */
   variant?: "default" | "paper";
+  /** Marks the likely LCP image as eager/high priority. */
+  imagePriority?: boolean;
 };
 
 /**
@@ -45,26 +46,16 @@ export function GenerationCard({
   item,
   showActions = true,
   variant = "default",
+  imagePriority = false,
 }: GenerationCardProps) {
-  const [imageError, setImageError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-
   const label = formatCardLabel(item.builder, item.target);
   const score = formatCompactCount(item.netScore);
   const paperTitle = `${item.builder} × ${item.target}`;
   const screenLabel = (item.screenType && item.screenType.trim()) || "Screenshot";
 
-  const handleImageError = useCallback(() => {
-    setImageError(true);
-  }, []);
-
   if (variant === "paper") {
     return (
-      <div
-        className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-2xl bg-canvas"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+      <div className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-2xl bg-canvas">
         <Link
           href={`/g/${item.slug}`}
           className="absolute inset-0 z-0 rounded-2xl"
@@ -73,15 +64,15 @@ export function GenerationCard({
 
         <div className="relative z-10 flex flex-col pointer-events-none">
           <div className="relative aspect-4/5 w-full overflow-hidden bg-ink">
-            {item.imageUrl && !imageError ? (
+            {item.imageUrl ? (
               <Image
                 src={item.imageUrl}
                 alt={label}
                 fill
                 sizes={GENERATION_CARD_IMAGE_SIZES}
                 className="object-cover"
-                loading="lazy"
-                onError={handleImageError}
+                loading={imagePriority ? "eager" : "lazy"}
+                fetchPriority={imagePriority ? "high" : undefined}
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-ink to-ink/80 p-4">
@@ -112,9 +103,7 @@ export function GenerationCard({
               <div
                 className={cn(
                   "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-linear-to-t from-ink/70 to-transparent px-3 py-3 transition-opacity lg:flex",
-                  isHovered
-                    ? "pointer-events-auto opacity-100 duration-200"
-                    : "pointer-events-none opacity-0 duration-150",
+                  "pointer-events-none opacity-0 duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:duration-200 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-within:duration-200",
                 )}
               >
                 <CardAction
@@ -141,23 +130,12 @@ export function GenerationCard({
                 />
                 <CardAction
                   label="Share"
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: label,
-                        url: `/g/${item.slug}`,
-                      });
-                    } else {
-                      navigator.clipboard.writeText(
-                        `${window.location.origin}/g/${item.slug}`,
-                      );
-                    }
-                  }}
                   icon={
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                       <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .799l6.733 3.366a2.5 2.5 0 11-.671 1.341l-6.733-3.366a2.5 2.5 0 110-3.482l6.733-3.366A2.52 2.52 0 0113 4.5z" />
                     </svg>
                   }
+                  slug={item.slug}
                 />
               </div>
             )}
@@ -179,11 +157,7 @@ export function GenerationCard({
   }
 
   return (
-    <div
-      className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-tile bg-canvas shadow-sm transition-all duration-200 hover:shadow-md"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-tile bg-canvas shadow-sm transition-all duration-200 hover:shadow-md">
       {/* Full-card hit target; content uses pointer-events-none so Remix/Download/Share stay usable */}
       <Link
         href={`/g/${item.slug}`}
@@ -194,18 +168,18 @@ export function GenerationCard({
       <div className="relative z-10 flex flex-col pointer-events-none">
         {/* Image area — ≥70% of card height */}
         <div className="relative aspect-4/5 w-full overflow-hidden">
-          {item.imageUrl && !imageError ? (
+          {item.imageUrl ? (
             <Image
               src={item.imageUrl}
               alt={label}
               fill
               sizes={GENERATION_CARD_IMAGE_SIZES}
               className="object-cover"
-              loading="lazy"
-              onError={handleImageError}
+              loading={imagePriority ? "eager" : "lazy"}
+              fetchPriority={imagePriority ? "high" : undefined}
             />
           ) : (
-            /* Placeholder on image failure or missing URL */
+            /* Placeholder on missing image URL */
             <div className="flex h-full w-full items-center justify-center bg-panel p-4">
               <p className="text-center font-display text-lg leading-tight text-muted">
                 {label}
@@ -225,9 +199,7 @@ export function GenerationCard({
             <div
               className={cn(
                 "absolute inset-x-0 bottom-0 hidden items-center justify-center gap-2 bg-linear-to-t from-ink/60 to-transparent px-3 py-3 transition-opacity lg:flex",
-                isHovered
-                  ? "pointer-events-auto opacity-100 duration-200"
-                  : "pointer-events-none opacity-0 duration-150",
+                "pointer-events-none opacity-0 duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:duration-200 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-within:duration-200",
               )}
             >
               <CardAction
@@ -254,23 +226,12 @@ export function GenerationCard({
               />
               <CardAction
                 label="Share"
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: label,
-                      url: `/g/${item.slug}`,
-                    });
-                  } else {
-                    navigator.clipboard.writeText(
-                      `${window.location.origin}/g/${item.slug}`,
-                    );
-                  }
-                }}
                 icon={
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                     <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .799l6.733 3.366a2.5 2.5 0 11-.671 1.341l-6.733-3.366a2.5 2.5 0 110-3.482l6.733-3.366A2.52 2.52 0 0113 4.5z" />
                   </svg>
                 }
+                slug={item.slug}
               />
             </div>
           )}
@@ -294,41 +255,32 @@ export function GenerationCard({
 
 type CardActionProps = {
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   href?: string;
   download?: boolean;
-  onClick?: () => void;
+  slug?: string;
 };
 
-function CardAction({ label, icon, href, download, onClick }: CardActionProps) {
+function CardAction({ label, icon, href, download, slug }: CardActionProps) {
   const classes =
     "flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm transition-transform duration-150 hover:scale-110";
 
-  if (href && !onClick) {
+  if (href) {
     return (
       <Link
         href={href}
         className={classes}
         aria-label={label}
         download={download || undefined}
-        onClick={(e) => e.stopPropagation()}
       >
         {icon}
       </Link>
     );
   }
 
-  return (
-    <button
-      type="button"
-      className={classes}
-      aria-label={label}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-    >
-      {icon}
-    </button>
-  );
+  if (slug) {
+    return <CardShareAction label={label} slug={slug} icon={icon} />;
+  }
+
+  return null;
 }
