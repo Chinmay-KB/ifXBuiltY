@@ -141,7 +141,7 @@ function PaperGeneratingPanel({
       className={cn("flex w-full flex-col", compact ? "min-h-0 flex-1 gap-3" : "gap-4 lg:max-w-none")}
       role="status"
       aria-live="polite"
-      aria-label={`Generating a parody screenshot: if ${b} built ${t}`}
+      aria-label={`Generating a satirical screenshot: if ${b} built ${t}`}
     >
       <div
         className={cn(

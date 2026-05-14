@@ -32,16 +32,18 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "ifXBuiltY — Parody screenshot generator",
+    default: "ifXBuiltY - Cursed AI Screenshots for Bad Product Ideas",
     template: "%s · ifXBuiltY",
   },
   description:
-    "What if X built Y? Combine any brand with any product and get an AI-generated parody UI screenshot. Browse the feed, vote, remix, and share.",
+    "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
   applicationName: "ifXBuiltY",
   keywords: [
-    "parody screenshot",
+    "AI satire generator",
+    "satirical screenshot",
     "AI UI generator",
     "brand mashup",
+    "cursed UI",
     "satirical UI",
     "fake app screenshot",
   ],
@@ -49,23 +51,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "ifXBuiltY",
-    title: "ifXBuiltY — Parody screenshot generator",
+    title: "ifXBuiltY - Cursed AI Screenshots for Bad Product Ideas",
     description:
-      "What if X built Y? AI-generated parody UI screenshots. Vote, remix, and share.",
+      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
     images: [
       {
-        url: "/icon.png",
-        width: 512,
-        height: 512,
-        alt: "ifXBuiltY",
+        url: "/card-smol.png",
+        width: 1200,
+        height: 630,
+        alt: "ifXBuiltY preview card",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ifXBuiltY — Parody screenshot generator",
+    title: "ifXBuiltY - Cursed AI Screenshots for Bad Product Ideas",
     description:
-      "What if X built Y? AI-generated parody UI screenshots. Vote, remix, and share.",
+      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
     images: ["/card-smol.png"],
   },
   robots: {
@@ -101,7 +103,7 @@ export default async function RootLayout({
     name: "ifXBuiltY",
     url: siteUrl,
     description:
-      "What if X built Y? AI-generated parody UI screenshots. Combine brands and products for satirical fake-app imagery.",
+      "A cursed product lab for AI UI screenshots, brand mashups, satirical fake-app imagery, and ideas nobody should put on a roadmap.",
   };
 
   return (

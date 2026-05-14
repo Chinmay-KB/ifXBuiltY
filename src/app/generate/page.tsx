@@ -6,9 +6,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { GeneratePageClient } from "./generate-page-client";
 
 export const metadata: Metadata = {
-  title: "Generate a parody screenshot",
+  title: "Generate a cursed AI screenshot",
   description:
-    "Pick a builder, pick a target product, and generate a satirical UI screenshot in seconds.",
+    "Pick the culprit brand, pick the product victim, and let ifXBuiltY cook a satirical AI UI screenshot before legal gets a calendar invite.",
   alternates: { canonical: "/generate" },
 };
 

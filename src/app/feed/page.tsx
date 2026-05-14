@@ -8,9 +8,9 @@ import { fetchFeedServer } from "@/lib/fetch-feed";
 import type { FeedSort } from "@/lib/feed-types";
 
 export const metadata: Metadata = {
-  title: "Browse parody screenshots",
+  title: "Browse cursed AI screenshots",
   description:
-    "Trending and newest AI-generated parody UI screenshots. Vote on brand mashups and filter by builder or target.",
+    "A public evidence locker of cursed AI UI screenshots. Filter brand mashups, vote on the cursed ones, and pretend product strategy did this on purpose.",
   alternates: { canonical: "/feed" },
 };
 

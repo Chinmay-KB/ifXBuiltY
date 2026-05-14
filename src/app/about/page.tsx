@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "About the bad idea lab",
   description:
-    "ifXBuiltY is a playground for parody product UI — combine brands, generate screenshots, and browse what the community imagines.",
+    "ifXBuiltY is a tiny comedy lab for satirical AI UI screenshots: mix brands, invent products nobody asked for, and browse the community's evidence.",
 };
 
 export default function AboutPage() {
@@ -20,7 +20,7 @@ export default function AboutPage() {
       </p>
       <p className="mt-4 text-lg leading-relaxed text-subtle">
         It&apos;s part creative toy, part commentary, and part feed of alternate timelines. Have fun,
-        don&apos;t impersonate real products maliciously, and tip your hat to the brands you parody.
+        don&apos;t impersonate real products maliciously, and tip your hat to the brands you spoof.
       </p>
       <Link
         href="/generate"

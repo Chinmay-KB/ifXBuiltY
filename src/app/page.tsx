@@ -10,10 +10,10 @@ import { getTotalPublishedCount } from "@/lib/homepage-stats";
 export const metadata: Metadata = {
   title: {
     absolute:
-      "ifXBuiltY — What if X built Y? AI parody screenshots from parallel universes",
+      "ifXBuiltY - Cursed AI screenshots from brand mashups",
   },
   description:
-    "The world's worst product ideas. Crossbreed any company with any product. Watch the UI write itself. Browse the wall, vote, remix, and share.",
+    "The internet's tiny lab for cursed product ideas. Crossbreed any company with any app, get an AI screenshot, then vote, remix, and share the evidence.",
   alternates: { canonical: "/" },
 };
 

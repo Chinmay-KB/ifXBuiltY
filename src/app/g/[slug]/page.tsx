@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const title = formatResultTitle(gen.builder, gen.target);
-  const description = `AI-generated parody UI screenshot: ${title}.`;
+  const description = `A cursed AI UI screenshot from the ifXBuiltY evidence locker: ${title}.`;
   const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
 
   return {

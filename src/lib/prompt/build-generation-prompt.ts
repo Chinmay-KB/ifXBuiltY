@@ -20,7 +20,7 @@ export function buildGenerationPrompt(fields: GenerationFields): string {
   }
 
   const lines = [
-    `Parody UI screenshot: fictional software for a "${target}"-like scenario, built entirely in the style of "${builder}" (stylistic reference — not corporate endorsement).`,
+    `Satirical UI screenshot: fictional software for a "${target}"-like scenario, built entirely in the style of "${builder}" (stylistic reference — not corporate endorsement).`,
 
     // 3-layer humor system
     `HUMOR LAYERS (all three must be present):`,

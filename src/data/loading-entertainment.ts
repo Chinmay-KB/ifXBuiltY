@@ -163,7 +163,7 @@ export const GENERIC_LOADING_MESSAGES = [
   "Exploring parallel timelines...",
   "Generating an alternate universe...",
   "The AI is overthinking this...",
-  "Pixel-perfecting the parody...",
+  "Pixel-perfecting the satire...",
   "Almost there, hold tight...",
   "Crafting something ridiculous...",
   "This is going to be good...",

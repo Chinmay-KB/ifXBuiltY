@@ -5,9 +5,9 @@ import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Showcase & quick prompts",
+  title: "Prompt starters for cursed screenshots",
   description:
-    "Example brand mashups and ready-made prompts to spark your next parody screenshot.",
+    "Steal a starter prompt, summon a brand mashup, and generate the satirical AI screenshot your product team should absolutely not roadmap.",
   alternates: { canonical: "/images" },
 };
 
