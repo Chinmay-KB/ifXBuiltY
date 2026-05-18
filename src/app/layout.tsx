@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { cookies } from "next/headers";
 
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
@@ -130,6 +131,7 @@ export default async function RootLayout({
           </NavigationGeneratingProvider>
         </SignInModalProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
