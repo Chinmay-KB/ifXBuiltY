@@ -52,6 +52,7 @@ export function WallCard({ item, height, eager = false, tilt = 0 }: WallCardProp
           loading={eager ? "eager" : "lazy"}
           priority={eager}
           onError={() => setImgError(true)}
+          unoptimized
         />
       ) : (
         <div

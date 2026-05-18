@@ -92,6 +92,7 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
                   sizes="56px"
                   className="object-cover"
                   loading="eager"
+                  unoptimized
                 />
               )}
             </Link>
@@ -280,6 +281,7 @@ function FloatingThumbnail({
           sizes="(max-width: 768px) 0px, 200px"
           className="object-cover transition-transform duration-300 hover:scale-105"
           loading="eager"
+          unoptimized
         />
       ) : (
         <div className="h-full w-full bg-panel" />

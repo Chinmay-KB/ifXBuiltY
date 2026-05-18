@@ -49,6 +49,7 @@ export function FeedTile({ item, index, offsetClass }: Props) {
               sizes={FEED_TILE_PREVIEW_SIZES}
               className="object-cover"
               loading="lazy"
+              unoptimized
             />
           ) : (
             <div className="h-full w-full bg-ink/30" aria-hidden />

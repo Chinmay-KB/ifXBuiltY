@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ id: string }> };
 
 const CACHE_CONTROL =
-  "public, max-age=31536000, stale-while-revalidate=86400";
+  "public, max-age=31536000, s-maxage=31536000, immutable";
 
 const VARIANT_WIDTH_PX: Record<Exclude<GenerationMediaVariant, "full">, number> =
   {

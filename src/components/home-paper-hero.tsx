@@ -181,6 +181,7 @@ function HeroGenerationCard({
             sizes="(max-width: 768px) 46vw, (max-width: 1280px) 23vw, 280px"
             className="object-contain p-2 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:group-hover/card:scale-[1.015]"
             priority={priority}
+            unoptimized
           />
         </div>
         <div className="pointer-events-none border-t border-line bg-canvas px-3 py-2.5">

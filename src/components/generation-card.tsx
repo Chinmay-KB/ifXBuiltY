@@ -73,6 +73,7 @@ export function GenerationCard({
                 className="object-cover"
                 loading={imagePriority ? "eager" : "lazy"}
                 fetchPriority={imagePriority ? "high" : undefined}
+                unoptimized
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-ink to-ink/80 p-4">
@@ -177,6 +178,7 @@ export function GenerationCard({
               className="object-cover"
               loading={imagePriority ? "eager" : "lazy"}
               fetchPriority={imagePriority ? "high" : undefined}
+              unoptimized
             />
           ) : (
             /* Placeholder on missing image URL */
