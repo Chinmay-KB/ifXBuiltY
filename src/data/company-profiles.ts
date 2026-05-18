@@ -26,6 +26,18 @@ export type CompanyProfile = {
   /** Path in company-logos bucket, or null if no logo uploaded */
   logoPath: string | null;
   defaultVibeTags: string[];
+  /** Parent company id for products; null for company-level profiles */
+  parentCompanyId: string | null;
+  /** 'company' or 'product' */
+  profileType: 'company' | 'product';
+  /** Product category: search, video, maps, payments, etc. */
+  category: string;
+  /** 1 = core, 2 = strong, 3 = niche-but-memeable */
+  popularityTier: number;
+  /** seed, researched, reviewed, approved, rejected */
+  researchStatus: string;
+  /** Meme potential score 1-5 */
+  memeStrength: number;
 };
 
 const EMPTY_STYLE_DNA: StyleDna = {
@@ -78,6 +90,12 @@ function mapRow(row: Record<string, unknown>): CompanyProfile {
       : EMPTY_ARCHETYPE,
     logoPath: (row.logo_path as string) ?? null,
     defaultVibeTags: Array.isArray(row.default_vibe_tags) ? (row.default_vibe_tags as string[]) : [],
+    parentCompanyId: (row.parent_company_id as string) ?? null,
+    profileType: (row.profile_type as 'company' | 'product') ?? 'company',
+    category: (row.category as string) ?? '',
+    popularityTier: (row.popularity_tier as number) ?? 2,
+    researchStatus: (row.research_status as string) ?? 'approved',
+    memeStrength: (row.meme_strength as number) ?? 3,
   };
 }
 
@@ -142,4 +160,44 @@ export async function getCompanyScreenshots(
 
   if (error) throw error;
   return (data ?? []).map((r: { image_path: string }) => r.image_path);
+}
+
+export type CompanyGroup = {
+  company: CompanyProfile;
+  products: CompanyProfile[];
+};
+
+/**
+ * Fetch all profiles grouped by parent company.
+ * Companies with no products still appear with an empty products array.
+ */
+export async function getAllCompanyGroups(): Promise<CompanyGroup[]> {
+  const all = await getAllCompanyProfiles();
+  const companies = all.filter((p) => p.profileType === "company");
+  const products = all.filter((p) => p.profileType === "product");
+
+  const groups: CompanyGroup[] = companies.map((company) => ({
+    company,
+    products: products
+      .filter((p) => p.parentCompanyId === company.id)
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+
+  return groups.sort((a, b) => a.company.name.localeCompare(b.company.name));
+}
+
+/**
+ * List all selectable profile ids (companies + approved products).
+ * Used by the picker and random pairing logic.
+ */
+export async function listSelectableProfileIds(): Promise<string[]> {
+  const supabase = createSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("company_profiles")
+    .select("id")
+    .or("profile_type.eq.company,and(profile_type.eq.product,research_status.eq.approved)")
+    .order("name");
+
+  if (error) throw error;
+  return (data ?? []).map((r: { id: string }) => r.id);
 }

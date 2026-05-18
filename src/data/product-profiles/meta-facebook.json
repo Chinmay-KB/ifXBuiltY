@@ -1,0 +1,34 @@
+{
+  "id": "meta-facebook",
+  "name": "Facebook",
+  "parent_company_id": "meta",
+  "category": "social",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["familiar", "cluttered", "algorithmically overwhelming"],
+    "colors": ["#1877F2 Facebook blue", "white background", "gray text", "red notification badge"],
+    "visual_traits": ["infinite scroll feed", "top navigation bar", "bottom tab bar (mobile)", "Stories row at top", "Marketplace/Groups/Reels tabs"],
+    "ux_traits": ["double-tap like", "comment threading", "share to Story", "memory notifications", "friend suggestions everywhere"],
+    "meme_exaggeration": ["your aunt's political posts", "birthday reminders for people you forgot", "Marketplace scams", "groups for everything hyper-specific"],
+    "iconic_elements": ["blue thumbs up Like button", "notification bell with red dot", "profile picture frame", "Stories circle ring"],
+    "behavioral_stereotypes": ["scrolling without posting", "accepting friend requests from strangers", "reading comments instead of the article"],
+    "satirical_patterns": ["People You May Know: your ex's new partner's cousin", "On This Day: please don't show me this photo from 2012"]
+  },
+  "archetype": {
+    "type": "social feed with infinite scroll",
+    "sections": ["top nav (search/notifications/menu)", "Stories row", "news feed (posts with reactions/comments)", "bottom tab bar", "right sidebar (contacts/suggestions on desktop)"],
+    "layout": "single-column feed on mobile, three-column on desktop",
+    "content_style": ["post cards", "profile photos", "reaction counts", "comment threads", "shared links with preview images"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Facebook is for old people now", "your mom's friend's comments", "Marketplace wild encounters"],
+    "user_frustrations": ["algorithm hides friends' posts", "too many ads", "privacy settings maze"],
+    "cultural_shorthand": "The social network everyone has but nobody admits to using"
+  },
+  "reference_urls": ["https://www.facebook.com"],
+  "screenshot_targets": ["news feed", "post with comments", "Stories row"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic", "Scammy"]
+}

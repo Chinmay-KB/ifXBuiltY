@@ -1,0 +1,34 @@
+{
+  "id": "google-drive",
+  "name": "Google Drive",
+  "parent_company_id": "google",
+  "category": "storage",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["organized", "collaborative", "enterprise-clean"],
+    "colors": ["#4285F4 blue", "#0F9D58 green", "#F4B400 yellow", "#DB4437 red", "white/light gray background"],
+    "visual_traits": ["file list/grid view", "left sidebar navigation", "color-coded folders", "shared with me section", "storage meter at bottom"],
+    "ux_traits": ["New button top-left", "drag-and-drop upload", "right-click context menu", "starred items", "recent files auto-sorted", "shared drive hierarchy"],
+    "meme_exaggeration": ["15GB fills up instantly", "orphaned files in Shared with Me limbo", "comment threads that become arguments", "someone deletes the folder you needed"],
+    "iconic_elements": ["triangle Drive logo", "color folder icons", "star toggle", "share button with avatar stack", "storage progress bar"],
+    "behavioral_stereotypes": ["hoarding files you'll never open", "naming things Final_v2_ACTUAL_FINAL", "passive-aggressive comment suggestions"],
+    "satirical_patterns": ["You have 0.03 GB remaining — upgrade now!", "Untitled Document (47)"]
+  },
+  "archetype": {
+    "type": "file management with list/grid view",
+    "sections": ["left sidebar (My Drive, Shared, Recent, Starred, Trash)", "top toolbar with search and New button", "file list/grid with name/owner/modified columns", "detail panel on right"],
+    "layout": "three-column: sidebar, file list, optional detail panel",
+    "content_style": ["file icons by type", "name", "owner avatar", "last modified date", "file size"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Final_v3_REAL_FINAL.docx", "storage full at 15GB", "who deleted the shared folder"],
+    "user_frustrations": ["can't find that one file", "shared with me is chaos", "sync conflicts"],
+    "cultural_shorthand": "Where documents go to be collaboratively confused"
+  },
+  "reference_urls": ["https://drive.google.com"],
+  "screenshot_targets": ["file list view", "grid view with folders", "shared with me"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "arc-browser",
+  "name": "Arc Browser",
+  "parent_company_id": "arc",
+  "category": "browser",
+  "screen_type": "desktop app",
+  "popularity_tier": 2,
+  "style_dna": {
+    "tone": ["opinionated", "maximalist", "browser-revolutionary"],
+    "colors": ["sidebar color customization", "light/dark themes", "space-specific color coding", "minimal tab bar (no traditional tabs)"],
+    "visual_traits": ["left sidebar with spaces", "no traditional top tab bar", "pinned tabs as sidebar items", "split view", "Boost customization per site"],
+    "ux_traits": ["Spaces for context switching", "Arc Max AI features", "Easel for screenshots", "Notes sidebar", "command bar (Cmd+T)", "tab auto-archiving"],
+    "meme_exaggeration": ["browser as a personality trait", "sidebar tabs confuse everyone", "Arc Max writes your emails", "the browser that thinks it knows better than you"],
+    "iconic_elements": ["colorful sidebar", "space switcher", "pinned tabs as icons", "Cmd+T command bar", "Boost customization panel"],
+    "behavioral_stereotypes": ["converting all your friends to Arc", "organizing life by Spaces", "tab archiving anxiety (where did it go)"],
+    "satirical_patterns": ["Your browser now has opinions about how you browse", "Arc: the browser that reorganizes your tabs whether you asked or not"]
+  },
+  "archetype": {
+    "type": "browser with sidebar navigation and space-based organization",
+    "sections": ["sidebar with spaces and tabs", "main content area", "command bar overlay", "split view", "Boost customization panel"],
+    "layout": "left sidebar replaces top tab bar, full-screen content area",
+    "content_style": ["web pages", "pinned tab icons", "space labels", "AI summaries", "notes"]
+  },
+  "meme_dna": {
+    "observed_memes": ["browser evangelism", "sidebar confusion for Chrome users", "tab auto-archiving panic"],
+    "user_frustrations": ["learning curve is steep", "some sites break", "sync between devices is limited"],
+    "cultural_shorthand": "The browser that makes you feel like a futurist and also slightly lost"
+  },
+  "reference_urls": ["https://arc.net"],
+  "screenshot_targets": ["sidebar with spaces", "split view", "command bar"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium", "Chaotic"]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "google-search",
+  "name": "Google Search",
+  "parent_company_id": "google",
+  "category": "search",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["minimal", "authoritative", "helpful"],
+    "colors": ["#4285F4 blue links", "#006621 green URLs", "#777 gray text", "white background"],
+    "visual_traits": ["centered search bar", "logo prominence", "card-based results", "chip filters", "knowledge panel right rail"],
+    "ux_traits": ["search-first entry point", "autocomplete dropdown", "infinite scroll results", "People Also Ask expandables", "pagination at bottom"],
+    "meme_exaggeration": ["ads disguised as results", "SEO spam on page 2", "I'm Feeling Lucky nobody uses", "zero-click answers killing publishers"],
+    "iconic_elements": ["blue underlined links", "green URL breadcrumbs", "three-dot menu per result", "Featured Answer box"],
+    "behavioral_stereotypes": ["endless query refinement", "clicking back to try next result", "trust in first result blindly"],
+    "satirical_patterns": ["recipe blogs with 3000-word life stories before ingredients", "SEO content farms dominating results"]
+  },
+  "archetype": {
+    "type": "search results page with ranked list",
+    "sections": ["search bar header", "filter chips row", "organic results list", "knowledge panel sidebar", "People Also Ask section", "related searches footer"],
+    "layout": "single-column results with optional right rail",
+    "content_style": ["title links", "URL breadcrumbs", "meta descriptions", "star ratings", "sitelinks"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Google knows everything about you", "page 2 of results is where links go to die", "SEO killed the internet"],
+    "user_frustrations": ["ads look exactly like results", "can't find original content past blogs", "autocomplete suggests embarrassing things"],
+    "cultural_shorthand": "The homepage you visit before visiting any other website"
+  },
+  "reference_urls": ["https://www.google.com"],
+  "screenshot_targets": ["main search page", "results page with knowledge panel", "mobile search"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

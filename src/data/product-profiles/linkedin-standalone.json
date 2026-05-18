@@ -1,0 +1,34 @@
+{
+  "id": "linkedin-standalone",
+  "name": "LinkedIn",
+  "parent_company_id": "microsoft",
+  "category": "social",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["corporate", "performative", "humble-brag central"],
+    "colors": ["#0A66C2 LinkedIn blue", "white background", "gray text", "green online indicators"],
+    "visual_traits": ["feed with post cards", "profile header with banner", "connections count", "endorsement badges", "job recommendation cards"],
+    "ux_traits": ["like/celebrate/love reactions", "comment threads with 'congrats!'", "Open to Work green banner", "skill endorsements", "InMail credits"],
+    "meme_exaggeration": ["humble-brag posts about getting fired", "'thrilled and honored' in every post", "connection requests from recruiters", "corporate motivational quotes"],
+    "iconic_elements": ["blue 'in' logo", "Open to Work green photo frame", "500+ connections badge", "skill endorsement list", "congrats comment flood"],
+    "behavioral_stereotypes": ["posting about getting laid off as a positive", "accepting every connection request", "endorsing skills of people you barely know"],
+    "satirical_patterns": ["I'm thrilled to announce that I was fired and it's the best thing that ever happened to me", "Congratulations! (commented 847 times on a post about a promotion)"]
+  },
+  "archetype": {
+    "type": "professional social feed with profile networking",
+    "sections": ["top nav (Home/Network/Jobs/Messaging/Notifications)", "feed with posts", "right sidebar (news/suggestions)", "profile page with experience/education", "messaging panel"],
+    "layout": "three-column: feed center, sidebar right, navigation top",
+    "content_style": ["text posts", "article shares", "job postings", "profile cards", "congratulatory comments"]
+  },
+  "meme_dna": {
+    "observed_memes": ["humble-brag culture", "thrilled and honored", "congrats comment spam"],
+    "user_frustrations": ["feed is all self-promotion", "recruiter spam", "algorithm promotes cringe posts"],
+    "cultural_shorthand": "Facebook but everyone is pretending to be professional"
+  },
+  "reference_urls": ["https://www.linkedin.com"],
+  "screenshot_targets": ["feed view", "profile page", "job recommendations"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Scammy"]
+}

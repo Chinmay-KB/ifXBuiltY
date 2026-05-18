@@ -1,0 +1,34 @@
+{
+  "id": "google-maps",
+  "name": "Google Maps",
+  "parent_company_id": "google",
+  "category": "maps",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["authoritative", "helpful", "data-dense"],
+    "colors": ["#4285F4 blue route line", "#34A853 green parks", "#EA4335 red pins", "light gray roads", "white buildings"],
+    "visual_traits": ["full-screen map canvas", "floating search bar top", "bottom sheet for details", "layer toggle top-right", "compass recenter button"],
+    "ux_traits": ["search-first entry", "bottom sheet with three states (peek/mid/full)", "directions FAB", "saved places with colored pins", "timeline history"],
+    "meme_exaggeration": ["ETA always optimistic", "recalculating anxiety", "Street View rabbit holes", "pin-dropping in wrong place", "indoor maps for malls you'll never visit"],
+    "iconic_elements": ["blue dot with accuracy circle", "red destination pin", "traffic color coding (green/yellow/red)", "compass needle"],
+    "behavioral_stereotypes": ["arguing with the route", "ignoring it and getting lost anyway", "checking Street View before going somewhere new"],
+    "satirical_patterns": ["suggests a route that saves 1 minute but adds 3 tolls", "business listings with 3 reviews from 2014"]
+  },
+  "archetype": {
+    "type": "map-based exploration with overlay panels",
+    "sections": ["full-screen map canvas", "search bar overlay", "bottom detail sheet", "layer controls", "directions panel", "place info with photos/reviews"],
+    "layout": "map-first with floating UI chrome",
+    "content_style": ["place names", "ratings", "hours", "photos", "reviews", "transit schedules"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Google Maps ETA vs reality", "Street View embarrassing moments", "Timeline knows everywhere you've been"],
+    "user_frustrations": ["indoor GPS doesn't work", "traffic reroutes add 10 minutes", "business hours always wrong"],
+    "cultural_shorthand": "The app that knows where you've been better than you do"
+  },
+  "reference_urls": ["https://maps.google.com"],
+  "screenshot_targets": ["main map view", "place detail bottom sheet", "directions route view"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

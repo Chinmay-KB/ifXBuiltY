@@ -1,0 +1,34 @@
+{
+  "id": "microsoft-word",
+  "name": "Microsoft Word",
+  "parent_company_id": "microsoft",
+  "category": "docs",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["professional", "dense", "feature-overwhelming"],
+    "colors": ["#2B579A Word blue", "white page canvas", "gray ribbon backgrounds", "light blue selection"],
+    "visual_traits": ["ribbon toolbar", "white page on gray background", "ruler at top", "status bar bottom", "navigation pane left"],
+    "ux_traits": ["ribbon tabs (Home/Insert/Design/Layout)", "contextual tabs appear on selection", "mini toolbar on text select", "Find/Replace dialog", "Track Changes markup"],
+    "meme_exaggeration": ["formatting breaks when you breathe", "page margins are a negotiation", "clipart ghost of versions past", "Save As dialog from 2003"],
+    "iconic_elements": ["ribbon interface", "page layout with margins visible", "cursor blinking on white page", "Track Changes red strikethrough"],
+    "behavioral_stereotypes": ["spending more time formatting than writing", "pasting from web destroys everything", "the document looks different on another computer"],
+    "satirical_patterns": ["Your formatting will be completely different on my computer", "Track Changes: passive-aggressive editing made visual"]
+  },
+  "archetype": {
+    "type": "document editor with ribbon toolbar",
+    "sections": ["title bar", "ribbon toolbar with tabs", "ruler", "page canvas", "status bar with word count/zoom", "navigation pane"],
+    "layout": "top-heavy toolbar, centered white page canvas, side panels optional",
+    "content_style": ["rich text", "headings", "tables", "images", "page breaks", "footnotes"]
+  },
+  "meme_dna": {
+    "observed_memes": ["formatting nightmare", "Track Changes wars", "paste from web destroys layout"],
+    "user_frustrations": ["images move when you don't want them to", "page breaks in wrong places", "different on Mac vs PC"],
+    "cultural_shorthand": "The word processor that requires a word processor manual"
+  },
+  "reference_urls": ["https://www.microsoft.com/microsoft-365/word"],
+  "screenshot_targets": ["document editing view", "ribbon toolbar closeup", "Track Changes view"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

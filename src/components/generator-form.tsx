@@ -6,7 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import Zoom from "@/components/image-zoom";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
-import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
+import { FLAT_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
 import { isGenerateEnabled } from "@/lib/ui/format";
@@ -62,8 +62,8 @@ export function GeneratorForm({
   const [target, setTarget] = useState(merged.target);
   const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
 
-  const builderList = companyOptions ?? BUILDER_OPTIONS;
-  const targetList = companyOptions ?? TARGET_OPTIONS;
+  const builderList = companyOptions ?? FLAT_OPTIONS;
+  const targetList = companyOptions ?? FLAT_OPTIONS;
 
   const { generate, cancelInflight, result, isLoading, error, errorCode } = useGenerate();
 

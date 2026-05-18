@@ -1,7 +1,7 @@
 import type { CompanyProfile } from "@/data/company-profiles";
 import {
   getCompanyProfileById,
-  listCompanyIds,
+  listSelectableProfileIds,
 } from "@/data/company-profiles";
 
 /** Max length for extraDetails — image models tolerate long prompts but stay bounded */
@@ -58,9 +58,9 @@ export async function mergeCompanyPair(
   const builder = await getCompanyProfileById(builderId);
   const target = await getCompanyProfileById(targetId);
   if (!builder || !target) {
-    const ids = await listCompanyIds();
+    const ids = await listSelectableProfileIds();
     throw new RangeError(
-      `Unknown company id(s): ${builderId}, ${targetId}. Valid: ${ids.join(", ")}`,
+      `Unknown profile id(s): ${builderId}, ${targetId}. Valid: ${ids.join(", ")}`,
     );
   }
   if (builderId === targetId) {
@@ -72,6 +72,14 @@ export async function mergeCompanyPair(
       // Layer 1: Visual Recognition
       formatStyleDna(builder.name, builder.styleDna),
       formatArchetype(target.name, target.archetype),
+
+      // Parent company context for products
+      builder.parentCompanyId
+        ? `Note: ${builder.name} is a product of ${builder.parentCompanyId} — use the product's specific style, not the parent company's branding.`
+        : "",
+      target.parentCompanyId
+        ? `Note: ${target.name} is a product of ${target.parentCompanyId} — the target domain is this specific product, not the parent company.`
+        : "",
 
       // Layer 2: UX Recognition
       builder.styleDna.ux_traits.length > 0
@@ -138,11 +146,11 @@ export async function fillFourUniqueSlots(): Promise<SlotWithFields[]> {
   return out;
 }
 
-/** Sample random distinct builder/target ids (uniform among companies). */
+/** Sample random distinct builder/target ids (uniform among companies and products). */
 export async function randomDistinctPairIds(): Promise<{ builderId: string; targetId: string }> {
-  const ids = await listCompanyIds();
+  const ids = await listSelectableProfileIds();
   if (ids.length < 2) {
-    throw new RangeError("Need at least two companies for pairing");
+    throw new RangeError("Need at least two profiles for pairing");
   }
   let builderId = ids[Math.floor(Math.random() * ids.length)]!;
   let targetId = ids[Math.floor(Math.random() * ids.length)]!;

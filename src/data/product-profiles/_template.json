@@ -1,0 +1,61 @@
+{
+  "_comment": "Product profile template — copy this file and fill in the fields for each product.",
+  "_instructions": "Save as src/data/product-profiles/<company>-<product>.json",
+
+  "id": "google-maps",
+  "name": "Google Maps",
+  "parent_company_id": "google",
+  "category": "maps",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+
+  "style_dna": {
+    "tone": ["helpful", "authoritative", "clean"],
+    "colors": ["#4285F4 blue primary", "#34A853 green accent", "#EA4335 red pins", "#FBBC05 yellow"],
+    "visual_traits": ["card-based bottom sheet", "floating search bar", "prominent map canvas", "rounded action chips"],
+    "ux_traits": ["search-first entry", "layer toggles in top-right", "bottom sheet for details", "directions FAB"],
+    "meme_exaggeration": ["ETA is always optimistic", "recalculating anxiety", "Street View rabbit holes", "pin-dropping in wrong place"],
+    "iconic_elements": ["blue dot location indicator", "red pin markers", "traffic color coding", "compass recenter button"],
+    "behavioral_stereotypes": ["overconfident routing", "indoor maps for places you'll never visit", "timeline knows everywhere you've been"],
+    "satirical_patterns": ["suggests routes through toll roads you don't want", "business listings with 3 reviews from 2014"]
+  },
+
+  "archetype": {
+    "type": "map-based exploration with overlay panels",
+    "sections": ["full-screen map canvas", "search bar overlay", "bottom detail sheet", "layer controls", "directions panel"],
+    "layout": "map-first with floating UI chrome",
+    "content_style": ["place names", "ratings", "hours", "photos", "reviews", "transit schedules"]
+  },
+
+  "meme_dna": {
+    "observed_memes": [
+      "Google Maps ETA vs reality",
+      "Street View embarrassing moments",
+      "Timeline privacy concerns",
+      "wrong destination pins"
+    ],
+    "user_frustrations": [
+      "indoor GPS doesn't work",
+      "traffic reroutes add 10 minutes",
+      "business hours are always wrong"
+    ],
+    "cultural_shorthand": "The app that knows where you've been better than you do"
+  },
+
+  "reference_urls": [
+    "https://maps.google.com",
+    "https://www.google.com/maps/about/"
+  ],
+
+  "screenshot_targets": [
+    "main map view with search",
+    "place detail bottom sheet",
+    "directions route view",
+    "layer selection panel"
+  ],
+
+  "screenshot_paths": [],
+
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

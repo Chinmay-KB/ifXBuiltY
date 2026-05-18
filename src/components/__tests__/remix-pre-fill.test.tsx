@@ -3,7 +3,7 @@ import * as fc from "fast-check";
 import { render, screen } from "@testing-library/react";
 import { GeneratorForm } from "../generator-form";
 import type { GenerationInputs } from "@/lib/ui/types";
-import { BUILDER_OPTIONS, TARGET_OPTIONS } from "@/data/generator-options";
+import { FLAT_OPTIONS } from "@/data/generator-options";
 
 // Mock next/link to render a plain anchor
 vi.mock("next/link", () => ({
@@ -58,8 +58,8 @@ vi.mock("@/hooks/use-generate", () => ({
  */
 describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
   // Constrained arbitraries matching the actual select option values
-  const builderArb = fc.constantFrom(...BUILDER_OPTIONS.map((b) => b.name));
-  const targetArb = fc.constantFrom(...TARGET_OPTIONS.map((t) => t.name));
+  const builderArb = fc.constantFrom(...FLAT_OPTIONS.map((b) => b.name));
+  const targetArb = fc.constantFrom(...FLAT_OPTIONS.map((t) => t.name));
 
   // Arbitrary for extra details (free text)
   const extraDetailsArb = fc.string({ minLength: 0, maxLength: 100 });

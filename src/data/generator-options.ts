@@ -1,28 +1,41 @@
 /**
  * Dropdown options for the generator form.
- * Both builder and target options come from company-profiles.json.
+ * Options come from company-profiles.json with products nested under parent companies.
  */
 
 import companyProfiles from "./company-profiles.json";
 
-export type BuilderOption = {
+export type ProductOption = {
   id: string;
   name: string;
+  screenType: string;
 };
 
-export type TargetOption = {
+export type CompanyOption = {
   id: string;
   name: string;
+  products: ProductOption[];
 };
 
-/** All available builders derived from company profiles */
-export const BUILDER_OPTIONS: BuilderOption[] = companyProfiles.map((p) => ({
-  id: p.id,
-  name: p.name,
+/** All available options grouped by company */
+export const GENERATOR_OPTIONS: CompanyOption[] = companyProfiles.map((c) => ({
+  id: c.id,
+  name: c.name,
+  products: (c.products ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    screenType: p.screenType ?? "",
+  })),
 }));
 
-/** All available targets derived from company profiles */
-export const TARGET_OPTIONS: TargetOption[] = companyProfiles.map((p) => ({
-  id: p.id,
-  name: p.name,
-}));
+/** Flat list of all selectable entries (company + products) for simple selects */
+export type FlatOption = { id: string; name: string; groupId?: string };
+
+export const FLAT_OPTIONS: FlatOption[] = GENERATOR_OPTIONS.flatMap((group) => [
+  { id: group.id, name: group.name, groupId: group.id },
+  ...group.products.map((p) => ({ id: p.id, name: `${group.name} — ${p.name}`, groupId: group.id })),
+]);
+
+/** Backward-compatible: flat company-only list (legacy) */
+export const BUILDER_OPTIONS = GENERATOR_OPTIONS.map((c) => ({ id: c.id, name: c.name }));
+export const TARGET_OPTIONS = GENERATOR_OPTIONS.map((c) => ({ id: c.id, name: c.name }));
