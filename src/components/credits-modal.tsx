@@ -28,7 +28,10 @@ export function CreditsModal({ open, onClose, currentCredits = null }: CreditsMo
       const res = await fetch("/api/checkout/credits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.productId }),
+        body: JSON.stringify({
+          productId: product.productId,
+          returnUrl: window.location.href,
+        }),
       });
 
       if (!res.ok) {
