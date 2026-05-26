@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
@@ -130,6 +131,20 @@ export default async function RootLayout({
             </main>
           </NavigationGeneratingProvider>
         </SignInModalProvider>
+        <footer className="border-t border-ink/10 px-4 py-5 text-center text-sm text-ink/70">
+          <p>
+            Made with questionable sleep decisions by{" "}
+            <Link
+              href="https://chinmaykabi.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block font-medium text-ink transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+            >
+              Chinmay Kabi
+            </Link>
+            .
+          </p>
+        </footer>
         <Analytics />
         <SpeedInsights />
       </body>

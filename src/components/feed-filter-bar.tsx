@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { CompanyProductFilterDropdown } from "@/components/company-product-filter-dropdown";
 import { cn } from "@/lib/cn";
+import type {
+  FeedProfileFilterGroup,
+  FeedProfileFilterPick,
+} from "@/lib/feed-profile-filter";
 import type { FeedSort } from "@/lib/ui/types";
 import { VIBE_TAGS } from "@/lib/vibe-tags";
 
@@ -11,14 +16,22 @@ import { VIBE_TAGS } from "@/lib/vibe-tags";
 
 type FeedFilterBarProps = {
   currentSort: FeedSort;
-  builders: string[];
-  targets: string[];
-  selectedBuilders: string[];
-  selectedTargets: string[];
+  /** Flat string options (used on /feed). */
+  builders?: string[];
+  targets?: string[];
+  selectedBuilders?: string[];
+  selectedTargets?: string[];
+  /** Hierarchical company → product options (used on homepage). */
+  builderGroups?: FeedProfileFilterGroup[];
+  targetGroups?: FeedProfileFilterGroup[];
+  selectedBuilderPicks?: FeedProfileFilterPick[];
+  selectedTargetPicks?: FeedProfileFilterPick[];
   selectedTones: string[];
   onSortChange: (sort: FeedSort) => void;
-  onBuildersChange: (builders: string[]) => void;
-  onTargetsChange: (targets: string[]) => void;
+  onBuildersChange?: (builders: string[]) => void;
+  onTargetsChange?: (targets: string[]) => void;
+  onBuilderPicksChange?: (picks: FeedProfileFilterPick[]) => void;
+  onTargetPicksChange?: (picks: FeedProfileFilterPick[]) => void;
   onTonesChange: (tones: string[]) => void;
   syncUrl?: boolean;
   /** Paper signage styling (Desktop Feed v2) */
@@ -28,9 +41,8 @@ type FeedFilterBarProps = {
 /* ─── Sort Tabs ─── */
 
 const sortOptions: { value: FeedSort; label: string }[] = [
+  { value: "newest", label: "Latest generations" },
   { value: "trending", label: "Trending" },
-  { value: "newest", label: "Newest" },
-  { value: "top", label: "Staff picks" },
 ];
 
 export const FEED_VIBE_OPTIONS = VIBE_TAGS;
@@ -220,19 +232,27 @@ function MultiSelectDropdown({
 
 export function FeedFilterBar({
   currentSort,
-  builders,
-  targets,
-  selectedBuilders,
-  selectedTargets,
+  builders = [],
+  targets = [],
+  selectedBuilders = [],
+  selectedTargets = [],
+  builderGroups,
+  targetGroups,
+  selectedBuilderPicks = [],
+  selectedTargetPicks = [],
   selectedTones,
   onSortChange,
   onBuildersChange,
   onTargetsChange,
+  onBuilderPicksChange,
+  onTargetPicksChange,
   onTonesChange,
   syncUrl = true,
   variant = "default",
 }: FeedFilterBarProps) {
   const router = useRouter();
+  const useHierarchicalBuilder = Boolean(builderGroups && onBuilderPicksChange);
+  const useHierarchicalTarget = Boolean(targetGroups && onTargetPicksChange);
 
   // Sync filter state to URL search params
   const syncToUrl = useCallback(
@@ -270,7 +290,7 @@ export function FeedFilterBar({
 
   const handleBuildersChange = useCallback(
     (newBuilders: string[]) => {
-      onBuildersChange(newBuilders);
+      onBuildersChange?.(newBuilders);
       syncToUrl(currentSort, newBuilders, selectedTargets, selectedTones);
     },
     [onBuildersChange, syncToUrl, currentSort, selectedTargets, selectedTones],
@@ -278,10 +298,24 @@ export function FeedFilterBar({
 
   const handleTargetsChange = useCallback(
     (newTargets: string[]) => {
-      onTargetsChange(newTargets);
+      onTargetsChange?.(newTargets);
       syncToUrl(currentSort, selectedBuilders, newTargets, selectedTones);
     },
     [onTargetsChange, syncToUrl, currentSort, selectedBuilders, selectedTones],
+  );
+
+  const handleBuilderPicksChange = useCallback(
+    (picks: FeedProfileFilterPick[]) => {
+      onBuilderPicksChange?.(picks);
+    },
+    [onBuilderPicksChange],
+  );
+
+  const handleTargetPicksChange = useCallback(
+    (picks: FeedProfileFilterPick[]) => {
+      onTargetPicksChange?.(picks);
+    },
+    [onTargetPicksChange],
   );
 
   const isPaper = variant === "paper";
@@ -349,18 +383,36 @@ export function FeedFilterBar({
           isPaper && "border-t border-line px-4 pt-3 sm:px-6 lg:border-t-0 lg:px-0 lg:pt-0",
         )}
       >
-        <MultiSelectDropdown
-          label="Builder"
-          options={builders}
-          selected={selectedBuilders}
-          onChange={handleBuildersChange}
-        />
-        <MultiSelectDropdown
-          label="Target"
-          options={targets}
-          selected={selectedTargets}
-          onChange={handleTargetsChange}
-        />
+        {useHierarchicalBuilder && builderGroups ? (
+          <CompanyProductFilterDropdown
+            label="Builder"
+            groups={builderGroups}
+            selected={selectedBuilderPicks}
+            onChange={handleBuilderPicksChange}
+          />
+        ) : (
+          <MultiSelectDropdown
+            label="Builder"
+            options={builders}
+            selected={selectedBuilders}
+            onChange={handleBuildersChange}
+          />
+        )}
+        {useHierarchicalTarget && targetGroups ? (
+          <CompanyProductFilterDropdown
+            label="Target"
+            groups={targetGroups}
+            selected={selectedTargetPicks}
+            onChange={handleTargetPicksChange}
+          />
+        ) : (
+          <MultiSelectDropdown
+            label="Target"
+            options={targets}
+            selected={selectedTargets}
+            onChange={handleTargetsChange}
+          />
+        )}
       </div>
     </div>
   );

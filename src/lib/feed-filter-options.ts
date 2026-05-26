@@ -1,10 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
-import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
+import { getSelectableCompanyGroups } from "@/data/company-profiles";
+import {
+  publicGenerationsQuery,
+  type GenerationsSelectClient,
+} from "@/lib/feed-public-filters";
+import type { FeedHierarchicalFilterOptions, FeedProfileFilterGroup } from "@/lib/feed-profile-filter";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
-type FeedFilterOptions = {
+export type FeedFilterOptions = {
   builders: string[];
   targets: string[];
 };
@@ -41,10 +46,11 @@ async function fetchFeedFilterOptions(): Promise<FeedFilterOptions> {
       persistSession: false,
       autoRefreshToken: false,
     },
-  });
+  }) as unknown as GenerationsSelectClient;
 
-  const { data, error } = await applyPublicFeedFilters(
-    supabase.from("generations").select("builder, target"),
+  const { data, error } = await publicGenerationsQuery(
+    supabase,
+    "builder, target",
   ).range(0, MAX_OPTION_ROWS - 1);
 
   if (error) {
@@ -69,5 +75,55 @@ async function fetchFeedFilterOptions(): Promise<FeedFilterOptions> {
 export const getFeedFilterOptions = unstable_cache(
   fetchFeedFilterOptions,
   ["feed-filter-options"],
+  { revalidate: FILTER_OPTIONS_REVALIDATE_SECONDS },
+);
+
+function nameSet(names: string[]): Set<string> {
+  return new Set(names.map((n) => n.toLowerCase()));
+}
+
+function buildProfileGroupsForSide(
+  companyGroups: Awaited<ReturnType<typeof getSelectableCompanyGroups>>,
+  publishedNames: Set<string>,
+): FeedProfileFilterGroup[] {
+  const result: FeedProfileFilterGroup[] = [];
+
+  for (const group of companyGroups) {
+    const products = group.products.map((p) => ({ id: p.id, name: p.name }));
+    const companyMatches = publishedNames.has(group.company.name.toLowerCase());
+    const hasPublishedProduct = products.some((p) =>
+      publishedNames.has(p.name.toLowerCase()),
+    );
+
+    if (!companyMatches && !hasPublishedProduct) continue;
+
+    result.push({
+      companyId: group.company.id,
+      companyName: group.company.name,
+      products,
+    });
+  }
+
+  return result;
+}
+
+async function fetchFeedHierarchicalFilterOptions(): Promise<FeedHierarchicalFilterOptions> {
+  const [flat, companyGroups] = await Promise.all([
+    fetchFeedFilterOptions(),
+    getSelectableCompanyGroups(),
+  ]);
+
+  const builderNames = nameSet(flat.builders);
+  const targetNames = nameSet(flat.targets);
+
+  return {
+    builderGroups: buildProfileGroupsForSide(companyGroups, builderNames),
+    targetGroups: buildProfileGroupsForSide(companyGroups, targetNames),
+  };
+}
+
+export const getFeedHierarchicalFilterOptions = unstable_cache(
+  fetchFeedHierarchicalFilterOptions,
+  ["feed-hierarchical-filter-options"],
   { revalidate: FILTER_OPTIONS_REVALIDATE_SECONDS },
 );

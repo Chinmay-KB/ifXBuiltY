@@ -13,7 +13,7 @@ type HomeFeedGridProps = {
 /**
  * HomeFeedGrid — homepage-specific masonry feed grid.
  *
- * - Uses `useFeed` with `sort: "trending"` as default
+ * - Uses `useFeed` with `sort: "newest"` as default
  * - Masonry layout via CSS columns (`.masonry-feed` class from globals.css)
  * - Designed to show ≥12 cards above the fold on desktop (1280px+) with 5 columns
  * - Infinite scroll via IntersectionObserver sentinel
@@ -23,7 +23,7 @@ type HomeFeedGridProps = {
  */
 export function HomeFeedGrid({ initialItems }: HomeFeedGridProps) {
   const { items, isLoading, hasMore, loadMore } = useFeed({
-    sort: "trending",
+    sort: "newest",
     initialItems,
   });
 

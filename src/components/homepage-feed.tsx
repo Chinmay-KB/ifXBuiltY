@@ -1,11 +1,11 @@
 import { FeedMasonryGridStatic } from "@/components/feed-masonry-grid-static";
 import { HomepageFeedClient } from "@/components/homepage-feed-client";
+import type { FeedHierarchicalFilterOptions } from "@/lib/feed-profile-filter";
 import type { FeedItem } from "@/lib/ui/types";
 
 type HomepageFeedProps = {
   initialItems: FeedItem[];
-  availableBuilders: string[];
-  availableTargets: string[];
+  filterOptions: FeedHierarchicalFilterOptions;
 };
 
 /**
@@ -15,15 +15,11 @@ type HomepageFeedProps = {
  */
 export function HomepageFeed({
   initialItems,
-  availableBuilders,
-  availableTargets,
+  filterOptions,
 }: HomepageFeedProps) {
   return (
     <div id="feed" className="relative flex flex-1 flex-col">
-      <HomepageFeedClient
-        availableBuilders={availableBuilders}
-        availableTargets={availableTargets}
-      >
+      <HomepageFeedClient filterOptions={filterOptions}>
         <FeedMasonryGridStatic items={initialItems} />
       </HomepageFeedClient>
     </div>

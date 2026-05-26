@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { ensureSignupBonusCredits } from "@/lib/credits/signup-bonus";
 import { assertDodoEntitlementConfigured, getDodoClient } from "@/lib/dodo/client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -13,6 +14,15 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (userErr || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await ensureSignupBonusCredits(user);
+  } catch (e) {
+    console.error("[credits:balance] signup bonus failed", {
+      message: e instanceof Error ? e.message : String(e),
+      userId: user.id,
+    });
   }
 
   const { data: mapping, error: mapErr } = await supabase

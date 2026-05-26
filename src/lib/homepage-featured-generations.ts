@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
-import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
+import {
+  publicGenerationsQuery,
+  type GenerationsSelectClient,
+} from "@/lib/feed-public-filters";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
@@ -39,21 +42,19 @@ async function fetchHomepageFeaturedGenerations(): Promise<
       persistSession: false,
       autoRefreshToken: false,
     },
-  });
+  }) as unknown as GenerationsSelectClient;
 
-  const { data, error } = await applyPublicFeedFilters(
-    supabase
-      .from("generations")
-      .select("id, slug, builder, target, image_path, net_score, remix_count"),
+  const { data, error } = await publicGenerationsQuery(
+    supabase,
+    "id, slug, builder, target, image_path, net_score, remix_count",
   )
     .order("net_score", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(HOMEPAGE_FEATURED_LIMIT)
-    .returns<FeaturedGenerationRow[]>();
+    .limit(HOMEPAGE_FEATURED_LIMIT);
 
   if (error || !data) return [];
 
-  return data
+  return (data as FeaturedGenerationRow[])
     .filter((row) => row.image_path?.trim())
     .map((row) => ({
       id: row.id,
