@@ -3,7 +3,7 @@ import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import Link from "next/link";
 
 import { DeferredAnalytics } from "@/components/deferred-analytics";
-import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
+import { DeferredSpeedInsights } from "@/components/deferred-speed-insights";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { getSiteUrl } from "@/lib/site-url";
@@ -102,13 +102,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SignInModalProvider>
-          <NavigationGeneratingProvider>
-            <NavigationShellWrapper user={null} isSuperadmin={false} />
-            {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
-            <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
-              {children}
-            </main>
-          </NavigationGeneratingProvider>
+          <NavigationShellWrapper user={null} isSuperadmin={false} />
+          {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
+          <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
+            {children}
+          </main>
         </SignInModalProvider>
         <footer className="border-t border-ink/10 px-4 py-5 text-center text-sm text-ink/70">
           <p>
@@ -125,6 +123,7 @@ export default function RootLayout({
           </p>
         </footer>
         <DeferredAnalytics />
+        <DeferredSpeedInsights />
       </body>
     </html>
   );
