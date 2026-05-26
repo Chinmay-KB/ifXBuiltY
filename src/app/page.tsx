@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { HomepageHero } from "@/components/homepage-hero";
 import { HomepageFeed } from "@/components/homepage-feed";
-import { getFeedFilterOptions } from "@/lib/feed-filter-options";
+import { getFeedHierarchicalFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import { getHomepageFeaturedGenerations } from "@/lib/homepage-featured-generations";
 import { getTotalPublishedCount } from "@/lib/homepage-stats";
@@ -21,9 +21,9 @@ export default async function HomePage() {
   // Fetch featured generations for hero thumbnails + initial feed items in parallel
   const [featuredGenerations, feed, totalPublished, filterOptions] = await Promise.all([
     getHomepageFeaturedGenerations(),
-    fetchFeedServer({ sort: "trending", limit: 24 }),
+    fetchFeedServer({ sort: "newest", limit: 24 }),
     getTotalPublishedCount(),
-    getFeedFilterOptions(),
+    getFeedHierarchicalFilterOptions(),
   ]);
 
   // Build hero thumbnails — use featured first, supplement with feed items if needed
@@ -59,8 +59,7 @@ export default async function HomePage() {
       />
       <HomepageFeed
         initialItems={feed.items}
-        availableBuilders={filterOptions.builders}
-        availableTargets={filterOptions.targets}
+        filterOptions={filterOptions}
       />
     </div>
   );

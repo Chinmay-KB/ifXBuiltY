@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useCallback, useState, type ReactNode } from "react";
 
 import { FeedFilterBar } from "@/components/feed-filter-bar";
+import {
+  expandProfileSelectionsToNames,
+  type FeedHierarchicalFilterOptions,
+  type FeedProfileFilterPick,
+} from "@/lib/feed-profile-filter";
 import type { FeedSort } from "@/lib/ui/types";
 
 const DynamicFeedMasonryGrid = dynamic(
@@ -24,31 +29,45 @@ const DynamicFeedMasonryGrid = dynamic(
 );
 
 type HomepageFeedClientProps = {
-  availableBuilders: string[];
-  availableTargets: string[];
+  filterOptions: FeedHierarchicalFilterOptions;
   children: ReactNode;
 };
 
 export function HomepageFeedClient({
-  availableBuilders,
-  availableTargets,
+  filterOptions,
   children,
 }: HomepageFeedClientProps) {
-  const [sort, setSort] = useState<FeedSort>("trending");
-  const [selectedBuilders, setSelectedBuilders] = useState<string[]>([]);
-  const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+  const [sort, setSort] = useState<FeedSort>("newest");
+  const [selectedBuilderPicks, setSelectedBuilderPicks] = useState<
+    FeedProfileFilterPick[]
+  >([]);
+  const [selectedTargetPicks, setSelectedTargetPicks] = useState<
+    FeedProfileFilterPick[]
+  >([]);
   const [selectedTones, setSelectedTones] = useState<string[]>([]);
+
+  const expandedBuilders = expandProfileSelectionsToNames(
+    selectedBuilderPicks,
+    filterOptions.builderGroups,
+  );
+  const expandedTargets = expandProfileSelectionsToNames(
+    selectedTargetPicks,
+    filterOptions.targetGroups,
+  );
 
   const handleSortChange = useCallback((newSort: FeedSort) => {
     setSort(newSort);
   }, []);
 
-  const handleBuildersChange = useCallback((newBuilders: string[]) => {
-    setSelectedBuilders(newBuilders);
-  }, []);
+  const handleBuilderPicksChange = useCallback(
+    (picks: FeedProfileFilterPick[]) => {
+      setSelectedBuilderPicks(picks);
+    },
+    [],
+  );
 
-  const handleTargetsChange = useCallback((newTargets: string[]) => {
-    setSelectedTargets(newTargets);
+  const handleTargetPicksChange = useCallback((picks: FeedProfileFilterPick[]) => {
+    setSelectedTargetPicks(picks);
   }, []);
 
   const handleTonesChange = useCallback((next: string[]) => {
@@ -56,9 +75,9 @@ export function HomepageFeedClient({
   }, []);
 
   const isInitialView =
-    sort === "trending" &&
-    selectedBuilders.length === 0 &&
-    selectedTargets.length === 0 &&
+    sort === "newest" &&
+    selectedBuilderPicks.length === 0 &&
+    selectedTargetPicks.length === 0 &&
     selectedTones.length === 0;
 
   return (
@@ -68,14 +87,14 @@ export function HomepageFeedClient({
           variant="paper"
           syncUrl={false}
           currentSort={sort}
-          builders={availableBuilders}
-          targets={availableTargets}
-          selectedBuilders={selectedBuilders}
-          selectedTargets={selectedTargets}
+          builderGroups={filterOptions.builderGroups}
+          targetGroups={filterOptions.targetGroups}
+          selectedBuilderPicks={selectedBuilderPicks}
+          selectedTargetPicks={selectedTargetPicks}
           selectedTones={selectedTones}
           onSortChange={handleSortChange}
-          onBuildersChange={handleBuildersChange}
-          onTargetsChange={handleTargetsChange}
+          onBuilderPicksChange={handleBuilderPicksChange}
+          onTargetPicksChange={handleTargetPicksChange}
           onTonesChange={handleTonesChange}
         />
       </div>
@@ -85,11 +104,11 @@ export function HomepageFeedClient({
           children
         ) : (
           <DynamicFeedMasonryGrid
-            key={`${sort}|${selectedBuilders.join(",")}|${selectedTargets.join(",")}|${selectedTones.join(",")}`}
+            key={`${sort}|${expandedBuilders.join(",")}|${expandedTargets.join(",")}|${selectedTones.join(",")}`}
             initialItems={[]}
             sort={sort}
-            builders={selectedBuilders.length > 0 ? selectedBuilders : undefined}
-            targets={selectedTargets.length > 0 ? selectedTargets : undefined}
+            builders={expandedBuilders.length > 0 ? expandedBuilders : undefined}
+            targets={expandedTargets.length > 0 ? expandedTargets : undefined}
             tones={selectedTones.length > 0 ? selectedTones : undefined}
           />
         )}
