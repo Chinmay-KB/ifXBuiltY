@@ -1,110 +1,717 @@
 [
   {
-    "id": "duolingo",
-    "name": "Duolingo",
-    "tone": "absurdly polished",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Playful mascot energy, streaks, hearts, gentle guilt-trip microcopy, bright green accents, rounded cards.",
-    "targetDomain": "Learning and habit loops with gamified progress."
-  },
-  {
-    "id": "ikea",
-    "name": "IKEA",
-    "tone": "unhinged",
-    "screenType": "desktop web",
-    "region": "EU",
-    "builderStyle": "Swedish product names, flat illustration, numbered assembly steps, warehouse scale typography.",
-    "targetDomain": "Self-serve shopping with impossible optimism."
-  },
-  {
-    "id": "robinhood",
-    "name": "Robinhood",
-    "tone": "unhinged",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Neon green/black, confetti, streaks, crypto-grade hype, simple big buttons.",
-    "targetDomain": "Trading and instant gratification UX."
-  },
-  {
-    "id": "linkedin",
-    "name": "LinkedIn",
-    "tone": "dead serious",
-    "screenType": "desktop web",
-    "region": "US",
-    "builderStyle": "Blue corporate chrome, endorsements, humble-brag prompts, \"Say congrats\" patterns, MY NETWORK cues.",
-    "targetDomain": "Professional identity and networking rituals."
-  },
-  {
-    "id": "spotify",
-    "name": "Spotify",
-    "tone": "unhinged",
-    "screenType": "mobile app",
-    "region": "EU",
-    "builderStyle": "Dark mode, lime accent, playlists and recommendations, rounded cards, audio-first IA.",
-    "targetDomain": "Streaming libraries and discovery."
+    "id": "google",
+    "name": "Google",
+    "products": [
+      { "id": "google-search", "name": "Google Search", "screenType": "desktop web" },
+      { "id": "google-youtube", "name": "YouTube", "screenType": "desktop web" },
+      { "id": "google-maps", "name": "Google Maps", "screenType": "mobile app" },
+      { "id": "google-gmail", "name": "Gmail", "screenType": "desktop web" },
+      { "id": "google-drive", "name": "Google Drive", "screenType": "desktop web" },
+      { "id": "google-docs", "name": "Google Docs", "screenType": "desktop web" },
+      { "id": "google-sheets", "name": "Google Sheets", "screenType": "desktop web" },
+      { "id": "google-slides", "name": "Google Slides", "screenType": "desktop web" },
+      { "id": "google-calendar", "name": "Google Calendar", "screenType": "desktop web" },
+      { "id": "google-photos", "name": "Google Photos", "screenType": "mobile app" },
+      { "id": "google-translate", "name": "Google Translate", "screenType": "mobile app" },
+      { "id": "google-chrome", "name": "Google Chrome", "screenType": "desktop web" },
+      { "id": "google-android", "name": "Android", "screenType": "mobile app" },
+      { "id": "google-play-store", "name": "Google Play Store", "screenType": "mobile app" },
+      { "id": "google-wallet", "name": "Google Wallet", "screenType": "mobile app" },
+      { "id": "google-pay", "name": "Google Pay", "screenType": "mobile app" },
+      { "id": "google-meet", "name": "Google Meet", "screenType": "desktop web" },
+      { "id": "google-gemini", "name": "Google Gemini", "screenType": "desktop web" }
+    ]
   },
   {
     "id": "apple",
     "name": "Apple",
-    "tone": "absurdly polished",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Large SF-style type, generous whitespace, frosted glass, subtle motion, premium restraint.",
-    "targetDomain": "Consumer hardware and services ecosystem."
-  },
-  {
-    "id": "google",
-    "name": "Google",
-    "tone": "absurdly polished",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Material You cards, colorful accents, chip filters, helpful microcopy, dense settings.",
-    "targetDomain": "Search and horizontal consumer utilities."
-  },
-  {
-    "id": "airbnb",
-    "name": "Airbnb",
-    "tone": "absurdly polished",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Rausch coral, rounded photography-forward listings, trust badges, trip storytelling.",
-    "targetDomain": "Marketplace listings and hosted stays."
+    "products": [
+      { "id": "apple-ios", "name": "iOS", "screenType": "mobile app" },
+      { "id": "apple-macos", "name": "macOS", "screenType": "desktop app" },
+      { "id": "apple-app-store", "name": "App Store", "screenType": "mobile app" },
+      { "id": "apple-imessage", "name": "iMessage", "screenType": "mobile app" },
+      { "id": "apple-facetime", "name": "FaceTime", "screenType": "mobile app" },
+      { "id": "apple-safari", "name": "Safari", "screenType": "desktop web" },
+      { "id": "apple-music", "name": "Apple Music", "screenType": "mobile app" },
+      { "id": "apple-tv", "name": "Apple TV", "screenType": "mobile app" },
+      { "id": "apple-pay", "name": "Apple Pay", "screenType": "mobile app" },
+      { "id": "apple-wallet", "name": "Apple Wallet", "screenType": "mobile app" },
+      { "id": "apple-maps", "name": "Apple Maps", "screenType": "mobile app" },
+      { "id": "apple-notes", "name": "Apple Notes", "screenType": "mobile app" },
+      { "id": "apple-health", "name": "Apple Health", "screenType": "mobile app" },
+      { "id": "apple-fitness", "name": "Apple Fitness", "screenType": "mobile app" },
+      { "id": "apple-icloud", "name": "iCloud", "screenType": "desktop web" },
+      { "id": "apple-find-my", "name": "Find My", "screenType": "mobile app" }
+    ]
   },
   {
     "id": "microsoft",
     "name": "Microsoft",
-    "tone": "dead serious",
-    "screenType": "desktop web",
-    "region": "US",
-    "builderStyle": "Fluent / Office-family density, ribbon-era cues, neutral blues and greys, enterprise grids and pivot tables.",
-    "targetDomain": "Productivity suites and B2B admin consoles."
+    "products": [
+      { "id": "microsoft-windows", "name": "Windows", "screenType": "desktop app" },
+      { "id": "microsoft-office", "name": "Microsoft 365", "screenType": "desktop web" },
+      { "id": "microsoft-word", "name": "Microsoft Word", "screenType": "desktop web" },
+      { "id": "microsoft-excel", "name": "Microsoft Excel", "screenType": "desktop web" },
+      { "id": "microsoft-powerpoint", "name": "Microsoft PowerPoint", "screenType": "desktop web" },
+      { "id": "microsoft-outlook", "name": "Microsoft Outlook", "screenType": "desktop web" },
+      { "id": "microsoft-teams", "name": "Microsoft Teams", "screenType": "desktop web" },
+      { "id": "microsoft-onedrive", "name": "OneDrive", "screenType": "desktop web" },
+      { "id": "microsoft-edge", "name": "Microsoft Edge", "screenType": "desktop web" },
+      { "id": "microsoft-bing", "name": "Bing", "screenType": "desktop web" },
+      { "id": "microsoft-copilot", "name": "Microsoft Copilot", "screenType": "desktop web" },
+      { "id": "microsoft-vs-code", "name": "VS Code", "screenType": "desktop web" },
+      { "id": "microsoft-visual-studio", "name": "Visual Studio", "screenType": "desktop app" },
+      { "id": "microsoft-github", "name": "GitHub", "screenType": "desktop web" },
+      { "id": "microsoft-azure", "name": "Azure", "screenType": "desktop web" },
+      { "id": "microsoft-xbox", "name": "Xbox", "screenType": "desktop web" },
+      { "id": "microsoft-game-pass", "name": "Xbox Game Pass", "screenType": "desktop web" },
+      { "id": "microsoft-linkedin", "name": "LinkedIn", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "meta",
+    "name": "Meta",
+    "products": [
+      { "id": "meta-facebook", "name": "Facebook", "screenType": "mobile app" },
+      { "id": "meta-instagram", "name": "Instagram", "screenType": "mobile app" },
+      { "id": "meta-whatsapp", "name": "WhatsApp", "screenType": "mobile app" },
+      { "id": "meta-messenger", "name": "Messenger", "screenType": "mobile app" },
+      { "id": "meta-threads", "name": "Threads", "screenType": "mobile app" },
+      { "id": "meta-quest", "name": "Meta Quest", "screenType": "desktop app" },
+      { "id": "meta-horizon", "name": "Horizon Worlds", "screenType": "desktop app" },
+      { "id": "meta-ai", "name": "Meta AI", "screenType": "mobile app" },
+      { "id": "meta-business-suite", "name": "Meta Business Suite", "screenType": "desktop web" },
+      { "id": "meta-ads-manager", "name": "Ads Manager", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "products": [
+      { "id": "amazon-shopping", "name": "Amazon Shopping", "screenType": "desktop web" },
+      { "id": "amazon-prime", "name": "Amazon Prime", "screenType": "desktop web" },
+      { "id": "amazon-prime-video", "name": "Prime Video", "screenType": "desktop web" },
+      { "id": "amazon-music", "name": "Amazon Music", "screenType": "mobile app" },
+      { "id": "amazon-kindle", "name": "Kindle", "screenType": "mobile app" },
+      { "id": "amazon-audible", "name": "Audible", "screenType": "mobile app" },
+      { "id": "amazon-alexa", "name": "Alexa", "screenType": "mobile app" },
+      { "id": "amazon-fire-tv", "name": "Fire TV", "screenType": "desktop app" },
+      { "id": "amazon-twitch", "name": "Twitch", "screenType": "desktop web" },
+      { "id": "amazon-ring", "name": "Ring", "screenType": "mobile app" },
+      { "id": "amazon-aws-console", "name": "AWS Console", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "netflix",
+    "name": "Netflix",
+    "products": [
+      { "id": "netflix", "name": "Netflix", "screenType": "desktop web" },
+      { "id": "netflix-games", "name": "Netflix Games", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "spotify",
+    "name": "Spotify",
+    "products": [
+      { "id": "spotify", "name": "Spotify", "screenType": "mobile app" },
+      { "id": "spotify-wrapped", "name": "Spotify Wrapped", "screenType": "mobile app" },
+      { "id": "spotify-for-artists", "name": "Spotify for Artists", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok",
+    "products": [
+      { "id": "tiktok", "name": "TikTok", "screenType": "mobile app" },
+      { "id": "tiktok-shop", "name": "TikTok Shop", "screenType": "mobile app" },
+      { "id": "tiktok-capcut", "name": "CapCut", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "snapchat",
+    "name": "Snapchat",
+    "products": [
+      { "id": "snapchat", "name": "Snapchat", "screenType": "mobile app" },
+      { "id": "snapchat-bitmoji", "name": "Bitmoji", "screenType": "mobile app" },
+      { "id": "snapchat-snap-map", "name": "Snap Map", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "reddit",
+    "name": "Reddit",
+    "products": [
+      { "id": "reddit", "name": "Reddit", "screenType": "desktop web" },
+      { "id": "reddit-ads", "name": "Reddit Ads", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "x-twitter",
+    "name": "X / Twitter",
+    "products": [
+      { "id": "x-twitter", "name": "X", "screenType": "mobile app" },
+      { "id": "x-twitter-communities", "name": "X Communities", "screenType": "mobile app" },
+      { "id": "x-twitter-spaces", "name": "X Spaces", "screenType": "mobile app" },
+      { "id": "x-twitter-grok", "name": "X Grok", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "uber",
+    "name": "Uber",
+    "products": [
+      { "id": "uber-rides", "name": "Uber Rides", "screenType": "mobile app" },
+      { "id": "uber-eats", "name": "Uber Eats", "screenType": "mobile app" },
+      { "id": "uber-driver", "name": "Uber Driver App", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "airbnb",
+    "name": "Airbnb",
+    "products": [
+      { "id": "airbnb-guest", "name": "Airbnb Guest App", "screenType": "mobile app" },
+      { "id": "airbnb-host", "name": "Airbnb Host Dashboard", "screenType": "desktop web" },
+      { "id": "airbnb-experiences", "name": "Airbnb Experiences", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "doordash",
+    "name": "DoorDash",
+    "products": [
+      { "id": "doordash-consumer", "name": "DoorDash Consumer App", "screenType": "mobile app" },
+      { "id": "doordash-dasher", "name": "Dasher App", "screenType": "mobile app" },
+      { "id": "doordash-merchant", "name": "Merchant Portal", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "adobe",
+    "name": "Adobe",
+    "products": [
+      { "id": "adobe-photoshop", "name": "Photoshop", "screenType": "desktop app" },
+      { "id": "adobe-illustrator", "name": "Illustrator", "screenType": "desktop app" },
+      { "id": "adobe-premiere-pro", "name": "Premiere Pro", "screenType": "desktop app" },
+      { "id": "adobe-after-effects", "name": "After Effects", "screenType": "desktop app" },
+      { "id": "adobe-lightroom", "name": "Lightroom", "screenType": "mobile app" },
+      { "id": "adobe-acrobat", "name": "Acrobat", "screenType": "desktop app" },
+      { "id": "adobe-express", "name": "Adobe Express", "screenType": "desktop web" },
+      { "id": "adobe-firefly", "name": "Adobe Firefly", "screenType": "desktop web" },
+      { "id": "adobe-indesign", "name": "InDesign", "screenType": "desktop app" },
+      { "id": "adobe-behance", "name": "Behance", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "figma",
+    "name": "Figma",
+    "products": [
+      { "id": "figma-design", "name": "Figma Design", "screenType": "desktop web" },
+      { "id": "figma-figjam", "name": "FigJam", "screenType": "desktop web" },
+      { "id": "figma-dev-mode", "name": "Dev Mode", "screenType": "desktop web" },
+      { "id": "figma-slides", "name": "Figma Slides", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "canva",
+    "name": "Canva",
+    "products": [
+      { "id": "canva-editor", "name": "Canva Editor", "screenType": "desktop web" },
+      { "id": "canva-magic-studio", "name": "Magic Studio", "screenType": "desktop web" },
+      { "id": "canva-presentations", "name": "Canva Presentations", "screenType": "desktop web" },
+      { "id": "canva-docs", "name": "Canva Docs", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "notion",
+    "name": "Notion",
+    "products": [
+      { "id": "notion", "name": "Notion", "screenType": "desktop web" },
+      { "id": "notion-calendar", "name": "Notion Calendar", "screenType": "desktop web" },
+      { "id": "notion-mail", "name": "Notion Mail", "screenType": "desktop web" },
+      { "id": "notion-ai", "name": "Notion AI", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "slack",
+    "name": "Slack",
+    "products": [
+      { "id": "slack", "name": "Slack", "screenType": "desktop web" },
+      { "id": "slack-huddles", "name": "Slack Huddles", "screenType": "desktop web" },
+      { "id": "slack-canvas", "name": "Slack Canvas", "screenType": "desktop web" },
+      { "id": "slack-workflow-builder", "name": "Workflow Builder", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "discord",
+    "name": "Discord",
+    "products": [
+      { "id": "discord", "name": "Discord", "screenType": "desktop app" },
+      { "id": "discord-servers", "name": "Discord Servers", "screenType": "desktop web" },
+      { "id": "discord-nitro", "name": "Discord Nitro", "screenType": "desktop web" },
+      { "id": "discord-stage", "name": "Stage Channels", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "zoom",
+    "name": "Zoom",
+    "products": [
+      { "id": "zoom-meetings", "name": "Zoom Meetings", "screenType": "desktop web" },
+      { "id": "zoom-webinars", "name": "Zoom Webinars", "screenType": "desktop web" },
+      { "id": "zoom-whiteboard", "name": "Zoom Whiteboard", "screenType": "desktop web" },
+      { "id": "zoom-team-chat", "name": "Zoom Team Chat", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "atlassian",
+    "name": "Atlassian",
+    "products": [
+      { "id": "atlassian-jira", "name": "Jira", "screenType": "desktop web" },
+      { "id": "atlassian-confluence", "name": "Confluence", "screenType": "desktop web" },
+      { "id": "atlassian-trello", "name": "Trello", "screenType": "desktop web" },
+      { "id": "atlassian-bitbucket", "name": "Bitbucket", "screenType": "desktop web" },
+      { "id": "atlassian-loom", "name": "Loom", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "products": [
+      { "id": "github-repos", "name": "GitHub Repos", "screenType": "desktop web" },
+      { "id": "github-prs", "name": "Pull Requests", "screenType": "desktop web" },
+      { "id": "github-actions", "name": "GitHub Actions", "screenType": "desktop web" },
+      { "id": "github-copilot", "name": "GitHub Copilot", "screenType": "desktop web" },
+      { "id": "github-issues", "name": "GitHub Issues", "screenType": "desktop web" },
+      { "id": "github-projects", "name": "GitHub Projects", "screenType": "desktop web" },
+      { "id": "github-codespaces", "name": "GitHub Codespaces", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "products": [
+      { "id": "gitlab-repos", "name": "GitLab Repos", "screenType": "desktop web" },
+      { "id": "gitlab-cicd", "name": "GitLab CI/CD", "screenType": "desktop web" },
+      { "id": "gitlab-issues", "name": "GitLab Issues", "screenType": "desktop web" },
+      { "id": "gitlab-security", "name": "Security Dashboard", "screenType": "desktop web" }
+    ]
   },
   {
     "id": "linear",
     "name": "Linear",
-    "tone": "dead serious",
-    "screenType": "desktop web",
-    "region": "US",
-    "builderStyle": "Ultra-fast minimal UI, dark graphite, keyboard-shortcut hints, cycle/issue metaphors, razor-sharp typography.",
-    "targetDomain": "Issue tracking and engineering workflows."
+    "products": [
+      { "id": "linear-issues", "name": "Linear Issues", "screenType": "desktop web" },
+      { "id": "linear-cycles", "name": "Linear Cycles", "screenType": "desktop web" },
+      { "id": "linear-roadmaps", "name": "Linear Roadmaps", "screenType": "desktop web" },
+      { "id": "linear-triage", "name": "Linear Triage", "screenType": "desktop web" }
+    ]
   },
   {
-    "id": "twitter",
-    "name": "Twitter",
-    "tone": "unhinged",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Short-post timeline, bird-era or minimal social chrome, reply chains, trending sidebar, compose prominence.",
-    "targetDomain": "Public conversation and real-time feed."
+    "id": "asana",
+    "name": "Asana",
+    "products": [
+      { "id": "asana-tasks", "name": "Asana Tasks", "screenType": "desktop web" },
+      { "id": "asana-projects", "name": "Asana Projects", "screenType": "desktop web" },
+      { "id": "asana-goals", "name": "Asana Goals", "screenType": "desktop web" },
+      { "id": "asana-timeline", "name": "Asana Timeline", "screenType": "desktop web" }
+    ]
   },
   {
-    "id": "facebook",
-    "name": "Facebook",
-    "tone": "absurdly polished",
-    "screenType": "mobile app",
-    "region": "US",
-    "builderStyle": "Classic Facebook blue, reactions row, groups and Marketplace tiles, algorithmic feed density.",
-    "targetDomain": "Personal network feed and social engagement."
+    "id": "monday",
+    "name": "Monday.com",
+    "products": [
+      { "id": "monday-boards", "name": "Monday Boards", "screenType": "desktop web" },
+      { "id": "monday-automations", "name": "Monday Automations", "screenType": "desktop web" },
+      { "id": "monday-dashboards", "name": "Monday Dashboards", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "airtable",
+    "name": "Airtable",
+    "products": [
+      { "id": "airtable-bases", "name": "Airtable Bases", "screenType": "desktop web" },
+      { "id": "airtable-interfaces", "name": "Airtable Interfaces", "screenType": "desktop web" },
+      { "id": "airtable-automations", "name": "Airtable Automations", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "miro",
+    "name": "Miro",
+    "products": [
+      { "id": "miro-whiteboards", "name": "Miro Whiteboards", "screenType": "desktop web" },
+      { "id": "miro-templates", "name": "Miro Templates", "screenType": "desktop web" },
+      { "id": "miro-workshops", "name": "Miro Workshops", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "webflow",
+    "name": "Webflow",
+    "products": [
+      { "id": "webflow-designer", "name": "Webflow Designer", "screenType": "desktop web" },
+      { "id": "webflow-cms", "name": "Webflow CMS", "screenType": "desktop web" },
+      { "id": "webflow-ecommerce", "name": "Webflow Ecommerce", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "framer",
+    "name": "Framer",
+    "products": [
+      { "id": "framer-sites", "name": "Framer Sites", "screenType": "desktop web" },
+      { "id": "framer-cms", "name": "Framer CMS", "screenType": "desktop web" },
+      { "id": "framer-ai-generator", "name": "AI Site Generator", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "vercel",
+    "name": "Vercel",
+    "products": [
+      { "id": "vercel-dashboard", "name": "Vercel Dashboard", "screenType": "desktop web" },
+      { "id": "vercel-deployments", "name": "Vercel Deployments", "screenType": "desktop web" },
+      { "id": "vercel-analytics", "name": "Vercel Analytics", "screenType": "desktop web" },
+      { "id": "vercel-ai-gateway", "name": "AI Gateway", "screenType": "desktop web" },
+      { "id": "vercel-workflow", "name": "Vercel Workflow", "screenType": "desktop web" },
+      { "id": "vercel-blob", "name": "Vercel Blob", "screenType": "desktop web" },
+      { "id": "vercel-edge-config", "name": "Edge Config", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "supabase",
+    "name": "Supabase",
+    "products": [
+      { "id": "supabase-dashboard", "name": "Supabase Dashboard", "screenType": "desktop web" },
+      { "id": "supabase-auth", "name": "Supabase Auth", "screenType": "desktop web" },
+      { "id": "supabase-database", "name": "Supabase Database", "screenType": "desktop web" },
+      { "id": "supabase-storage", "name": "Supabase Storage", "screenType": "desktop web" },
+      { "id": "supabase-edge-functions", "name": "Edge Functions", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "cloudflare",
+    "name": "Cloudflare",
+    "products": [
+      { "id": "cloudflare-dashboard", "name": "Cloudflare Dashboard", "screenType": "desktop web" },
+      { "id": "cloudflare-workers", "name": "Cloudflare Workers", "screenType": "desktop web" },
+      { "id": "cloudflare-pages", "name": "Cloudflare Pages", "screenType": "desktop web" },
+      { "id": "cloudflare-r2", "name": "Cloudflare R2", "screenType": "desktop web" },
+      { "id": "cloudflare-dns", "name": "Cloudflare DNS", "screenType": "desktop web" },
+      { "id": "cloudflare-waf", "name": "Cloudflare WAF", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "products": [
+      { "id": "openai-chatgpt", "name": "ChatGPT", "screenType": "desktop web" },
+      { "id": "openai-api", "name": "OpenAI API Platform", "screenType": "desktop web" },
+      { "id": "openai-gpts", "name": "GPTs", "screenType": "desktop web" },
+      { "id": "openai-sora", "name": "Sora", "screenType": "desktop web" },
+      { "id": "openai-codex", "name": "Codex", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "products": [
+      { "id": "anthropic-claude", "name": "Claude", "screenType": "desktop web" },
+      { "id": "anthropic-console", "name": "Claude Console", "screenType": "desktop web" },
+      { "id": "anthropic-workbench", "name": "Claude Workbench", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "stripe",
+    "name": "Stripe",
+    "products": [
+      { "id": "stripe-dashboard", "name": "Stripe Dashboard", "screenType": "desktop web" },
+      { "id": "stripe-checkout", "name": "Stripe Checkout", "screenType": "desktop web" },
+      { "id": "stripe-billing", "name": "Stripe Billing", "screenType": "desktop web" },
+      { "id": "stripe-connect", "name": "Stripe Connect", "screenType": "desktop web" },
+      { "id": "stripe-radar", "name": "Stripe Radar", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "paypal",
+    "name": "PayPal",
+    "products": [
+      { "id": "paypal", "name": "PayPal", "screenType": "desktop web" },
+      { "id": "paypal-venmo", "name": "Venmo", "screenType": "mobile app" },
+      { "id": "paypal-braintree", "name": "Braintree", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "block",
+    "name": "Block (Square)",
+    "products": [
+      { "id": "block-cash-app", "name": "Cash App", "screenType": "mobile app" },
+      { "id": "block-square-pos", "name": "Square POS", "screenType": "mobile app" },
+      { "id": "block-square-dashboard", "name": "Square Dashboard", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "coinbase",
+    "name": "Coinbase",
+    "products": [
+      { "id": "coinbase", "name": "Coinbase", "screenType": "mobile app" },
+      { "id": "coinbase-wallet", "name": "Coinbase Wallet", "screenType": "mobile app" },
+      { "id": "coinbase-advanced-trade", "name": "Coinbase Advanced Trade", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "robinhood",
+    "name": "Robinhood",
+    "products": [
+      { "id": "robinhood-trading", "name": "Robinhood Trading", "screenType": "mobile app" },
+      { "id": "robinhood-retirement", "name": "Robinhood Retirement", "screenType": "mobile app" },
+      { "id": "robinhood-crypto", "name": "Robinhood Crypto", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "revolut",
+    "name": "Revolut",
+    "products": [
+      { "id": "revolut-banking", "name": "Revolut Banking App", "screenType": "mobile app" },
+      { "id": "revolut-cards", "name": "Revolut Cards", "screenType": "mobile app" },
+      { "id": "revolut-crypto", "name": "Revolut Crypto", "screenType": "mobile app" },
+      { "id": "revolut-travel", "name": "Revolut Travel", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "wise",
+    "name": "Wise",
+    "products": [
+      { "id": "wise-transfer", "name": "Wise Money Transfer", "screenType": "desktop web" },
+      { "id": "wise-business", "name": "Wise Business", "screenType": "desktop web" },
+      { "id": "wise-card", "name": "Wise Card", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "shopify",
+    "name": "Shopify",
+    "products": [
+      { "id": "shopify-admin", "name": "Shopify Admin", "screenType": "desktop web" },
+      { "id": "shopify-storefront", "name": "Shopify Storefront", "screenType": "desktop web" },
+      { "id": "shopify-pos", "name": "Shopify POS", "screenType": "mobile app" },
+      { "id": "shopify-checkout", "name": "Shopify Checkout", "screenType": "desktop web" },
+      { "id": "shopify-app", "name": "Shop App", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "ebay",
+    "name": "eBay",
+    "products": [
+      { "id": "ebay-marketplace", "name": "eBay Marketplace", "screenType": "desktop web" },
+      { "id": "ebay-seller-hub", "name": "eBay Seller Hub", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "etsy",
+    "name": "Etsy",
+    "products": [
+      { "id": "etsy-marketplace", "name": "Etsy Marketplace", "screenType": "desktop web" },
+      { "id": "etsy-seller", "name": "Etsy Seller App", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "walmart",
+    "name": "Walmart",
+    "products": [
+      { "id": "walmart-shopping", "name": "Walmart Shopping App", "screenType": "mobile app" },
+      { "id": "walmart-marketplace", "name": "Walmart Marketplace", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "target",
+    "name": "Target",
+    "products": [
+      { "id": "target-shopping", "name": "Target Shopping App", "screenType": "mobile app" },
+      { "id": "target-drive-up", "name": "Target Drive Up", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "starbucks",
+    "name": "Starbucks",
+    "products": [
+      { "id": "starbucks-rewards", "name": "Starbucks Rewards App", "screenType": "mobile app" },
+      { "id": "starbucks-ordering", "name": "Starbucks Ordering", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "mcdonalds",
+    "name": "McDonald's",
+    "products": [
+      { "id": "mcdonalds-app", "name": "McDonald's App", "screenType": "mobile app" },
+      { "id": "mcdonalds-kiosk", "name": "McDonald's Kiosk", "screenType": "desktop app" },
+      { "id": "mcdonalds-rewards", "name": "McDonald's Rewards", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "zomato",
+    "name": "Zomato",
+    "products": [
+      { "id": "zomato-discovery", "name": "Zomato Restaurant Discovery", "screenType": "mobile app" },
+      { "id": "zomato-delivery", "name": "Zomato Delivery", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "swiggy",
+    "name": "Swiggy",
+    "products": [
+      { "id": "swiggy-food", "name": "Swiggy Food Delivery", "screenType": "mobile app" },
+      { "id": "swiggy-instamart", "name": "Swiggy Instamart", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "booking",
+    "name": "Booking.com",
+    "products": [
+      { "id": "booking-flow", "name": "Booking.com Booking Flow", "screenType": "desktop web" },
+      { "id": "booking-partner", "name": "Booking.com Partner Hub", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "expedia",
+    "name": "Expedia",
+    "products": [
+      { "id": "expedia-search", "name": "Expedia Travel Search", "screenType": "desktop web" },
+      { "id": "expedia-trips", "name": "Expedia Trips", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "duolingo",
+    "name": "Duolingo",
+    "products": [
+      { "id": "duolingo", "name": "Duolingo", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "linkedin-standalone",
+    "name": "LinkedIn",
+    "products": [
+      { "id": "linkedin-standalone", "name": "LinkedIn", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "tinder-co",
+    "name": "Tinder",
+    "products": [
+      { "id": "tinder", "name": "Tinder", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "bumble",
+    "name": "Bumble",
+    "products": [
+      { "id": "bumble", "name": "Bumble", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "waze",
+    "name": "Waze",
+    "products": [
+      { "id": "waze", "name": "Waze", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "monzo",
+    "name": "Monzo",
+    "products": [
+      { "id": "monzo", "name": "Monzo", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "superhuman",
+    "name": "Superhuman",
+    "products": [
+      { "id": "superhuman", "name": "Superhuman", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "arc",
+    "name": "Arc",
+    "products": [
+      { "id": "arc-browser", "name": "Arc Browser", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "raycast",
+    "name": "Raycast",
+    "products": [
+      { "id": "raycast", "name": "Raycast", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "peloton",
+    "name": "Peloton",
+    "products": [
+      { "id": "peloton", "name": "Peloton", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "headspace",
+    "name": "Headspace",
+    "products": [
+      { "id": "headspace", "name": "Headspace", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "calm",
+    "name": "Calm",
+    "products": [
+      { "id": "calm", "name": "Calm", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "ikea",
+    "name": "IKEA",
+    "products": [
+      { "id": "ikea", "name": "IKEA", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "pinterest",
+    "name": "Pinterest",
+    "products": [
+      { "id": "pinterest", "name": "Pinterest", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "telegram",
+    "name": "Telegram",
+    "products": [
+      { "id": "telegram", "name": "Telegram", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "signal",
+    "name": "Signal",
+    "products": [
+      { "id": "signal", "name": "Signal", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "twitch-standalone",
+    "name": "Twitch",
+    "products": [
+      { "id": "twitch-standalone", "name": "Twitch", "screenType": "desktop web" }
+    ]
+  },
+  {
+    "id": "samsung",
+    "name": "Samsung",
+    "products": [
+      { "id": "samsung-one-ui", "name": "Samsung One UI", "screenType": "mobile app" },
+      { "id": "samsung-pay", "name": "Samsung Pay", "screenType": "mobile app" }
+    ]
+  },
+  {
+    "id": "tesla",
+    "name": "Tesla",
+    "products": [
+      { "id": "tesla-app", "name": "Tesla App", "screenType": "mobile app" },
+      { "id": "tesla-infotainment", "name": "Tesla Infotainment", "screenType": "desktop app" }
+    ]
+  },
+  {
+    "id": "nike",
+    "name": "Nike",
+    "products": [
+      { "id": "nike-app", "name": "Nike App", "screenType": "mobile app" },
+      { "id": "nike-snkrs", "name": "Nike SNKRS", "screenType": "mobile app" }
+    ]
   }
 ]

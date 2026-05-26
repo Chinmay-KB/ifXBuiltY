@@ -1,3 +1,5 @@
+import companyProfiles from "@/data/company-profiles.json";
+
 /**
  * Loading screen entertainment data.
  * Used during image generation to keep users engaged with
@@ -37,6 +39,9 @@ export const BUILDER_FUN_FACTS: Record<string, string[]> = {
     "Every Apple keynote uses the word 'magical' at least once. It's contractual.",
   ],
 
+  "google-maps": [
+    "Google Maps ETA optimism has caused more missed flights than actual delays.",
+  ],
   google: [
     "Google has shut down more products than most companies have launched.",
     "Google's Material Design has more versions than Android itself.",
@@ -114,6 +119,9 @@ export const LOADING_MESSAGES_BY_BUILDER: Record<string, string[]> = {
     "Making it thinner than last time...",
   ],
 
+  "google-maps": [
+    "Google Maps ETA optimism has caused more missed flights than actual delays.",
+  ],
   google: [
     "Launching a new product (might kill it later)...",
     "Adding Material You to everything...",
@@ -170,12 +178,117 @@ export const GENERIC_LOADING_MESSAGES = [
   "Rendering an impossible product...",
 ];
 
+/** Fallback fun facts when builder-specific facts are unavailable */
+export const GENERIC_FUN_FACTS = [
+  "The first computer bug was an actual moth found in a Harvard Mark II logbook in 1947.",
+  "Ninety percent of startups start as a 'quick idea' that accidentally became someone's full-time job.",
+  "Every app eventually adds dark mode, keyboard shortcuts, and one feature users never asked for.",
+  "Most viral product ideas sound ridiculous right up until they have 10 million users.",
+];
+
+type CatalogProduct = { id: string; name: string };
+type CatalogCompany = { id: string; name: string; products?: CatalogProduct[] };
+
+function buildCatalogBackfillFunFacts(): Record<string, string[]> {
+  const backfill: Record<string, string[]> = {};
+  for (const company of companyProfiles as CatalogCompany[]) {
+    if (!BUILDER_FUN_FACTS[company.id]) {
+      backfill[company.id] = [
+        `${company.name} users can smell an inconsistent border radius from three screens away.`,
+        `${company.name} has at least one micro-interaction someone will defend as "core to the experience."`,
+        `If this UI feels ${company.name}-ish in under two seconds, the branding team wins.`,
+      ];
+    }
+
+    for (const product of company.products ?? []) {
+      if (!BUILDER_FUN_FACTS[product.id]) {
+        backfill[product.id] = [
+          `${product.name} fans will absolutely notice if this doesn't feel like ${product.name}.`,
+          `${product.name} is where tiny UX choices become full-blown internet discourse.`,
+          `Every ${product.name} screen has one detail that looks simple and took twenty design iterations.`,
+        ];
+      }
+    }
+  }
+  return backfill;
+}
+
+const CATALOG_BACKFILL_FUN_FACTS = buildCatalogBackfillFunFacts();
+
+function humanizeProfileId(profileId: string): string {
+  return profileId
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildDynamicFunFacts(builderName: string, builderId?: string): string[] {
+  const displayName = builderName.trim() || (builderId ? humanizeProfileId(builderId) : "This product");
+  return [
+    `${displayName} has a visual language users can recognize before they read a single word.`,
+    `${displayName} probably ships one tiny "quality of life" tweak every week that nobody writes release notes for.`,
+    `${displayName} proves that copy tone and spacing can feel like product features.`,
+  ];
+}
+
+function mergeFactLists(...lists: Array<string[] | undefined>): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+  for (const list of lists) {
+    for (const fact of list ?? []) {
+      if (seen.has(fact)) continue;
+      seen.add(fact);
+      merged.push(fact);
+    }
+  }
+  return merged;
+}
+
+function getFunFacts(builder: string, builderId?: string): string[] {
+  const dynamicFacts = buildDynamicFunFacts(builder, builderId);
+  if (builderId) {
+    const directFacts = BUILDER_FUN_FACTS[builderId];
+    const directBackfill = CATALOG_BACKFILL_FUN_FACTS[builderId];
+    const mergedDirect = mergeFactLists(directFacts, directBackfill, dynamicFacts, GENERIC_FUN_FACTS);
+    if (mergedDirect.length > 0) return mergedDirect;
+  }
+  const key = resolveEntertainmentKey(builder, builderId);
+  return mergeFactLists(
+    BUILDER_FUN_FACTS[key],
+    CATALOG_BACKFILL_FUN_FACTS[key],
+    dynamicFacts,
+    GENERIC_FUN_FACTS,
+  );
+}
+
 /**
  * Get loading messages for a specific builder.
  * Falls back to generic messages if builder isn't recognized.
  */
-export function getLoadingMessages(builder: string): string[] {
-  const key = builder.toLowerCase().replace(/\s+/g, "-");
+
+/**
+ * Resolve lookup key for fun facts / loading copy.
+ * Products fall back to parent company slug prefix (e.g. google-maps → google).
+ */
+export function resolveEntertainmentKey(builderName: string, builderId?: string): string {
+  if (builderId) {
+    if (BUILDER_FUN_FACTS[builderId] || LOADING_MESSAGES_BY_BUILDER[builderId]) {
+      return builderId;
+    }
+    const dash = builderId.indexOf("-");
+    if (dash > 0) {
+      const parent = builderId.slice(0, dash);
+      if (BUILDER_FUN_FACTS[parent] || LOADING_MESSAGES_BY_BUILDER[parent]) {
+        return parent;
+      }
+    }
+  }
+  return builderName.toLowerCase().replace(/\s+/g, "-");
+}
+
+export function getLoadingMessages(builder: string, builderId?: string): string[] {
+  const key = resolveEntertainmentKey(builder, builderId);
   return LOADING_MESSAGES_BY_BUILDER[key] ?? GENERIC_LOADING_MESSAGES;
 }
 
@@ -183,9 +296,8 @@ export function getLoadingMessages(builder: string): string[] {
  * Get a random fun fact for a specific builder.
  * Returns null if no facts are available.
  */
-export function getRandomFunFact(builder: string): string | null {
-  const key = builder.toLowerCase().replace(/\s+/g, "-");
-  const facts = BUILDER_FUN_FACTS[key];
+export function getRandomFunFact(builder: string, builderId?: string): string | null {
+  const facts = getFunFacts(builder, builderId);
   if (!facts || facts.length === 0) return null;
   return facts[Math.floor(Math.random() * facts.length)];
 }
@@ -194,7 +306,6 @@ export function getRandomFunFact(builder: string): string | null {
  * Get all fun facts for a specific builder.
  * Returns empty array if none available.
  */
-export function getAllFunFacts(builder: string): string[] {
-  const key = builder.toLowerCase().replace(/\s+/g, "-");
-  return BUILDER_FUN_FACTS[key] ?? [];
+export function getAllFunFacts(builder: string, builderId?: string): string[] {
+  return getFunFacts(builder, builderId);
 }

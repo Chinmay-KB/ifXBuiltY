@@ -1,0 +1,34 @@
+{
+  "id": "microsoft-excel",
+  "name": "Microsoft Excel",
+  "parent_company_id": "microsoft",
+  "category": "spreadsheet",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["analytical", "dense", "power-user territory"],
+    "colors": ["#217346 Excel green", "white cells", "gray gridlines", "blue selection highlight", "conditional formatting colors"],
+    "visual_traits": ["infinite grid", "formula bar", "sheet tabs bottom", "ribbon toolbar", "cell reference box"],
+    "ux_traits": ["cell editing with F2", "drag-fill handle", "pivot table wizard", "conditional formatting rules", "freeze panes"],
+    "meme_exaggeration": ["spreadsheets used as databases", "VBA macros nobody understands", "#REF! errors everywhere", "circular reference warnings"],
+    "iconic_elements": ["grid of cells", "formula bar with fx", "sheet tabs (Sheet1, Sheet2)", "fill handle small square", "column letters + row numbers"],
+    "behavioral_stereotypes": ["someone's entire business runs on one Excel file", "formatting as a table to make it look professional", "pivot tables as a personality trait"],
+    "satirical_patterns": ["This spreadsheet has 847 tabs and Dave is the only one who understands it", "The database is just an Excel file on someone's desktop"]
+  },
+  "archetype": {
+    "type": "spreadsheet grid with formula editing",
+    "sections": ["ribbon toolbar", "formula bar", "cell grid", "sheet tabs", "status bar with sum/average", "name box"],
+    "layout": "full-screen grid with top toolbar and bottom sheet tabs",
+    "content_style": ["cell values", "formulas", "charts", "conditional formatting", "data validation dropdowns"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Excel is actually a database", "VBA macros from 2004 still running", "circular reference panic"],
+    "user_frustrations": ["dates formatted as numbers", "text stored as numbers", "merged cells break everything"],
+    "cultural_shorthand": "The program that runs the global economy through someone's desktop file"
+  },
+  "reference_urls": ["https://www.microsoft.com/microsoft-365/excel"],
+  "screenshot_targets": ["spreadsheet grid view", "formula bar closeup", "pivot table view"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic"]
+}

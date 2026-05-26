@@ -1,0 +1,34 @@
+{
+  "id": "amazon-prime-video",
+  "name": "Prime Video",
+  "parent_company_id": "amazon",
+  "category": "video",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["content-heavy", "recommendation-driven", "slightly cluttered"],
+    "colors": ["dark backgrounds (#0f171e)", "white text", "blue #00A8E1 accents", "thumbnail-heavy"],
+    "visual_traits": ["hero banner carousel", "horizontal content rows", "category filters", "thumbnail grids", "X-Ray overlay during playback"],
+    "ux_traits": ["auto-play next episode", "watchlist management", "X-Ray actor info overlay", "download for offline", "profiles"],
+    "meme_exaggeration": ["The Boys is the only show people know exists", "X-Ray spoils the plot by showing actor names", "free with Prime but also rent this for $4.99", "interface changes every 6 months"],
+    "iconic_elements": ["hero banner with play button", "horizontal scroll rows", "X-Ray panel on right during playback", "Prime badge on thumbnails"],
+    "behavioral_stereotypes": ["scrolling for 30 minutes then rewatching The Office", "X-Ray distracting from the actual show", "is this free with Prime or do I pay extra"],
+    "satirical_patterns": ["You're watching: The Boys. Also available: 847 shows you'll never find", "FREE with Prime* (*terms, conditions, and additional rentals apply)"]
+  },
+  "archetype": {
+    "type": "streaming content browse with hero banner",
+    "sections": ["hero banner carousel", "horizontal content rows (Continue Watching/Recommended/Trending)", "category navigation", "video player with X-Ray", "search/browse"],
+    "layout": "hero banner top, horizontal scroll rows, dark background",
+    "content_style": ["show/movie thumbnails", "titles", "metadata (year/rating)", "progress bars", "Prime badges"]
+  },
+  "meme_dna": {
+    "observed_memes": ["The Boys monopoly", "X-Ray spoilers", "free with Prime confusion"],
+    "user_frustrations": ["UI constantly changes", "hard to find what's actually free", "search results mix free and paid content"],
+    "cultural_shorthand": "The streaming service you have because it came with Prime shipping"
+  },
+  "reference_urls": ["https://www.primevideo.com"],
+  "screenshot_targets": ["homepage browse", "video player with X-Ray", "content detail page"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic"]
+}

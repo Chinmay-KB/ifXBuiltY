@@ -16,7 +16,7 @@ export default function AboutPage() {
       <p className="mt-6 text-lg leading-relaxed text-subtle">
         ifXBuiltY asks a simple question: what if one company built another company&apos;s product?
         Pick a builder and a target, describe the vibe, and get a satirical UI screenshot — then share
-        it, vote, and remix.
+        it and vote.
       </p>
       <p className="mt-4 text-lg leading-relaxed text-subtle">
         It&apos;s part creative toy, part commentary, and part feed of alternate timelines. Have fun,

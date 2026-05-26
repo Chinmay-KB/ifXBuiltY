@@ -22,14 +22,10 @@ vi.mock("next/link", () => ({
 }));
 
 /**
- * Feature: ui-redesign, Property 8: Remix count conditional display
- * Validates: Requirements 3.8
- *
- * For any FeedItem, the card SHALL display the remix count as a visible label
- * if and only if remixCount >= 1. When remixCount === 0, no remix count label
- * SHALL be rendered.
+ * Remix actions are hidden from the UI for now.
+ * This test ensures the feed card never renders remix labels.
  */
-describe("GenerationCard - Property 8: Remix count conditional display", () => {
+describe("GenerationCard - remix labels are hidden", () => {
   // Arbitrary for a valid FeedItem with a controlled remixCount
   const feedItemArb = (remixCountArb: fc.Arbitrary<number>): fc.Arbitrary<FeedItem> =>
     fc.record({
@@ -45,39 +41,16 @@ describe("GenerationCard - Property 8: Remix count conditional display", () => {
       createdAt: fc.integer({ min: 1577836800000, max: 1893456000000 }).map((ts) => new Date(ts).toISOString()),
     });
 
-  it("should display remix count label when remixCount >= 1", () => {
+  it("should not render remix labels for any remixCount", () => {
     fc.assert(
       fc.property(
-        feedItemArb(fc.integer({ min: 1, max: 10000 })),
+        feedItemArb(fc.integer({ min: 0, max: 10000 })),
         (item) => {
           const { container } = render(<GenerationCard item={item} />);
 
-          // The remix count badge should be present
-          const expectedText = item.remixCount === 1
-            ? "1 remix"
-            : `${item.remixCount} remixes`;
-
-          expect(container.textContent).toContain(expectedText);
-
-          // Clean up for next iteration
-          container.remove();
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-
-  it("should NOT display remix count label when remixCount === 0", () => {
-    fc.assert(
-      fc.property(
-        feedItemArb(fc.constant(0)),
-        (item) => {
-          const { container } = render(<GenerationCard item={item} />);
-
-          // No remix/remixes text should appear
           expect(container.textContent).not.toMatch(/\d+\s+remix(es)?/);
+          expect(container.textContent).not.toContain("Remix");
 
-          // Clean up for next iteration
           container.remove();
         }
       ),

@@ -27,9 +27,14 @@ export type FeedSort = "trending" | "newest" | "top" | "remixes";
 export type GenerationInputs = {
   builder: string;
   target: string;
+  /** Profile slug ids when selected from DB picker */
+  builderId?: string;
+  targetId?: string;
   extraDetails: string;
   /** Visual vibe / tone label (e.g. Chaotic, Scammy) — folded into prompt + stored on row */
   tone?: string;
+  /** Output frame: mobile app, desktop web, etc. */
+  screenType?: string;
 };
 
 export type GenerationResult = {
@@ -38,6 +43,7 @@ export type GenerationResult = {
   imageUrl: string | null;
   builder: string;
   target: string;
+  status?: "queued" | "processing" | "completed" | "failed";
 };
 
 export type RemixSource = {

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
       "ifXBuiltY - Cursed AI screenshots from brand mashups",
   },
   description:
-    "The internet's tiny lab for cursed product ideas. Crossbreed any company with any app, get an AI screenshot, then vote, remix, and share the evidence.",
+    "The internet's tiny lab for cursed product ideas. Crossbreed any company with any app, get an AI screenshot, then vote and share the evidence.",
   alternates: { canonical: "/" },
 };
 

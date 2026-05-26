@@ -35,15 +35,17 @@ describe("Feature: ui-redesign, Property 13: Reset clears to defaults", () => {
   const successResponseArb = fc.record({
     id: fc.integer({ min: 1, max: 100000 }),
     slug: fc.string({ minLength: 3, maxLength: 30 }),
-    imageUrl: fc.oneof(
-      fc.constant(null),
-      fc.webUrl()
-    ),
+    status: fc.constantFrom("queued", "processing"),
   });
 
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
   });
 
   afterEach(() => {
@@ -60,7 +62,7 @@ describe("Feature: ui-redesign, Property 13: Reset clears to defaults", () => {
           fetchMock.mockImplementation(() =>
             Promise.resolve(
               new Response(JSON.stringify(responseData), {
-                status: 200,
+                status: 202,
                 headers: { "Content-Type": "application/json" },
               })
             )
@@ -75,6 +77,8 @@ describe("Feature: ui-redesign, Property 13: Reset clears to defaults", () => {
 
           // Verify we're in the "result" phase (result is set)
           expect(result.current.result).not.toBeNull();
+          expect(result.current.result?.slug).toBe(responseData.slug);
+          expect(result.current.result?.imageUrl).toBeNull();
           expect(result.current.error).toBeNull();
           expect(result.current.isLoading).toBe(false);
 

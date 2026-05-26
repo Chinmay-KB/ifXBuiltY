@@ -1,0 +1,34 @@
+{
+  "id": "microsoft-windows",
+  "name": "Windows",
+  "parent_company_id": "microsoft",
+  "category": "OS",
+  "screen_type": "desktop app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["enterprise-familiar", "functional", "slightly cluttered"],
+    "colors": ["#0078D4 Windows blue", "dark/light theme toggle", "acrylic/fluency blur effects", "neutral grays"],
+    "visual_traits": ["taskbar bottom", "Start menu centered (Win11) or left (Win10)", "windowed app model", "system tray right corner", "desktop icons"],
+    "ux_traits": ["right-click context menus", "Alt-Tab window switching", "Settings app replacing Control Panel", "notification center slide-in", "Snap Layouts for windows"],
+    "meme_exaggeration": ["Windows Update restarts at worst moments", "Control Panel vs Settings confusion", "blue screen of death", "driver installation fails"],
+    "iconic_elements": ["Windows logo", "taskbar with pinned apps", "Start button", "system tray clock", "BSOD sad face :( )"],
+    "behavioral_stereotypes": ["ignoring update notifications for months", "restarting fixes everything", "multiple Control Panels nobody understands"],
+    "satirical_patterns": ["Restart later? Your PC will restart in 3... 2... (you were working on something important)", "Would you like to set Edge as your default browser? (asked 47 times)"]
+  },
+  "archetype": {
+    "type": "desktop OS shell with window management",
+    "sections": ["desktop area", "taskbar", "Start menu", "system tray", "Settings panels", "File Explorer"],
+    "layout": "full-screen desktop with bottom taskbar, floating windows",
+    "content_style": ["app icons", "window chrome", "menu bars", "dialog boxes", "notification toasts"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Windows Update forced restart", "BSOD at critical moment", "Control Panel maze"],
+    "user_frustrations": ["two settings apps", "updates break things", "driver compatibility"],
+    "cultural_shorthand": "The OS that asks if you want to restart every time you sit down to work"
+  },
+  "reference_urls": ["https://www.microsoft.com/windows"],
+  "screenshot_targets": ["desktop with taskbar", "Start menu", "Settings app"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Chaotic"]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "apple-ios",
+  "name": "iOS",
+  "parent_company_id": "apple",
+  "category": "OS",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["premium", "restrained", "deliberate"],
+    "colors": ["SF system font", "white/light gray backgrounds", "blue #007AFF accent", "subtle blur/translucency effects"],
+    "visual_traits": ["rounded app icons grid", "bottom tab bars", "navigation bar top", "Control Center swipe down", "Home Screen widgets"],
+    "ux_traits": ["swipe to go back", "Haptic Touch long press", "App Library auto-sorting", "Focus modes", "Share Sheet bottom sheet"],
+    "meme_exaggeration": ["Lightning port until 2023", "one home button philosophy for a decade", "Android users get green bubbles", "it just works (until it doesn't)"],
+    "iconic_elements": ["rounded square app icons", "notch/Dynamic Island", "bottom home indicator bar", "Control Center toggles", "SF Symbols"],
+    "behavioral_stereotypes": ["organizing apps by color", "screenshotting everything", "never changing the default wallpaper"],
+    "satirical_patterns": ["The new feature Android had in 2016", "Dynamic Island: we turned a bug into a feature"]
+  },
+  "archetype": {
+    "type": "mobile OS home screen with app grid",
+    "sections": ["status bar (time/battery/signal)", "app icon grid", "dock (bottom 4 apps)", "widget panels", "App Library pages"],
+    "layout": "grid of rounded icons on wallpaper background, dock at bottom",
+    "content_style": ["app icons with badges", "widget cards", "notification banners", "control center toggles"]
+  },
+  "meme_dna": {
+    "observed_memes": ["green bubble shame", "Lightning port loyalty", "it just works"],
+    "user_frustrations": ["no file system access", "default app restrictions", "repairability"],
+    "cultural_shorthand": "The walled garden everyone willingly walks into"
+  },
+  "reference_urls": ["https://www.apple.com/ios"],
+  "screenshot_targets": ["home screen grid", "Control Center", "Settings app"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

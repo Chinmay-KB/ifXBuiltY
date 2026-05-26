@@ -1,0 +1,34 @@
+{
+  "id": "waze",
+  "name": "Waze",
+  "parent_company_id": "google",
+  "category": "maps",
+  "screen_type": "mobile app",
+  "popularity_tier": 2,
+  "style_dna": {
+    "tone": ["playful", "crowd-sourced", "chaotic-good"],
+    "colors": ["blue map base", "purple route line", "colorful report icons", "yellow/orange alerts", "playful cartoon-ish UI elements"],
+    "visual_traits": ["map with colorful report icons", "bottom ETA bar", "report button (orange)", "mood/avatar display", "chat-like report feed"],
+    "ux_traits": ["crowd-sourced reports (police/accidents/hazards)", "route recalculation in real-time", "horn honk/light flash features", "points/level system", "voice pack customization"],
+    "meme_exaggeration": ["rerouting through residential neighborhoods to save 30 seconds", "reporting everything including existential dread", "the one Waze user who reports every single thing", "angry neighbor reactions to shortcut traffic"],
+    "iconic_elements": ["orange report button", "purple route line", "police car icon", "ETA bar with time saved", "Waze mood/avatar"],
+    "behavioral_stereotypes": ["becoming a Waze reporter as a hobby", "taking sketchy shortcuts through alleys", "the neighborhood that Waze ruined"],
+    "satirical_patterns": ["Waze found a route that saves 1 minute and adds 47 turns", "Police reported 0.3 miles ahead (by someone who was definitely speeding)"]
+  },
+  "archetype": {
+    "type": "navigation map with crowd-sourced overlays",
+    "sections": ["map canvas with route", "bottom ETA bar", "report button", "alert icons on map", "navigation turn-by-turn overlay"],
+    "layout": "full-screen map with bottom ETA bar, floating report button",
+    "content_style": ["route line", "report icons", "street names", "ETA/time saved", "turn instructions"]
+  },
+  "meme_dna": {
+    "observed_memes": ["residential shortcut chaos", "over-reporting everything", "angry neighbors"],
+    "user_frustrations": ["routes through impossible streets", "battery drain", "wrong reports not cleared"],
+    "cultural_shorthand": "The app that made your quiet neighborhood a highway"
+  },
+  "reference_urls": ["https://www.waze.com"],
+  "screenshot_targets": ["navigation view", "report button", "route with alerts"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic"]
+}

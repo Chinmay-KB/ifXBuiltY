@@ -1,0 +1,34 @@
+{
+  "id": "microsoft-vs-code",
+  "name": "VS Code",
+  "parent_company_id": "microsoft",
+  "category": "IDE",
+  "screen_type": "desktop app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["developer-minimal", "customizable", "extension-heavy"],
+    "colors": ["#007ACC VS Code blue", "dark theme #1e1e1e background", "syntax highlighting colors", "status bar blue"],
+    "visual_traits": ["sidebar with file explorer", "tabbed editor area", "integrated terminal bottom", "activity bar left icons", "status bar bottom"],
+    "ux_traits": ["command palette (Cmd/Ctrl+Shift+P)", "multi-cursor editing", "integrated Git", "extension marketplace", "split editor views"],
+    "meme_exaggeration": ["500 extensions installed", "theme customization over actual coding", "command palette for everything", "it's actually Electron so it uses 2GB RAM"],
+    "iconic_elements": ["blue status bar", "activity bar icons (Explorer/Search/Source Control/Debug/Extensions)", "minimap right side", "breadcrumb path"],
+    "behavioral_stereotypes": ["spending 3 hours configuring your editor to code for 30 minutes", "every developer has a different theme", "installing extensions you'll use once"],
+    "satirical_patterns": ["Your VS Code has more extensions than lines of code", "The real IDE was the themes we installed along the way"]
+  },
+  "archetype": {
+    "type": "code editor with sidebar and tabbed panels",
+    "sections": ["activity bar (far left)", "sidebar (file explorer/search/etc)", "tabbed editor area", "panel (terminal/output/debug)", "status bar"],
+    "layout": "left-heavy sidebar, centered editor, bottom panel, full-width status bar",
+    "content_style": ["syntax-highlighted code", "file tree", "search results", "terminal output", "git diff"]
+  },
+  "meme_dna": {
+    "observed_memes": ["500 extensions", "theme hopping", "Electron RAM usage"],
+    "user_frustrations": ["extensions conflict with each other", "IntelliSense sometimes just guesses", "settings.json is a second language"],
+    "cultural_shorthand": "The text editor that became an IDE through sheer willpower and extensions"
+  },
+  "reference_urls": ["https://code.visualstudio.com"],
+  "screenshot_targets": ["editor with sidebar", "command palette", "integrated terminal"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
+import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 type FeedFilterOptions = {
@@ -42,12 +43,9 @@ async function fetchFeedFilterOptions(): Promise<FeedFilterOptions> {
     },
   });
 
-  const { data, error } = await supabase
-    .from("generations")
-    .select("builder, target")
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible")
-    .range(0, MAX_OPTION_ROWS - 1);
+  const { data, error } = await applyPublicFeedFilters(
+    supabase.from("generations").select("builder, target"),
+  ).range(0, MAX_OPTION_ROWS - 1);
 
   if (error) {
     console.error("Could not load feed filter options", error);

@@ -66,6 +66,12 @@ export async function GET() {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     screenshotCount: countMap.get(row.id) ?? 0,
+    profileType: row.profile_type ?? "company",
+    parentCompanyId: row.parent_company_id ?? null,
+    category: row.category ?? "",
+    researchStatus: row.research_status ?? "approved",
+    popularityTier: row.popularity_tier ?? 2,
+    memeStrength: row.meme_strength ?? 3,
   }));
 
   return NextResponse.json(result);

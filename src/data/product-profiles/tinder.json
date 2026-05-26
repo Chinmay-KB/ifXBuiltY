@@ -1,0 +1,34 @@
+{
+  "id": "tinder",
+  "name": "Tinder",
+  "parent_company_id": "tinder-co",
+  "category": "dating",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["casual", "gamified", "swipe-obsessed"],
+    "colors": ["#FE3C72 Tinder pink/red", "white cards", "gradient backgrounds", "green/blue action buttons"],
+    "visual_traits": ["full-screen photo cards", "swipe gesture", "action buttons (nope/like/super like)", "match animation", "chat list"],
+    "ux_traits": ["right swipe = like, left = nope", "Super Like (blue star)", "Boost feature", "Gold subscriptions upsell", "match notification with confetti"],
+    "meme_exaggeration": ["swiping for hours then matching with nobody", "bio says 'just ask' with zero info", "group photos where you can't tell who the person is", "premium upsells at every turn"],
+    "iconic_elements": ["flame logo", "card stack UI", "swipe animation", "match screen with confetti", "Super Like blue border"],
+    "behavioral_stereotypes": ["swiping while on the toilet", "matching and never messaging", "unmatching without explanation"],
+    "satirical_patterns": ["You have 3 new likes! (pay $30 to see who)", "Your bio: 'fluent in sarcasm' — truly a unique individual"]
+  },
+  "archetype": {
+    "type": "card-based discovery with gesture interaction",
+    "sections": ["full-screen photo card", "swipe gesture area", "action buttons bottom", "match notification overlay", "chat list"],
+    "layout": "single full-screen card with action buttons, swipe-driven navigation",
+    "content_style": ["photos", "name/age/distance", "bio text", "interest tags", "Spotify anthem"]
+  },
+  "meme_dna": {
+    "observed_memes": ["swipe fatigue", "premium paywall everything", "matching with your cousin"],
+    "user_frustrations": ["algorithm hides your profile unless you pay", "bots and fake profiles", "matches never respond"],
+    "cultural_shorthand": "The app that turned dating into a slot machine"
+  },
+  "reference_urls": ["https://tinder.com"],
+  "screenshot_targets": ["card swipe view", "match screen", "chat list"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic", "Scammy"]
+}

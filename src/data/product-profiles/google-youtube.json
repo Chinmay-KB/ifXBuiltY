@@ -1,0 +1,34 @@
+{
+  "id": "google-youtube",
+  "name": "YouTube",
+  "parent_company_id": "google",
+  "category": "video",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["energetic", "algorithm-driven", "creator-focused"],
+    "colors": ["#FF0000 red brand", "dark mode #0f0f0f background", "white text", "#3ea6ff blue links"],
+    "visual_traits": ["thumbnail grid", "sidebar navigation", "video player dominance", "chip filters at top", "comment section below"],
+    "ux_traits": ["autoplay toggle", "infinite recommended feed", "mini player on scroll", "shorts vertical feed", "subscribe button prominence"],
+    "meme_exaggeration": ["clickbait thumbnails with shocked faces", "subscribe begging at 30 seconds", "mid-roll ads at worst moments", "algorithm rabbit holes at 2 AM"],
+    "iconic_elements": ["red play button", "thumbnail with arrow and face", "view count + timestamp overlay", "like/dislike bar"],
+    "behavioral_stereotypes": ["one video becomes three hours", "comment section is a different internet", "music playing in background while doing something else"],
+    "satirical_patterns": ["THIS VIDEO IS SPONSORED BY... (first 30 seconds)", "smash that like button energy"]
+  },
+  "archetype": {
+    "type": "video streaming with recommendation feed",
+    "sections": ["header with search", "category chips", "video thumbnail grid", "video player page with sidebar recommendations", "comment section"],
+    "layout": "grid-based browse, single-column watch page with right-rail recommendations",
+    "content_style": ["thumbnail images", "title overlays", "channel avatars", "view counts", "upload timestamps"]
+  },
+  "meme_dna": {
+    "observed_memes": ["YouTube recommended at 3 AM", "clickbait thumbnails", "video essay 2 hours long about a 5-minute topic"],
+    "user_frustrations": ["ads every 3 minutes", "can't skip intro", "algorithm only shows one type of content"],
+    "cultural_shorthand": "The second largest search engine that's actually a video platform"
+  },
+  "reference_urls": ["https://www.youtube.com"],
+  "screenshot_targets": ["homepage grid", "video watch page", "shorts feed"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic"]
+}

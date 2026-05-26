@@ -1,0 +1,34 @@
+{
+  "id": "notion",
+  "name": "Notion",
+  "parent_company_id": "notion",
+  "category": "productivity",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["minimal", "flexible", "obsessively organized"],
+    "colors": ["white/light background", "dark mode available", "gray text hierarchy", "colorful callout blocks", "minimal accent colors"],
+    "visual_traits": ["sidebar with page tree", "block-based editing", "cover images + icons", "breadcrumb navigation", "database views (table/board/timeline)"],
+    "ux_traits": ["slash commands for blocks", "drag-and-drop blocks", "database relations and rollups", "template buttons", "backlinks", "@mentions"],
+    "meme_exaggeration": ["spending more time building the system than using it", "second brain that's just a fancy todo list", "aesthetic Notion templates nobody fills out", "everything is a block"],
+    "iconic_elements": ["page emoji icons", "cover image header", "slash command menu", "toggle lists", "database property pills"],
+    "behavioral_stereotypes": ["building a life OS instead of living life", "template collecting", "reorganizing instead of doing work"],
+    "satirical_patterns": ["Your second brain has 47 databases and 0 actual thoughts", "Productivity system > actual productivity"]
+  },
+  "archetype": {
+    "type": "block-based document editor with database features",
+    "sections": ["sidebar with page hierarchy", "page header (icon + cover + title)", "block content area", "database views", "comments/suggestions panel"],
+    "layout": "left sidebar, centered document content, optional right panel",
+    "content_style": ["text blocks", "headers", "databases", "embeds", "callout boxes", "toggle lists"]
+  },
+  "meme_dna": {
+    "observed_memes": ["aesthetic Notion templates", "second brain cult", "building the system > using the system"],
+    "user_frustrations": ["offline mode is nonexistent", "mobile app is slow", "search is mediocre"],
+    "cultural_shorthand": "The app that replaces all your apps but becomes its own full-time job"
+  },
+  "reference_urls": ["https://www.notion.so"],
+  "screenshot_targets": ["page with blocks", "database table view", "sidebar navigation"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

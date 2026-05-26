@@ -16,7 +16,7 @@ type GenOk = {
   id: number;
   slug: string;
   imageUrl: string | null;
-  published: boolean;
+  status: string;
 };
 
 type GenErr = {
@@ -32,7 +32,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function postGenerate(
-  body: MergedGenerationFields,
+  slot: SlotWithFields,
   delayMs: number,
 ): Promise<RowResult> {
   await sleep(delayMs);
@@ -41,9 +41,11 @@ async function postGenerate(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        builder: body.builder,
-        target: body.target,
-        extraDetails: body.extraDetails,
+        builder: slot.fields.builder,
+        target: slot.fields.target,
+        builderId: slot.builderId,
+        targetId: slot.targetId,
+        extraDetails: slot.fields.extraDetails,
       }),
     });
     const data = (await res.json()) as {
@@ -69,7 +71,7 @@ async function postGenerate(
       id: data.id,
       slug: data.slug,
       imageUrl: data.imageUrl ?? null,
-      published: false,
+      status: (data as { status?: string }).status ?? "queued",
     };
   } catch {
     return { ok: false, error: "Network error" };
@@ -104,8 +106,6 @@ export function BatchGenerator() {
     null,
   ]);
   const [loading, setLoading] = useState(false);
-  const [publishingIdx, setPublishingIdx] = useState<number | null>(null);
-
   // Load initial slots on mount
   useEffect(() => {
     let cancelled = false;
@@ -169,38 +169,12 @@ export function BatchGenerator() {
     setResults([null, null, null, null]);
     const staggerMs = 180;
     const promises = slots.map((slot, i) =>
-      postGenerate(slot.fields, i * staggerMs),
+      postGenerate(slot, i * staggerMs),
     );
     const out = await Promise.all(promises);
     setResults(out);
     setLoading(false);
   }, [slots]);
-
-  const publishSlot = useCallback(async (index: number) => {
-    const res = results[index];
-    if (!res || !res.ok || res.published) return;
-    setPublishingIdx(index);
-    try {
-      const r = await fetch(`/api/generations/${res.id}/publish`, {
-        method: "POST",
-      });
-      const data = (await r.json()) as { error?: string };
-      if (!r.ok) {
-        alert(data.error ?? "Publish failed");
-        return;
-      }
-      setResults((prev) => {
-        const next = [...prev];
-        const cur = next[index];
-        if (cur && cur.ok) {
-          next[index] = { ...cur, published: true };
-        }
-        return next;
-      });
-    } finally {
-      setPublishingIdx(null);
-    }
-  }, [results]);
 
   const pairLabels = useMemo(
     () =>
@@ -216,10 +190,10 @@ export function BatchGenerator() {
       <div>
         <h1 className="font-display text-2xl text-ink">Batch generate</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Four random company pairs (from the profile library). Each{" "}
+          Four random company/product pairs (approved profiles from Supabase). Each{" "}
           <strong>Generate four</strong> runs four API requests — typically{" "}
           <strong>four credits</strong>. Creations save as drafts under your
-          account; publish to get a public{" "}
+          account; generations open on{" "}
           <code className="rounded bg-panel px-1 text-xs">/g/…</code> link.
         </p>
       </div>
@@ -245,7 +219,7 @@ export function BatchGenerator() {
         </div>
 
         {slotsLoading && slots.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Loading company pairs…</p>
+          <p className="text-sm text-muted-foreground">Loading profile pairs…</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {slots.map((slot, i) => (
@@ -311,30 +285,16 @@ export function BatchGenerator() {
                       Saved — preview URL unavailable.
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {!res.published ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={publishingIdx === i}
-                        onClick={() => void publishSlot(i)}
-                      >
-                        {publishingIdx === i ? "Publishing…" : "Publish"}
-                      </Button>
-                    ) : null}
-                    {res.published ? (
-                      <Link
-                        href={`/g/${encodeURIComponent(res.slug)}`}
-                        className="inline-flex items-center text-sm font-semibold text-ink underline"
-                      >
-                        View /g/{res.slug}
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        Draft · slug <code className="rounded bg-panel px-1">{res.slug}</code>
-                      </span>
-                    )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/g/${encodeURIComponent(res.slug)}`}
+                      className="inline-flex items-center text-sm font-semibold text-ink underline"
+                    >
+                      View /g/{res.slug}
+                    </Link>
+                    <span className="text-xs text-muted-foreground">
+                      {res.status === "completed" ? "Ready" : "Rendering…"}
+                    </span>
                   </div>
                 </>
               ) : null}

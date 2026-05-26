@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     template: "%s · ifXBuiltY",
   },
   description:
-    "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
+    "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and share the best accidents.",
   applicationName: "ifXBuiltY",
   keywords: [
     "AI satire generator",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     siteName: "ifXBuiltY",
     title: "ifXBuiltY - Cursed AI Screenshots for Bad Product Ideas",
     description:
-      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
+      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and share the best accidents.",
     images: [
       {
         url: "/card-smol.png",
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ifXBuiltY - Cursed AI Screenshots for Bad Product Ideas",
     description:
-      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and remix the worst accidents.",
+      "Mix any brand with any product, then watch ifXBuiltY generate cursed AI UI screenshots. Browse the chaos, vote on bad ideas, and share the best accidents.",
     images: ["/card-smol.png"],
   },
   robots: {

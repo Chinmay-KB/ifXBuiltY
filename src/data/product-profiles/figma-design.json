@@ -1,0 +1,34 @@
+{
+  "id": "figma-design",
+  "name": "Figma",
+  "parent_company_id": "figma",
+  "category": "design",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["creative", "collaborative", "precision-focused"],
+    "colors": ["dark canvas #2c2c2c", "#F24E1E Figma orange", "#a259ff purple components", "#1abcfe cyan selection", "white panels"],
+    "visual_traits": ["infinite canvas", "layers panel left", "properties panel right", "toolbar top", "multi-cursor collaboration dots"],
+    "ux_traits": ["component variants", "auto layout", "prototyping connections", "Dev Mode handoff", "comment pins on canvas", "real-time multiplayer cursors"],
+    "meme_exaggeration": ["designers naming layers 'Frame 4728'", "component variants with 200 combinations", "dev mode rage", "figma file with 847 pages"],
+    "iconic_elements": ["multiplayer colored cursors with names", "auto layout handles", "component diamond icon", "prototype noodle connections", "comment bubbles on canvas"],
+    "behavioral_stereotypes": ["naming layers is optional (Frame 1, Frame 2...)", "design system with 400 components", "leaving prototype mode open by accident"],
+    "satirical_patterns": ["Layers panel: Frame 847, Frame 848, Rectangle 293, Group (copy)", "This component has 47 variants and none of them are the right one"]
+  },
+  "archetype": {
+    "type": "design canvas with side panels",
+    "sections": ["toolbar top", "layers/assets panel left", "infinite canvas center", "properties/design panel right", "comments overlay"],
+    "layout": "full-screen canvas with left/right panels, top toolbar",
+    "content_style": ["vector shapes", "text layers", "component instances", "prototype connections", "design specs"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Frame 4728 naming convention", "dev mode handoff panic", "too many component variants"],
+    "user_frustrations": ["auto layout fighting you", "file gets slow with too many frames", "version history is confusing"],
+    "cultural_shorthand": "Where designers collaborate in real-time and developers suffer"
+  },
+  "reference_urls": ["https://www.figma.com"],
+  "screenshot_targets": ["design canvas with panels", "component variants", "Dev Mode view"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

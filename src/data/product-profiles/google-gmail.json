@@ -1,0 +1,34 @@
+{
+  "id": "google-gmail",
+  "name": "Gmail",
+  "parent_company_id": "google",
+  "category": "email",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["organized", "efficient", "slightly overwhelming"],
+    "colors": ["#EA4335 red compose button", "white background", "#1a73e8 blue accents", "gray label chips"],
+    "visual_traits": ["dense list view", "left sidebar with labels", "compose FAB bottom-right", "search bar top", "conversation threading"],
+    "ux_traits": ["checkbox selection", "archive vs delete confusion", "smart compose suggestions", "category tabs (Primary/Social/Promotions)", "undo send countdown"],
+    "meme_exaggeration": ["inbox zero is a myth", "promotions tab graveyard", "unsubscribe links that don't work", "reply-all disasters"],
+    "iconic_elements": ["red compose pencil icon", "star/unstar toggle", "label color chips", "conversation expand arrow"],
+    "behavioral_stereotypes": ["email anxiety", "marking as read without reading", "hoarding 50,000 unread emails"],
+    "satirical_patterns": ["You have 14,392 unread messages — would you like to clean up?", "Promotions tab: where newsletters go to be ignored forever"]
+  },
+  "archetype": {
+    "type": "email inbox with list view and detail panel",
+    "sections": ["left sidebar with folders/labels", "top search bar", "email list with sender/subject/snippet", "reading pane or full email view", "compose overlay"],
+    "layout": "three-column: sidebar, list, reading pane",
+    "content_style": ["sender name + avatar", "subject line", "snippet preview", "timestamp", "attachment indicators"]
+  },
+  "meme_dna": {
+    "observed_memes": ["inbox zero cult", "reply-all horror stories", "email signatures that are longer than the email"],
+    "user_frustrations": ["can't actually unsubscribe", "important emails go to Promotions", "search doesn't find that one email from 2019"],
+    "cultural_shorthand": "The email client everyone uses but nobody loves"
+  },
+  "reference_urls": ["https://mail.google.com"],
+  "screenshot_targets": ["inbox list view", "email reading pane", "compose window"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Chaotic"]
+}

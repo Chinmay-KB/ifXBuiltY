@@ -9,6 +9,16 @@ function isValidUuid(s: string): boolean {
   );
 }
 
+/** Returns the anon session id from the cookie when present; does not create one. */
+export async function getAnonSessionId(): Promise<string | null> {
+  const store = await cookies();
+  const existing = store.get(ANON_SESSION_COOKIE_NAME)?.value;
+  if (existing && isValidUuid(existing)) {
+    return existing;
+  }
+  return null;
+}
+
 /**
  * Returns a stable anonymous session id from the cookie, or creates one and
  * sets it on the outgoing response (httpOnly, SameSite=Lax).
@@ -17,9 +27,8 @@ export async function getOrCreateAnonSessionId(): Promise<{
   sessionId: string;
   applyCookie: (res: NextResponse) => void;
 }> {
-  const store = await cookies();
-  const existing = store.get(ANON_SESSION_COOKIE_NAME)?.value;
-  if (existing && isValidUuid(existing)) {
+  const existing = await getAnonSessionId();
+  if (existing) {
     return { sessionId: existing, applyCookie: () => {} };
   }
 

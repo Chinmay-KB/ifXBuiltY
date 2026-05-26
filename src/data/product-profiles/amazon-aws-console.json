@@ -1,0 +1,34 @@
+{
+  "id": "amazon-aws-console",
+  "name": "AWS Console",
+  "parent_company_id": "amazon",
+  "category": "cloud",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["enterprise", "overwhelming", "infinite complexity"],
+    "colors": ["#232F3E dark navy header", "#FF9900 AWS orange", "white content areas", "light gray backgrounds"],
+    "visual_traits": ["top navigation with region selector", "service search bar", "200+ service grid", "dashboard widgets", "billing alarm anxiety"],
+    "ux_traits": ["IAM role management", "CloudWatch dashboards", "S3 bucket browser", "EC2 instance management", "cost explorer"],
+    "meme_exaggeration": ["accidental $10,000 bill", "200 services and you use 3", "IAM permissions nightmare", "which region is this in"],
+    "iconic_elements": ["orange AWS logo", "region selector dropdown", "service search with 200+ results", "billing dashboard with scary numbers"],
+    "behavioral_stereotypes": ["leaving instances running over weekend", "IAM policy that grants *:*", "console vs CLI identity crisis"],
+    "satirical_patterns": ["Your monthly bill: $14,782.32 (you clicked the wrong thing)", "200+ services, 0 documentation that makes sense"]
+  },
+  "archetype": {
+    "type": "enterprise cloud management dashboard",
+    "sections": ["top nav bar (region/services/account)", "service search", "dashboard with widgets", "service-specific management console", "billing/cost sidebar"],
+    "layout": "top-heavy navigation, dashboard grid, service-specific sub-consoles",
+    "content_style": ["service cards", "resource tables", "metrics graphs", "status indicators", "configuration forms"]
+  },
+  "meme_dna": {
+    "observed_memes": ["accidental cloud bill", "IAM permission hell", "which AWS service do I actually need"],
+    "user_frustrations": ["console is slow", "documentation is scattered", "pricing is incomprehensible"],
+    "cultural_shorthand": "The dashboard where startups go to accidentally spend their seed round"
+  },
+  "reference_urls": ["https://aws.amazon.com/console"],
+  "screenshot_targets": ["main dashboard", "service search", "EC2 console"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Chaotic"]
+}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { GeneratorForm } from "@/components/generator-form";
+import { pollGenerationUntilDone } from "@/lib/generation/poll-until-done";
 import type {
   GenerationInputs,
   GenerationResult,
@@ -31,8 +32,14 @@ export function RemixForm({
 
   const handleGenerated = useCallback(
     (result: GenerationResult) => {
-      // Navigate to the generation detail page after successful remix
-      router.push(`/g/${result.slug}`);
+      void (async () => {
+        try {
+          const final = await pollGenerationUntilDone(result.id);
+          router.push(`/g/${final.slug}`);
+        } catch {
+          router.push(`/g/${result.slug}`);
+        }
+      })();
     },
     [router],
   );

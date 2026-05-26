@@ -27,6 +27,12 @@ type Company = {
   archetype: Archetype;
   logoPath: string | null;
   screenshotCount: number;
+  profileType: string;
+  parentCompanyId: string | null;
+  category: string;
+  researchStatus: string;
+  popularityTier: number;
+  memeStrength: number;
 };
 
 type Status = "loading" | "error" | "success";
@@ -36,6 +42,7 @@ export default function AdminCompanyListPage() {
   const [status, setStatus] = useState<Status>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<"all" | "company" | "product">("all");
 
   const fetchCompanies = useCallback(async () => {
     setStatus("loading");
@@ -89,6 +96,15 @@ export default function AdminCompanyListPage() {
     }
   }
 
+  const filtered = typeFilter === "all"
+    ? companies
+    : companies.filter((c) => c.profileType === typeFilter);
+
+  const typeCounts = companies.reduce((acc, c) => {
+    acc[c.profileType] = (acc[c.profileType] ?? 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div>
       {/* Page header */}
@@ -99,6 +115,27 @@ export default function AdminCompanyListPage() {
             + Add Company
           </Button>
         </Link>
+      </div>
+
+      {/* Type filter tabs */}
+      <div className="mb-4 flex gap-2">
+        {[
+          { key: "all" as const, label: `All (${companies.length})` },
+          { key: "company" as const, label: `Companies (${typeCounts.company ?? 0})` },
+          { key: "product" as const, label: `Products (${typeCounts.product ?? 0})` },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setTypeFilter(key)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              typeFilter === key
+                ? "bg-ink text-chrome"
+                : "bg-panel text-muted hover:text-ink"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Loading state */}
@@ -124,32 +161,35 @@ export default function AdminCompanyListPage() {
       )}
 
       {/* Empty state */}
-      {status === "success" && companies.length === 0 && (
+      {status === "success" && filtered.length === 0 && (
         <Surface className="p-8 text-center">
           <p className="text-muted">
-            No companies exist yet. Add your first company to get started.
+            {typeFilter === "all"
+              ? "No companies exist yet. Add your first company to get started."
+              : `No ${typeFilter} profiles found.`}
           </p>
         </Surface>
       )}
 
       {/* Company list */}
-      {status === "success" && companies.length > 0 && (
+      {status === "success" && filtered.length > 0 && (
         <Surface className="overflow-hidden p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-line bg-canvas text-xs font-medium uppercase tracking-wide text-muted">
-                  <th className="px-4 py-3">Company</th>
+                  <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Slug</th>
-                  <th className="px-4 py-3">Tone</th>
                   <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Parent</th>
+                  <th className="px-4 py-3">Tone</th>
                   <th className="px-4 py-3">Layout</th>
                   <th className="px-4 py-3 text-center">Screenshots</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {companies.map((company) => (
+                {filtered.map((company) => (
                   <tr
                     key={company.id}
                     className="transition-colors hover:bg-canvas/60"
@@ -171,11 +211,22 @@ export default function AdminCompanyListPage() {
                         {company.id}
                       </code>
                     </td>
-                    <td className="px-4 py-3 text-muted">
-                      {(company.styleDna.tone ?? []).join(", ") || "—"}
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          company.profileType === "product"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {company.profileType}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-muted">
-                      {company.archetype.type || "—"}
+                      {company.parentCompanyId || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-muted">
+                      {(company.styleDna.tone ?? []).join(", ") || "—"}
                     </td>
                     <td className="px-4 py-3 text-muted">
                       {company.archetype.layout || "—"}
@@ -185,11 +236,19 @@ export default function AdminCompanyListPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/admin/companies/${company.id}`}>
-                          <Button variant="ghost" size="sm">
-                            Edit
-                          </Button>
-                        </Link>
+                        {company.profileType === "product" ? (
+                          <Link href={`/admin/products/${company.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link href={`/admin/companies/${company.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

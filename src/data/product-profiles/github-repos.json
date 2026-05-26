@@ -1,0 +1,34 @@
+{
+  "id": "github-repos",
+  "name": "GitHub",
+  "parent_company_id": "github",
+  "category": "developer",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["developer-familiar", "data-dense", "community-driven"],
+    "colors": ["dark mode #0d1117 background", "#58a6ff blue links", "#238636 green buttons", "#f78166 orange accents", "gray borders"],
+    "visual_traits": ["file tree browser", "code view with line numbers", "PR diff view", "contribution graph (green squares)", "repo header with stars/forks"],
+    "ux_traits": ["blob blame view", "inline code review comments", "merge conflict resolution UI", "Actions workflow visualization", "copilot suggestions"],
+    "meme_exaggeration": ["green square obsession", "readme-driven development", "force push to main accidents", "dependency hell in package.json"],
+    "iconic_elements": ["Octocat", "contribution graph", "star/fork/watch buttons", "branch selector dropdown", "diff +/− lines"],
+    "behavioral_stereotypes": ["checking contribution graph daily", "writing README before code", "closing issues with 'works on my machine'"],
+    "satirical_patterns": ["Your contribution graph: 365 green squares (you committed 'fix typo' every day)", "README.md: the most important file you'll write"]
+  },
+  "archetype": {
+    "type": "code repository browser with collaboration features",
+    "sections": ["repo header (name/stars/forks)", "file browser", "code viewer with syntax highlighting", "PR/Merge request view", "Issues tab", "Actions tab"],
+    "layout": "header with metadata, file tree left, code content right, tabs for navigation",
+    "content_style": ["code with syntax highlighting", "diff views", "commit messages", "issue descriptions", "PR review comments"]
+  },
+  "meme_dna": {
+    "observed_memes": ["green contribution squares", "README-driven development", "force push regrets"],
+    "user_frustrations": ["merge conflicts", "CI/CD pipelines failing for no reason", "review requests at 5 PM Friday"],
+    "cultural_shorthand": "Where code goes to be judged by strangers"
+  },
+  "reference_urls": ["https://github.com"],
+  "screenshot_targets": ["repo file browser", "PR diff view", "contribution graph"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

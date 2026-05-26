@@ -35,12 +35,15 @@ export async function POST(_request: Request, context: RouteContext) {
   if (row.creator_id !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (row.visibility !== "draft") {
-    return NextResponse.json(
-      { error: "Generation is not a draft", code: "not_draft" },
-      { status: 409 },
-    );
+  if (row.visibility === "published") {
+    return NextResponse.json({
+      ok: true,
+      id,
+      slug: row.slug,
+      visibility: "published" as const,
+    });
   }
+
   if (!row.image_path?.trim()) {
     return NextResponse.json(
       { error: "Cannot publish without an image", code: "missing_image" },
@@ -52,8 +55,7 @@ export async function POST(_request: Request, context: RouteContext) {
     .from("generations")
     .update({ visibility: "published" })
     .eq("id", id)
-    .eq("creator_id", user.id)
-    .eq("visibility", "draft");
+    .eq("creator_id", user.id);
 
   if (upErr) {
     return NextResponse.json(

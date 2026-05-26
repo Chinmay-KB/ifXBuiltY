@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { getAllCompanyProfiles } from "@/data/company-profiles";
+import { getSelectableCompanyGroups } from "@/data/company-profiles";
+import { buildGeneratorProfileGroups } from "@/data/generator-profile-options";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { GeneratePageClient } from "./generate-page-client";
@@ -23,15 +24,15 @@ export default async function GeneratePage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const profiles = await getAllCompanyProfiles();
-  const companies = profiles.map((c) => ({ id: c.id, name: c.name }));
+  const groups = await getSelectableCompanyGroups();
+  const profileGroups = buildGeneratorProfileGroups(groups);
 
   return (
     <GeneratePageClient
       signedIn={!!user}
       initialBuilder={params.builder}
       initialTarget={params.target}
-      companies={companies}
+      profileGroups={profileGroups}
     />
   );
 }

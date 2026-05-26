@@ -1,0 +1,34 @@
+{
+  "id": "microsoft-teams",
+  "name": "Microsoft Teams",
+  "parent_company_id": "microsoft",
+  "category": "communication",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["corporate", "overwhelming", "trying-to-be-Slack"],
+    "colors": ["#6264A7 Teams purple", "white/light backgrounds", "gray sidebar", "red notification badges"],
+    "visual_traits": ["left rail navigation", "channel list", "chat threads", "meeting controls bar", "file tabs in channels"],
+    "ux_traits": ["Activity feed with @mentions", "channel tabs (Posts/Files/Wiki)", "meeting join flow", "screen sharing controls", "background blur/replacement"],
+    "meme_exaggeration": ["you're muted for 10 minutes", "can everyone see my screen", "background blur on cat", "meeting that could have been an email"],
+    "iconic_elements": ["purple app icon", "Activity bell with red badge", "meeting control bar (mute/camera/share/leave)", "channel @mention highlight"],
+    "behavioral_stereotypes": ["joining meetings 2 minutes late", "typing indicator anxiety", "accidentally unmuted"],
+    "satirical_patterns": ["Your meeting starts in 5 minutes (notification you'll ignore)", "Can you hear me? Can you see my screen? (the Teams greeting)"]
+  },
+  "archetype": {
+    "type": "team communication with channels and meetings",
+    "sections": ["left rail (Activity/Chat/Teams/Calendar/Calls)", "channel list sidebar", "main content area (chat/posts)", "right panel (details/members)", "meeting overlay"],
+    "layout": "left navigation rail, sidebar list, main content area, optional right panel",
+    "content_style": ["chat messages", "channel posts", "file attachments", "meeting invites", "reaction emojis"]
+  },
+  "meme_dna": {
+    "observed_memes": ["you're muted", "this meeting could have been an email", "Teams notification overload"],
+    "user_frustrations": ["slow to load", "notification spam", "search doesn't find anything"],
+    "cultural_shorthand": "The corporate chat app that makes you miss email"
+  },
+  "reference_urls": ["https://www.microsoft.com/microsoft-teams"],
+  "screenshot_targets": ["chat view", "channel posts", "meeting controls"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Chaotic"]
+}

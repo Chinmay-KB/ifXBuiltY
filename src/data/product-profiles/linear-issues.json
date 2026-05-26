@@ -1,0 +1,34 @@
+{
+  "id": "linear-issues",
+  "name": "Linear",
+  "parent_company_id": "linear",
+  "category": "project-management",
+  "screen_type": "desktop web",
+  "popularity_tier": 2,
+  "style_dna": {
+    "tone": ["ultra-minimal", "fast", "engineering-precious"],
+    "colors": ["dark theme dominant", "#5E6AD2 Linear purple", "near-black backgrounds", "subtle borders", "muted text hierarchy"],
+    "visual_traits": ["minimal sidebar", "issue list with keyboard shortcuts", "command bar", "cycle progress indicator", "clean detail view"],
+    "ux_traits": ["keyboard-first navigation", "command palette (K)", "batch operations", "cycle-based planning", "GitHub sync", "Triage inbox"],
+    "meme_exaggeration": ["so fast it makes Jira users cry", "keyboard shortcuts for everything", "the tool that makes you feel productive just by opening it", "designer-approved issue tracker"],
+    "iconic_elements": ["purple accent on dark", "issue ID format (PROJ-123)", "cycle progress ring", "Triage queue", "keyboard shortcut hints"],
+    "behavioral_stereotypes": ["switching from Jira and feeling reborn", "using keyboard shortcuts exclusively", "obsessing over cycle velocity"],
+    "satirical_patterns": ["Linear is so fast you finish the ticket before you read it", "Your Jira migration story: a tragedy in three acts"]
+  },
+  "archetype": {
+    "type": "issue tracker with list view and detail panel",
+    "sections": ["sidebar (workspace navigation)", "issue list with filters", "issue detail panel", "command bar overlay", "Triage inbox"],
+    "layout": "left sidebar, center list, right detail panel — all dark, all minimal",
+    "content_style": ["issue titles", "status labels", "priority indicators", "assignee avatars", "cycle badges"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Jira refugees", "keyboard shortcut flexing", "it's just so fast"],
+    "user_frustrations": ["limited customization", "no Gantt charts", "pricing for small teams"],
+    "cultural_shorthand": "The issue tracker that startups use to feel like they have their act together"
+  },
+  "reference_urls": ["https://linear.app"],
+  "screenshot_targets": ["issue list", "issue detail", "Triage inbox"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium"]
+}

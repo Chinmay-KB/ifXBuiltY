@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
+import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
@@ -40,13 +41,11 @@ async function fetchHomepageFeaturedGenerations(): Promise<
     },
   });
 
-  const { data, error } = await supabase
-    .from("generations")
-    .select("id, slug, builder, target, image_path, net_score, remix_count")
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible")
-    .not("image_path", "is", null)
-    .neq("image_path", "")
+  const { data, error } = await applyPublicFeedFilters(
+    supabase
+      .from("generations")
+      .select("id, slug, builder, target, image_path, net_score, remix_count"),
+  )
     .order("net_score", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(HOMEPAGE_FEATURED_LIMIT)

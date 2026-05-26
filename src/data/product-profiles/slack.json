@@ -1,0 +1,34 @@
+{
+  "id": "slack",
+  "name": "Slack",
+  "parent_company_id": "slack",
+  "category": "communication",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["casual-professional", "notification-heavy", "channel-organized"],
+    "colors": ["#4A154B dark purple sidebar", "#E01E5A Slack red/pink", "white/light content area", "color-coded channel indicators"],
+    "visual_traits": ["left sidebar with workspace/channels", "message threads", "emoji reactions row", "search bar top", "huddle indicator"],
+    "ux_traits": ["slash commands", "thread replies", "channel bookmarks", "workflow builder", "status messages", "Do Not Disturb scheduling"],
+    "meme_exaggeration": ["notification overload", "threads within threads", "emoji reactions as communication", "the person who uses @channel for everything"],
+    "iconic_elements": ["hashtag channel prefix", "thread sidebar right", "emoji reaction bar", "typing indicator", "unread message divider"],
+    "behavioral_stereotypes": ["checking Slack before email", "reacting with 👀 instead of responding", "creating a channel that nobody uses"],
+    "satirical_patterns": ["You have 847 unread messages (you've been away for 2 hours)", "This conversation could have been a thread (it wasn't)"]
+  },
+  "archetype": {
+    "type": "team messaging with channel-based organization",
+    "sections": ["workspace sidebar (far left)", "channel/DM list", "message feed", "thread panel (right)", "compose bar bottom"],
+    "layout": "left sidebar, center message feed, optional right thread panel",
+    "content_style": ["chat messages", "file attachments", "code blocks", "emoji reactions", "threaded replies"]
+  },
+  "meme_dna": {
+    "observed_memes": ["notification anxiety", "emoji as entire response", "@channel abuse"],
+    "user_frustrations": ["search is terrible", "too many channels", "threads nobody follows"],
+    "cultural_shorthand": "The chat app that turned work into a group chat"
+  },
+  "reference_urls": ["https://slack.com"],
+  "screenshot_targets": ["channel view", "thread panel", "sidebar with channels"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic"]
+}

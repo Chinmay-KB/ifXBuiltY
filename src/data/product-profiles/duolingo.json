@@ -1,0 +1,34 @@
+{
+  "id": "duolingo",
+  "name": "Duolingo",
+  "parent_company_id": "duolingo",
+  "category": "education",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["playful", "guilt-inducing", "gamified"],
+    "colors": ["#58CC02 Duolingo green", "#CE82FF purple", "#FFC800 gold", "#FF4B4B red hearts", "white background"],
+    "visual_traits": ["rounded lesson cards", "progress path/tree", "streak flame icon", "hearts/lives counter", "leaderboard rankings"],
+    "ux_traits": ["tap-to-answer lessons", "streak counter", "hearts system (lose one per mistake)", "league promotions", "daily goals", "push notification guilt"],
+    "meme_exaggeration": ["Duo owl threatening your family", "streak anxiety", "passive-aggressive notifications", "learning a language in 5 minutes a day (for 3 years)"],
+    "iconic_elements": ["green owl mascot (Duo)", "streak flame", "heart/lives system", "XP progress bar", "league standings"],
+    "behavioral_stereotypes": ["doing one lesson to keep the streak", "ignoring notifications then feeling guilty", "competing with strangers on leaderboard"],
+    "satirical_patterns": ["Your streak is at risk! (notification at 11:58 PM)", "Duo knows when you skip a day. Duo always knows."]
+  },
+  "archetype": {
+    "type": "gamified learning path with daily engagement loops",
+    "sections": ["lesson path/tree", "bottom navigation (Learn/Practice/Leaderboard/Profile)", "streak display top", "hearts/gems counters", "lesson completion screen"],
+    "layout": "vertical scrolling path with nodes, bottom tab navigation",
+    "content_style": ["lesson cards", "progress indicators", "achievement badges", "leaderboard rows", "streak calendar"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Duo owl threatening you", "streak pressure", "passive-aggressive notifications"],
+    "user_frustrations": ["hearts system punishes learning", "same lessons repeated", "league system is addictive but stressful"],
+    "cultural_shorthand": "The app that guilt-trips you into learning Spanish one tap at a time"
+  },
+  "reference_urls": ["https://www.duolingo.com"],
+  "screenshot_targets": ["lesson path", "active lesson screen", "streak display"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic", "Wholesome"]
+}

@@ -45,6 +45,34 @@ vi.mock("@/data/company-profiles", () => ({
         },
         logoPath: null,
       },
+      "google-maps": {
+        id: "google-maps",
+        name: "Google Maps",
+        parentCompanyId: "google",
+        profileType: "product",
+        styleDna: {
+          tone: ["helpful"],
+          colors: ["blue"],
+          visual_traits: ["map canvas"],
+          ux_traits: ["bottom sheet"],
+          meme_exaggeration: ["recalculating"],
+          iconic_elements: ["blue dot"],
+          behavioral_stereotypes: [],
+          satirical_patterns: [],
+        },
+        archetype: {
+          type: "maps",
+          sections: ["map", "search"],
+          layout: "mobile app",
+          content_style: ["places"],
+        },
+        logoPath: null,
+        defaultVibeTags: [],
+        category: "maps",
+        popularityTier: 1,
+        researchStatus: "approved",
+        memeStrength: 4,
+      },
       linear: {
         id: "linear",
         name: "Linear",
@@ -67,9 +95,21 @@ vi.mock("@/data/company-profiles", () => ({
         logoPath: null,
       },
     };
-    return profiles[id] ?? null;
+    const p = profiles[id];
+    if (!p) return null;
+    const base = {
+      defaultVibeTags: [] as string[],
+      category: "",
+      popularityTier: 2,
+      researchStatus: "approved",
+      memeStrength: 3,
+      parentCompanyId: null as string | null,
+      profileType: "company" as const,
+    };
+    return { ...base, ...p };
   }),
   listCompanyIds: vi.fn(async () => ["duolingo", "linear", "microsoft"]),
+  listSelectableProfileIds: vi.fn(async () => ["duolingo", "linear", "microsoft"]),
 }));
 
 import { mergeCompanyPair } from "@/lib/prompt/merge-company-pair";
@@ -77,6 +117,8 @@ import { mergeCompanyPair } from "@/lib/prompt/merge-company-pair";
 describe("mergeCompanyPair", () => {
   it("merges duolingo x microsoft with distinct builder and target names", async () => {
     const m = await mergeCompanyPair("duolingo", "microsoft");
+    expect(m.builderId).toBe("duolingo");
+    expect(m.targetId).toBe("microsoft");
     expect(m.builder).toBe("Duolingo");
     expect(m.target).toBe("Microsoft");
     expect(m.extraDetails).toContain("Duolingo");
@@ -91,5 +133,12 @@ describe("mergeCompanyPair", () => {
 
   it("throws for unknown id", async () => {
     await expect(mergeCompanyPair("duolingo", "not-real")).rejects.toThrow(RangeError);
+  });
+
+  it("merges product x company with parent context", async () => {
+    const m = await mergeCompanyPair("google-maps", "microsoft");
+    expect(m.builder).toBe("Google Maps");
+    expect(m.target).toBe("Microsoft");
+    expect(m.extraDetails).toContain("google");
   });
 });

@@ -1,0 +1,34 @@
+{
+  "id": "meta-instagram",
+  "name": "Instagram",
+  "parent_company_id": "meta",
+  "category": "social",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "style_dna": {
+    "tone": ["aspirational", "curated", "aesthetic-obsessed"],
+    "colors": ["gradient logo (purple/pink/orange/yellow)", "white/black backgrounds", "minimal chrome"],
+    "visual_traits": ["full-bleed photo/video feed", "Stories ring at top", "bottom tab bar (Home/Search/Reels/Shop/Profile)", "double-tap heart animation"],
+    "ux_traits": ["swipe between Stories", "tap to like", "hold to preview", "swipe up for links (Stories)", "infinite scroll Reels"],
+    "meme_exaggeration": ["food photos before eating", "couple goals nobody asked for", "influencer apology videos", "aesthetic flat lays of coffee"],
+    "iconic_elements": ["gradient ring around Stories", "double-tap heart burst", "three-line menu top-right", "heart/activity tab"],
+    "behavioral_stereotypes": ["taking 47 photos to post one", "editing filters until unrecognizable", "checking likes within 5 minutes"],
+    "satirical_patterns": ["Living my best life (from a staged photoshoot)", "No filter (used Valencia)"]
+  },
+  "archetype": {
+    "type": "visual-first social feed with Stories",
+    "sections": ["Stories row at top", "full-screen photo/video posts", "engagement bar (like/comment/share/save)", "bottom navigation", "Explore grid"],
+    "layout": "single-column full-bleed content, minimal text overlay",
+    "content_style": ["photos", "short videos", "Stories with stickers/text", "Reels with audio", "carousel posts"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Instagram vs reality", "influencer culture", "aesthetic everything"],
+    "user_frustrations": ["algorithm prioritizes Reels over photos", "can't see posts chronologically", "too many suggested posts"],
+    "cultural_shorthand": "Where everyone's life looks better than yours"
+  },
+  "reference_urls": ["https://www.instagram.com"],
+  "screenshot_targets": ["feed view", "Stories view", "profile grid"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Premium", "Chaotic"]
+}
