@@ -41,11 +41,7 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden px-5 pb-10 pt-12 md:min-h-[600px] md:px-12 md:pb-14 md:pt-16">
         <Link
           href="/"
-          className={cn(
-            "mb-7 flex items-center gap-2.5 transition-all duration-700 md:hidden",
-            mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
-          )}
-          style={{ transitionDelay: "50ms" }}
+          className="mb-7 flex items-center gap-2.5 md:hidden"
           aria-label="ifXBuiltY home"
         >
           <LogoMark size="sm" />
@@ -71,17 +67,9 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
             <Link
               key={thumb.id}
               href={`/g/${thumb.slug}`}
-              className={cn(
-                "relative block h-[72px] w-[56px] overflow-hidden rounded-lg border border-line bg-panel shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all duration-700",
-                mounted
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-4 opacity-0",
-              )}
+              className="relative block h-[72px] w-[56px] overflow-hidden rounded-lg border border-line bg-panel shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
               style={{
-                transitionDelay: `${i * 100 + 100}ms`,
-                transform: mounted
-                  ? `rotate(${MOBILE_ROTATIONS[i % MOBILE_ROTATIONS.length]}deg)`
-                  : undefined,
+                transform: `rotate(${MOBILE_ROTATIONS[i % MOBILE_ROTATIONS.length]}deg)`,
               }}
             >
               {thumb.imageUrl && (
@@ -91,7 +79,7 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
                   fill
                   sizes="56px"
                   className="object-cover"
-                  loading="eager"
+                  priority={i === 0}
                   unoptimized
                 />
               )}
@@ -102,36 +90,18 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
         {/* Center content */}
         <div className="relative z-10 flex max-w-[680px] flex-col items-center gap-5">
           <h1
-            className={cn(
-              "text-center font-display text-[clamp(2.75rem,10vw,5rem)] font-black italic leading-[0.88] tracking-[-0.04em] text-ink transition-all duration-700",
-              mounted
-                ? "translate-y-0 opacity-100"
-                : "translate-y-6 opacity-0",
-            )}
-            style={{ transitionDelay: "100ms" }}
+            className="text-center font-display text-[clamp(2.75rem,10vw,5rem)] font-black italic leading-[0.88] tracking-[-0.04em] text-ink"
           >
             The world&apos;s worst product ideas.
           </h1>
           <p
-            className={cn(
-              "max-w-[480px] text-center text-[15px] leading-relaxed text-muted-foreground transition-all duration-700 md:text-lg",
-              mounted
-                ? "translate-y-0 opacity-100"
-                : "translate-y-4 opacity-0",
-            )}
-            style={{ transitionDelay: "250ms" }}
+            className="max-w-[480px] text-center text-[15px] leading-relaxed text-muted-foreground md:text-lg"
           >
             Crossbreed any company with any product. Watch the UI write itself.
             One prompt, one cursed screenshot from a parallel universe.
           </p>
           <div
-            className={cn(
-              "flex flex-col items-center gap-3 pt-2 transition-all duration-700 sm:flex-row",
-              mounted
-                ? "translate-y-0 opacity-100"
-                : "translate-y-4 opacity-0",
-            )}
-            style={{ transitionDelay: "400ms" }}
+            className="flex flex-col items-center gap-3 pt-2 sm:flex-row"
           >
             <Link
               href="/generate"
@@ -152,11 +122,7 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
 
       {/* Stats strip */}
       <div
-        className={cn(
-          "flex w-full items-center justify-center gap-5 border-b border-line bg-panel/50 px-5 py-3 transition-all duration-700 md:gap-8 md:py-3.5",
-          mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-        )}
-        style={{ transitionDelay: "550ms" }}
+        className="flex w-full items-center justify-center gap-5 border-b border-line bg-panel/50 px-5 py-3 md:gap-8 md:py-3.5"
       >
         {ideasThisWeek > 0 && (
           <>
@@ -280,7 +246,8 @@ function FloatingThumbnail({
           fill
           sizes="(max-width: 768px) 0px, 200px"
           className="object-cover transition-transform duration-300 hover:scale-105"
-          loading="eager"
+          loading={index === 0 ? "eager" : "lazy"}
+          priority={index === 0}
           unoptimized
         />
       ) : (

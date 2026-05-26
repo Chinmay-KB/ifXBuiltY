@@ -2,14 +2,10 @@ import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
-import { isSuperadmin } from "@/lib/admin-constants";
-import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
@@ -80,27 +76,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const hasAuthCookie = hasSupabaseAuthCookie(cookieStore.getAll());
-  const user = hasAuthCookie
-    ? (await (await createSupabaseServerClient()).auth.getUser()).data.user
-    : null;
-
-  // Map Supabase user to the shape NavigationShell expects
-  const navUser = user
-    ? {
-        id: user.id,
-        email: user.email ?? undefined,
-        avatar_url: user.user_metadata?.avatar_url ?? undefined,
-        display_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? undefined,
-      }
-    : null;
-
   const siteUrl = getSiteUrl();
   const jsonLd = {
     "@context": "https://schema.org",
@@ -123,7 +103,7 @@ export default async function RootLayout({
         />
         <SignInModalProvider>
           <NavigationGeneratingProvider>
-            <NavigationShellWrapper user={navUser} isSuperadmin={isSuperadmin(user?.email)} />
+            <NavigationShellWrapper user={null} isSuperadmin={false} />
             {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
             <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
               {children}

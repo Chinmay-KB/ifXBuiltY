@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { useNavigationGenerating } from "@/components/navigation-generating-context";
 import { NavigationShell } from "@/components/navigation-shell";
+import { isSuperadmin as isSuperadminEmail } from "@/lib/admin-constants";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type User = {
   id: string;
@@ -37,6 +40,41 @@ function getNavVariant(pathname: string): "marketing" | "app" {
 export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWrapperProps) {
   const pathname = usePathname();
   const { state: generatingNavState } = useNavigationGenerating();
+  const [resolvedUser, setResolvedUser] = useState(user);
+  const [resolvedIsSuperadmin, setResolvedIsSuperadmin] = useState(isSuperadmin);
+
+  useEffect(() => {
+    if (user) return;
+
+    let cancelled = false;
+
+    async function hydrateUserFromSession() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+
+        if (cancelled || !authUser) return;
+
+        setResolvedUser({
+          id: authUser.id,
+          email: authUser.email ?? undefined,
+          avatar_url: authUser.user_metadata?.avatar_url ?? undefined,
+          display_name: authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? undefined,
+        });
+        setResolvedIsSuperadmin(isSuperadminEmail(authUser.email));
+      } catch {
+        // Keep anonymous shell on transient client auth failures.
+      }
+    }
+
+    void hydrateUserFromSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Don't render the main navigation on admin routes — admin uses its own AdminShell
   if (pathname.startsWith("/admin")) {
@@ -54,9 +92,9 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
 
   return (
     <NavigationShell
-      user={user}
+      user={resolvedUser}
       activeSection={activeSection}
-      isSuperadmin={isSuperadmin}
+      isSuperadmin={resolvedIsSuperadmin}
       isGenerationDetail={isGenerationDetail}
       variant={navVariant}
       generatingChrome={generatingChrome}
