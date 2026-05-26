@@ -586,7 +586,7 @@
     ]
   },
   {
-    "id": "tinder",
+    "id": "tinder-co",
     "name": "Tinder",
     "products": [
       { "id": "tinder", "name": "Tinder", "screenType": "mobile app" }

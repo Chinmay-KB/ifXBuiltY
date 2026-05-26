@@ -12,6 +12,7 @@ type AdminShellProps = {
 const NAV_ITEMS = [
   { href: "/admin", label: "Companies", match: /^\/admin$/ },
   { href: "/admin/products", label: "Products", match: /^\/admin\/products/ },
+  { href: "/admin/research", label: "Research", match: /^\/admin\/research/ },
 ];
 
 export function AdminShell({ children }: AdminShellProps) {

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { CardShareAction } from "@/components/card-share-action";
 import { cn } from "@/lib/cn";
 import { GENERATION_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
+import { formatScreenBadge, getDisplayAspectClass } from "@/lib/screen-type";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { formatCardLabel, formatCompactCount } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
@@ -38,8 +39,7 @@ type GenerationCardProps = {
  * - Label: "{builder} built {target}" (truncated at 60 chars)
  * - Compact vote score
  * - Hover reveals CardActionBar on desktop (fade-in 200ms, fade-out 150ms)
- * - Card opens /g/[slug]; Remix/Download/Share stay clickable when the bar is visible
- * - Remix count badge when remixCount >= 1
+ * - Card opens /g/[slug]; Download/Share stay clickable when the bar is visible
  * - Placeholder on image load failure
  */
 export function GenerationCard({
@@ -51,11 +51,15 @@ export function GenerationCard({
   const label = formatCardLabel(item.builder, item.target);
   const score = formatCompactCount(item.netScore);
   const paperTitle = `${item.builder} × ${item.target}`;
-  const screenLabel = (item.screenType && item.screenType.trim()) || "Screenshot";
+  const screenLabel =
+    item.screenType && item.screenType.trim()
+      ? formatScreenBadge(item.screenType)
+      : "Screenshot";
+  const imageAspectClass = getDisplayAspectClass(item.screenType ?? "desktop");
 
   if (variant === "paper") {
     return (
-      <div className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-2xl bg-canvas">
+      <div className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-2xl border border-line/80 bg-canvas shadow-[0_3px_14px_rgb(10_10_10/0.05)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_10px_24px_rgb(10_10_10/0.09)]">
         <Link
           href={`/g/${item.slug}`}
           className="absolute inset-0 z-0 rounded-2xl"
@@ -63,14 +67,19 @@ export function GenerationCard({
         />
 
         <div className="relative z-10 flex flex-col pointer-events-none">
-          <div className="relative aspect-4/5 w-full overflow-hidden bg-ink">
+          <div
+            className={cn(
+              "relative w-full overflow-hidden bg-panel",
+              imageAspectClass,
+            )}
+          >
             {item.imageUrl ? (
               <Image
                 src={item.imageUrl}
                 alt={label}
                 fill
                 sizes={GENERATION_CARD_IMAGE_SIZES}
-                className="object-cover"
+                className="object-cover transition-transform duration-300 ease-out motion-safe:group-hover:scale-[1.015]"
                 loading={imagePriority ? "eager" : "lazy"}
                 fetchPriority={imagePriority ? "high" : undefined}
                 unoptimized
@@ -108,15 +117,6 @@ export function GenerationCard({
                 )}
               >
                 <CardAction
-                  label="Remix"
-                  href={`/remix/${item.id}`}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                      <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0v2.43l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clipRule="evenodd" />
-                    </svg>
-                  }
-                />
-                <CardAction
                   label="Download"
                   href={
                     item.imageUrl ? generationMediaPath(item.slug, "full") : "#"
@@ -142,11 +142,11 @@ export function GenerationCard({
             )}
           </div>
 
-          <div className="flex flex-col gap-0.5 px-0.5 py-2 sm:py-2.5 md:px-1 md:py-3">
+          <div className="flex flex-col gap-1 px-2.5 py-2.5 sm:px-3 sm:py-3">
             <p className="line-clamp-2 font-sans text-[13px] font-semibold leading-[1.14] tracking-[-0.01em] text-ink sm:text-[14px] md:font-display md:text-[17px] md:font-bold md:leading-[1.1] md:tracking-[-0.02em]">
               {paperTitle}
             </p>
-            <p className="truncate font-mono text-[8.5px] uppercase tracking-[0.06em] text-muted sm:text-[10px]">
+            <p className="truncate font-mono text-[9px] uppercase tracking-wider text-subtle/80 sm:text-[10px]">
               <span suppressHydrationWarning>
                 {screenLabel} · {formatRelativeShort(item.createdAt)}
               </span>
@@ -159,7 +159,7 @@ export function GenerationCard({
 
   return (
     <div className="group relative flex flex-col overflow-hidden break-inside-avoid rounded-tile bg-canvas shadow-sm transition-all duration-200 hover:shadow-md">
-      {/* Full-card hit target; content uses pointer-events-none so Remix/Download/Share stay usable */}
+      {/* Full-card hit target; content uses pointer-events-none so Download/Share stay usable */}
       <Link
         href={`/g/${item.slug}`}
         className="absolute inset-0 z-0 rounded-tile"
@@ -168,14 +168,19 @@ export function GenerationCard({
 
       <div className="relative z-10 flex flex-col pointer-events-none">
         {/* Image area — ≥70% of card height */}
-        <div className="relative aspect-4/5 w-full overflow-hidden">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden bg-panel",
+            imageAspectClass,
+          )}
+        >
           {item.imageUrl ? (
             <Image
               src={item.imageUrl}
               alt={label}
               fill
               sizes={GENERATION_CARD_IMAGE_SIZES}
-              className="object-cover"
+              className="object-contain"
               loading={imagePriority ? "eager" : "lazy"}
               fetchPriority={imagePriority ? "high" : undefined}
               unoptimized
@@ -189,13 +194,6 @@ export function GenerationCard({
             </div>
           )}
 
-          {/* Remix count badge */}
-          {item.remixCount >= 1 && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-ink/70 px-2 py-0.5 text-xs font-medium text-white">
-              {item.remixCount} {item.remixCount === 1 ? "remix" : "remixes"}
-            </span>
-          )}
-
           {/* Desktop hover Action Bar */}
           {showActions && (
             <div
@@ -204,15 +202,6 @@ export function GenerationCard({
                 "pointer-events-none opacity-0 duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:duration-200 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-within:duration-200",
               )}
             >
-              <CardAction
-                label="Remix"
-                href={`/remix/${item.id}`}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0v2.43l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clipRule="evenodd" />
-                  </svg>
-                }
-              />
               <CardAction
                 label="Download"
                 href={

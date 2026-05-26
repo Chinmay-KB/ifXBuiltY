@@ -1,14 +1,29 @@
 "use client";
 
 import type { MutableRefObject } from "react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import Zoom from "@/components/image-zoom";
+import { ProductPickerSheet } from "@/components/product-picker/product-picker-sheet";
+import { ProfilePickerTrigger } from "@/components/product-picker/profile-picker-trigger";
+import { ScreenTypePopover } from "@/components/product-picker/screen-type-popover";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
-import { Button, FieldShell, MicroLabel, Surface } from "@/components/ui";
+import { Button, MicroLabel, Surface } from "@/components/ui";
+import type {
+  GeneratorProfileGroup,
+  GeneratorProfileOption,
+} from "@/data/generator-profile-options";
+import {
+  buildGeneratorProfileGroups,
+  profileById,
+  resolveProfileIdByName,
+} from "@/data/generator-profile-options";
 import { FLAT_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
+import {
+  normalizeRenderMode,
+  type RenderMode,
+} from "@/lib/screen-type";
 import { isGenerateEnabled } from "@/lib/ui/format";
 import type {
   GenerationInputs,
@@ -30,7 +45,9 @@ type GeneratorFormProps = {
   variant?: "default" | "paper";
   /** Tighter Paper layout to fit one viewport (Generate page) */
   paperDensity?: "comfortable" | "flush";
-  /** When set (e.g. from DB), builder/target selects use this list instead of static JSON */
+  /** Grouped company/product options from Supabase */
+  profileGroups?: GeneratorProfileGroup[];
+  /** @deprecated Use profileGroups */
   companyOptions?: GeneratorCompanyOption[];
   /** Parent can call `abortControlRef.current?.()` to cancel the in-flight `/api/generate` request */
   abortControlRef?: MutableRefObject<(() => void) | null>;
@@ -40,7 +57,10 @@ const defaults: GenerationInputs = {
   builder: "",
   target: "",
   extraDetails: "",
+  screenType: "desktop",
 };
+
+const FALLBACK_SCREEN = "desktop" as const;
 
 export function GeneratorForm({
   signedIn,
@@ -52,18 +72,94 @@ export function GeneratorForm({
   onInsufficientCredits,
   variant = "default",
   paperDensity = "comfortable",
+  profileGroups,
   companyOptions,
   abortControlRef,
 }: GeneratorFormProps) {
   const { openSignIn } = useSignInModal();
   const merged = { ...defaults, ...initialValues };
 
-  const [builder, setBuilder] = useState(merged.builder);
-  const [target, setTarget] = useState(merged.target);
-  const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
+  const groups = useMemo((): GeneratorProfileGroup[] =>
+      profileGroups ??
+      (companyOptions
+        ? [
+            {
+              companyId: "_flat",
+              companyName: "All",
+              options: companyOptions.map((o) => ({
+                id: o.id,
+                name: o.name,
+                profileType: "company" as const,
+                parentCompanyId: null,
+                category: "",
+                screenType: FALLBACK_SCREEN,
+              })),
+            },
+          ]
+        : [
+            {
+              companyId: "_catalog",
+              companyName: "Companies & products",
+              options: Array.from(
+                new Map(
+                  FLAT_OPTIONS.map((o) => [
+                    o.id,
+                    {
+                      id: o.id,
+                      name: o.name,
+                      profileType: "company" as const,
+                      parentCompanyId: null,
+                      category: "",
+                      screenType: FALLBACK_SCREEN,
+                    },
+                  ]),
+                ).values(),
+              ),
+            },
+          ]),
+    [profileGroups, companyOptions],
+  );
 
-  const builderList = companyOptions ?? FLAT_OPTIONS;
-  const targetList = companyOptions ?? FLAT_OPTIONS;
+  const idMap = useMemo(() => profileById(groups), [groups]);
+
+  const [builderId, setBuilderId] = useState(
+    merged.builderId ?? resolveProfileIdByName(merged.builder, groups) ?? "",
+  );
+  const [targetId, setTargetId] = useState(
+    merged.targetId ?? resolveProfileIdByName(merged.target, groups) ?? "",
+  );
+  const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
+  const [pickerField, setPickerField] = useState<null | "builder" | "target">(null);
+  const [screenType, setScreenType] = useState<RenderMode>(() =>
+    normalizeRenderMode(merged.screenType ?? FALLBACK_SCREEN),
+  );
+  const [screenTypeOverridden, setScreenTypeOverridden] = useState(
+    Boolean(merged.screenType),
+  );
+  const [screenTypePopoverOpen, setScreenTypePopoverOpen] = useState(false);
+  const builderTriggerRef = useRef<HTMLButtonElement>(null);
+  const targetTriggerRef = useRef<HTMLButtonElement>(null);
+  const screenTypeRowRef = useRef<HTMLDivElement>(null);
+
+  const builderOption = idMap.get(builderId);
+  const targetOption = idMap.get(targetId);
+  const builder = builderOption?.name ?? merged.builder;
+  const target = targetOption?.name ?? merged.target;
+  const builderScreenDefault = normalizeRenderMode(
+    builderOption?.screenType ?? FALLBACK_SCREEN,
+  );
+
+  useEffect(() => {
+    if (!merged.builder || builderId) return;
+    const id = resolveProfileIdByName(merged.builder, groups);
+    if (id) setBuilderId(id);
+  }, [merged.builder, builderId, groups]);
+
+  useEffect(() => {
+    if (!merged.target || targetId) return;
+    const id = resolveProfileIdByName(merged.target, groups);
+    if (id) setTargetId(id);
+  }, [merged.target, targetId, groups]);
 
   const { generate, cancelInflight, result, isLoading, error, errorCode } = useGenerate();
 
@@ -75,7 +171,7 @@ export function GeneratorForm({
     };
   }, [abortControlRef, cancelInflight]);
 
-  const canGenerate = isGenerateEnabled(builder, target);
+  const canGenerate = isGenerateEnabled(builderId, targetId);
   const flushPaper = variant === "paper" && paperDensity === "flush";
 
   const onGeneratedRef = useRef(onGenerated);
@@ -91,7 +187,7 @@ export function GeneratorForm({
   }, [onGenerated, onGenerating, onError, onInsufficientCredits]);
 
   useEffect(() => {
-    if (result) {
+    if (result?.id && result.slug) {
       onGeneratedRef.current(result);
     }
   }, [result]);
@@ -105,7 +201,10 @@ export function GeneratorForm({
       const inputs: GenerationInputs = {
         builder,
         target,
+        builderId: builderId || undefined,
+        targetId: targetId || undefined,
         extraDetails,
+        screenType,
       };
       onErrorRef.current?.(error, inputs);
     }
@@ -116,35 +215,98 @@ export function GeneratorForm({
     const inputs: GenerationInputs = {
       builder,
       target,
+      builderId: builderId || undefined,
+      targetId: targetId || undefined,
       extraDetails,
+      screenType,
     };
     onGeneratingRef.current?.(inputs);
     await generate(inputs, remixSource?.id ? { remixParentId: remixSource.id } : undefined);
-  }, [builder, target, extraDetails, generate, remixSource]);
+  }, [builder, target, builderId, targetId, extraDetails, screenType, generate, remixSource]);
+
+  const handlePickerSelect = useCallback(
+    (option: GeneratorProfileOption) => {
+      if (pickerField === "builder") {
+        setBuilderId(option.id);
+        if (!screenTypeOverridden) {
+          setScreenType(normalizeRenderMode(option.screenType));
+        }
+      } else if (pickerField === "target") {
+        setTargetId(option.id);
+      }
+      setPickerField(null);
+    },
+    [pickerField, screenTypeOverridden],
+  );
+
+  const pickerReturnFocusRef =
+    pickerField === "builder"
+      ? builderTriggerRef
+      : pickerField === "target"
+        ? targetTriggerRef
+        : undefined;
+
+  const pickerSheet = (
+    <ProductPickerSheet
+      open={pickerField !== null}
+      field={pickerField ?? "builder"}
+      groups={groups}
+      valueId={pickerField === "target" ? targetId : builderId}
+      onClose={() => setPickerField(null)}
+      onSelect={handlePickerSelect}
+      returnFocusRef={pickerReturnFocusRef}
+    />
+  );
+
+  const builderField = (
+    <div className="relative flex flex-col gap-2">
+      <ProfilePickerTrigger
+        id="gen-builder"
+        field="builder"
+        prefix="If"
+        groups={groups}
+        valueId={builderId}
+        selected={builderOption}
+        open={pickerField === "builder"}
+        variant={variant === "paper" ? "paper" : "default"}
+        onOpen={() => setPickerField("builder")}
+        triggerRef={builderTriggerRef}
+        screenType={screenType}
+        screenTypeDefault={builderScreenDefault}
+        onChangeScreenType={() => setScreenTypePopoverOpen(true)}
+        screenTypeRowRef={screenTypeRowRef}
+      />
+      <ScreenTypePopover
+        open={screenTypePopoverOpen}
+        value={screenType}
+        defaultValue={builderScreenDefault}
+        onClose={() => setScreenTypePopoverOpen(false)}
+        onChange={(v) => {
+          setScreenType(v);
+          setScreenTypeOverridden(true);
+        }}
+        anchorRef={screenTypeRowRef}
+      />
+    </div>
+  );
+
+  const targetField = (
+    <ProfilePickerTrigger
+      id="gen-target"
+      field="target"
+      prefix={variant === "paper" ? "built" : "Target"}
+      groups={groups}
+      valueId={targetId}
+      selected={targetOption}
+      open={pickerField === "target"}
+      variant={variant === "paper" ? "paper" : "default"}
+      onOpen={() => setPickerField("target")}
+      triggerRef={targetTriggerRef}
+    />
+  );
 
   const inner = (
     <>
-      {remixSource && (
-        <div className="flex items-center gap-3 rounded-lg bg-panel px-3 py-2">
-          {remixSource.imageUrl && (
-            <Zoom>
-              {/* eslint-disable-next-line @next/next/no-img-element -- rmiz measures native <img>; Next/Image breaks zoom geometry */}
-              <img
-                src={remixSource.imageUrl}
-                alt=""
-                width={40}
-                height={40}
-                className="size-10 shrink-0 rounded object-cover"
-              />
-            </Zoom>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-muted">Remixing from</p>
-            <p className="truncate text-sm font-semibold text-ink">{remixSource.label}</p>
-          </div>
-        </div>
-      )}
-
       {variant === "paper" ? (
         <>
           <div className={cn("flex flex-col", flushPaper ? "gap-3" : "gap-4")}>
@@ -152,67 +314,13 @@ export function GeneratorForm({
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
                 Builder (the who)
               </p>
-              <div className="flex items-baseline gap-3.5 rounded-[14px] bg-panel py-3.5 pl-5 pr-4">
-                <span className="font-display text-[32px] font-black italic leading-none text-ink">
-                  If
-                </span>
-                <select
-                  id="gen-builder"
-                  value={builder}
-                  onChange={(e) => setBuilder(e.target.value)}
-                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent font-display text-[28px] font-medium leading-[120%] tracking-[-0.02em] text-ink outline-none"
-                >
-                  <option value="">Select…</option>
-                  {builderList.map((b) => (
-                    <option key={b.id} value={b.name}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="shrink-0 text-muted"
-                  aria-hidden
-                >
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" />
-                </svg>
-              </div>
+              {builderField}
             </div>
             <div className="flex flex-col gap-2">
               <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
                 Target (the what)
               </p>
-              <div className="flex items-baseline gap-3.5 rounded-[14px] bg-panel py-3.5 pl-5 pr-4">
-                <span className="font-display text-[32px] font-black italic leading-none text-ink">
-                  built
-                </span>
-                <select
-                  id="gen-target"
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                  className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent font-display text-[28px] font-medium leading-[120%] tracking-[-0.02em] text-ink outline-none"
-                >
-                  <option value="">Select…</option>
-                  {targetList.map((t) => (
-                    <option key={t.id} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="shrink-0 text-muted"
-                  aria-hidden
-                >
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" />
-                </svg>
-              </div>
+              {targetField}
             </div>
           </div>
 
@@ -230,121 +338,51 @@ export function GeneratorForm({
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3.5">
-            {signedIn ? (
-              <button
-                type="button"
-                disabled={!canGenerate || isLoading}
-                onClick={() => void handleSubmit()}
-                className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2.5 rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic tracking-tight text-chrome transition-opacity disabled:opacity-40"
+          {signedIn ? (
+            <button
+              type="button"
+              disabled={!canGenerate || isLoading}
+              onClick={() => void handleSubmit()}
+              className="inline-flex min-h-[52px] w-full items-center justify-center gap-2.5 rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic tracking-tight text-chrome transition-opacity disabled:opacity-40"
+            >
+              {isLoading ? "Generating…" : "Generate"}
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="shrink-0 text-chrome"
+                aria-hidden
               >
-                {isLoading ? "Generating…" : "Generate"}
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="shrink-0 text-chrome"
-                  aria-hidden
-                >
-                  <path
-                    d="M5 12h14M12 5l7 7-7 7"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={openSignIn}
-                className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic text-chrome"
-              >
-                Sign in to generate
-              </button>
-            )}
-            <div className="flex flex-col gap-0.5 text-left">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-ink">
-                Uses 1 credit
-              </p>
-              <p className="font-mono text-[10px] font-medium tracking-[0.04em] text-muted">
-                ~14 seconds
-              </p>
-            </div>
-          </div>
+                <path
+                  d="M5 12h14M12 5l7 7-7 7"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={openSignIn}
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-ink px-6 py-4 font-display text-[22px] font-black italic text-chrome"
+            >
+              Sign in to generate
+            </button>
+          )}
         </>
       ) : (
         <>
           <div className="flex flex-col gap-4 md:flex-row md:gap-3">
             <div className="flex flex-1 flex-col gap-1.5">
               <MicroLabel htmlFor="gen-builder">Builder (the who)</MicroLabel>
-              <FieldShell>
-                <select
-                  id="gen-builder"
-                  value={builder}
-                  onChange={(e) => setBuilder(e.target.value)}
-                  className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
-                >
-                  <option value="">Select a company...</option>
-                  {builderList.map((b) => (
-                    <option key={b.id} value={b.name}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  className="shrink-0 text-muted"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </FieldShell>
+              {builderField}
             </div>
             <div className="flex flex-1 flex-col gap-1.5">
               <MicroLabel htmlFor="gen-target">Target (the what)</MicroLabel>
-              <FieldShell>
-                <select
-                  id="gen-target"
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value)}
-                  className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] font-medium text-ink outline-none"
-                >
-                  <option value="">Select a product...</option>
-                  {targetList.map((t) => (
-                    <option key={t.id} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  className="shrink-0 text-muted"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </FieldShell>
+              {targetField}
             </div>
           </div>
 
@@ -404,9 +442,15 @@ export function GeneratorForm({
         )}
       >
         {inner}
+        {pickerSheet}
       </div>
     );
   }
 
-  return <Surface variant="composer" className="flex flex-col gap-4">{inner}</Surface>;
+  return (
+    <Surface variant="composer" className="flex flex-col gap-4">
+      {inner}
+      {pickerSheet}
+    </Surface>
+  );
 }

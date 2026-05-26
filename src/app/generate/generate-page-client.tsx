@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CreditsModal } from "@/components/credits-modal";
-import { GenerationResultView } from "@/components/generation-result-view";
-import { GeneratorForm, type GeneratorCompanyOption } from "@/components/generator-form";
+import { GeneratorForm } from "@/components/generator-form";
+import type { GeneratorProfileGroup } from "@/data/generator-profile-options";
+import { flattenGeneratorProfileGroups } from "@/data/generator-profile-options";
 import { useNavigationGenerating } from "@/components/navigation-generating-context";
 import { getAllFunFacts, getLoadingMessages } from "@/data/loading-entertainment";
 import { useCredits } from "@/hooks/use-credits";
+import { useGenerationStatus } from "@/hooks/use-generation-status";
+import {
+  clearActiveGenerationId,
+  saveActiveGenerationId,
+} from "@/lib/generation/active-generation-storage";
 import { cn } from "@/lib/cn";
 import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
 
@@ -29,22 +36,18 @@ const STARTER_SWATCHES: { swatchClass: string; labelClass: string }[] = [
   { swatchClass: "bg-[#3A2A4E]", labelClass: "text-chrome" },
 ];
 
-const GENERATING_STEPS = [
-  "Reading the room",
-  "Sketching the product",
-  "Rendering the interface",
-  "Polishing the joke",
-];
-
-function buildCompanyPairPool(companies: GeneratorCompanyOption[]): { builder: string; target: string }[] {
-  if (companies.length < 2) return [];
+function buildCompanyPairPool(
+  profileGroups: GeneratorProfileGroup[],
+): { builder: string; target: string }[] {
+  const options = flattenGeneratorProfileGroups(profileGroups);
+  if (options.length < 2) return [];
   const pairs: { builder: string; target: string }[] = [];
-  for (let i = 0; i < companies.length; i++) {
-    for (let j = 0; j < companies.length; j++) {
+  for (let i = 0; i < options.length; i++) {
+    for (let j = 0; j < options.length; j++) {
       if (i === j) continue;
       pairs.push({
-        builder: companies[i]!.name,
-        target: companies[j]!.name,
+        builder: options[i]!.name,
+        target: options[j]!.name,
       });
     }
   }
@@ -92,6 +95,40 @@ function usePrefersReducedMotion() {
   return reducedMotion;
 }
 
+const EXPECTED_GENERATION_SECONDS = 60;
+
+function PromptComposition({
+  builder,
+  target,
+}: {
+  builder: string;
+  target: string;
+}) {
+  const b = builder.trim() || "…";
+  const t = target.trim() ? `${target.trim()}.` : "…";
+  return (
+    <div className="flex w-full max-w-120 flex-col gap-3">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        Now composing
+      </p>
+      <div className="mt-0.5 font-display tracking-[-0.028em]">
+        <p className="text-[clamp(1.05rem,1.6vw,1.35rem)] font-semibold leading-[1.02] text-ink/80 motion-safe:animate-loader-prompt-label-in">
+          If
+        </p>
+        <p className="relative text-[clamp(2.25rem,4.8vw,3.95rem)] font-black italic leading-[0.88] text-chrome [text-shadow:0_2px_0_rgba(10,10,10,0.16)] motion-safe:animate-loader-prompt-pop">
+          {b}
+        </p>
+        <p className="mt-1 text-[clamp(1.05rem,1.6vw,1.35rem)] font-semibold leading-[1.02] text-ink/80 motion-safe:animate-loader-prompt-label-in">
+          built
+        </p>
+        <p className="relative text-[clamp(2.25rem,4.8vw,3.95rem)] font-black italic leading-[0.88] text-chrome [text-shadow:0_2px_0_rgba(10,10,10,0.16)] motion-safe:animate-loader-prompt-pop">
+          {t}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function PaperGeneratingPanel({
   inputs,
   compact,
@@ -99,54 +136,70 @@ function PaperGeneratingPanel({
   inputs: GenerationInputs;
   compact?: boolean;
 }) {
-  const messages = getLoadingMessages(inputs.builder);
-  const facts = useMemo(() => getAllFunFacts(inputs.builder), [inputs.builder]);
+  const messages = getLoadingMessages(inputs.builder, inputs.builderId);
+  const facts = useMemo(
+    () => getAllFunFacts(inputs.builder, inputs.builderId),
+    [inputs.builder, inputs.builderId],
+  );
   const reducedMotion = usePrefersReducedMotion();
   const [msgIndex, setMsgIndex] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
-  const [pct, setPct] = useState(18);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     if (reducedMotion || messages.length <= 1) return;
     const id = setInterval(() => {
       setMsgIndex((prev) => (prev + 1) % messages.length);
-    }, 3500);
+    }, 5200);
     return () => clearInterval(id);
   }, [messages.length, reducedMotion]);
 
   useEffect(() => {
     if (reducedMotion || facts.length <= 1) return;
-    const id = setInterval(() => {
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const phaseOffset = setTimeout(() => {
       setFactIndex((prev) => (prev + 1) % facts.length);
-    }, 6000);
-    return () => clearInterval(id);
+      intervalId = setInterval(() => {
+        setFactIndex((prev) => (prev + 1) % facts.length);
+      }, 8300);
+    }, 2600);
+    return () => {
+      clearTimeout(phaseOffset);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [facts.length, reducedMotion]);
 
   useEffect(() => {
     if (reducedMotion) return;
+    const start = performance.now();
     const id = setInterval(() => {
-      setPct((p) => (p >= 94 ? p : p + 3));
-    }, 900);
+      setElapsed((performance.now() - start) / 1000);
+    }, 250);
     return () => clearInterval(id);
   }, [reducedMotion]);
 
+  const k = EXPECTED_GENERATION_SECONDS / 2.2;
+  const visiblePct = reducedMotion
+    ? 70
+    : Math.min(95, Math.round(95 * (1 - Math.exp(-elapsed / k))));
+
   const b = inputs.builder || "your builder";
   const t = inputs.target || "your target";
-  const visiblePct = reducedMotion ? 72 : pct;
-  const step = Math.min(4, Math.max(1, Math.ceil((visiblePct / 100) * 4)));
-  const message = messages[msgIndex % messages.length] ?? "Composing the alternate timeline.";
+  const message =
+    messages[msgIndex % messages.length] ?? "Composing the alternate timeline.";
+  const showFact = facts.length > 0;
 
   return (
     <div
-      className={cn("flex w-full flex-col", compact ? "min-h-0 flex-1 gap-3" : "gap-4 lg:max-w-none")}
+      className={cn("flex w-full flex-col", compact ? "gap-3" : "gap-4")}
       role="status"
       aria-live="polite"
       aria-label={`Generating a satirical screenshot: if ${b} built ${t}`}
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-[20px] border border-line bg-canvas",
-          compact ? "min-h-0 flex-1" : "min-h-[280px] lg:min-h-[360px]",
+          "relative w-full overflow-hidden rounded-[20px] border border-line bg-canvas",
+          compact ? "aspect-4/3" : "aspect-16/10",
         )}
         style={{
           backgroundImage:
@@ -160,14 +213,19 @@ function PaperGeneratingPanel({
               "radial-gradient(circle farthest-corner at 20% 30% in oklab, oklab(88.5% -0.016 0.181 / 15%) 0%, oklab(0% 0 0 / 0%) 40%), radial-gradient(circle farthest-corner at 80% 70% in oklab, oklab(65.4% 0.204 0.111 / 8%) 0%, oklab(0% 0 0 / 0%) 40%)",
           }}
         />
-        <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-chrome/15 px-3 py-1.5">
+        <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full bg-chrome/15 px-3 py-1.5 lg:right-5 lg:top-5">
           <span className="size-2 rounded-full bg-chrome" />
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-chrome">
             Rendering
           </span>
         </div>
-        <div className={cn("absolute inset-x-10 flex flex-col", compact ? "top-6 gap-2" : "top-10 gap-4")}>
-          {(compact ? [48, 70, 40, 62] : [48, 74, 36, 66, 52, 80, 42]).map((w, i) => (
+        <div
+          className={cn(
+            "absolute flex flex-col",
+            compact ? "inset-x-6 top-6 gap-2.5" : "inset-x-10 top-10 gap-4",
+          )}
+        >
+          {[48, 74, 36, 66, 52, 80, 42].map((w, i) => (
             <div
               key={`sk-${i}-${w}`}
               className={cn("rounded-sm bg-ink/6", compact ? "h-3" : "h-4")}
@@ -176,84 +234,68 @@ function PaperGeneratingPanel({
           ))}
         </div>
         <div
-          className="pointer-events-none absolute inset-x-[18%] h-[2px] rounded-full bg-chrome shadow-[0_0_10px_rgba(234,179,8,0.55)] motion-safe:transition-[top] motion-safe:duration-700"
-          style={{ top: `${22 + (visiblePct % 38)}%` }}
+          className="pointer-events-none absolute inset-x-[14%] h-[2px] rounded-full bg-chrome shadow-[0_0_10px_rgba(234,179,8,0.55)] motion-safe:transition-[top] motion-safe:duration-1000"
+          style={{ top: `${20 + (visiblePct % 50)}%` }}
           aria-hidden
         />
       </div>
 
-      {!compact ? (
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" aria-label="Generation steps">
-          {GENERATING_STEPS.map((label, index) => {
-            const isDone = index + 1 < step;
-            const isActive = index + 1 === step;
-            return (
-              <div
-                key={label}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              key={`radio-${msgIndex}`}
+              className="size-3.5 shrink-0 rounded-full border-[2.5px] border-ink motion-safe:animate-loader-radio-pulse"
+            />
+            <div className="relative min-w-0 overflow-hidden">
+              <p
+                key={`msg-${msgIndex}`}
                 className={cn(
-                  "rounded-[14px] border px-3.5 py-3",
-                  isActive
-                    ? "border-ink bg-chrome text-ink"
-                    : isDone
-                      ? "border-ink bg-ink text-chrome"
-                      : "border-line bg-panel text-muted",
+                  "min-w-0 font-sans font-semibold text-ink motion-safe:animate-loader-message-in",
+                  compact ? "line-clamp-2 text-[13px]" : "text-[15px]",
                 )}
               >
-                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]">
-                  {`0${index + 1}`}
-                </p>
-                <p className="mt-1.5 text-[13px] font-bold leading-[1.15]">{label}</p>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      <div className={cn("flex flex-col", compact ? "shrink-0 gap-2" : "gap-3")}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <span
-              className={cn(
-                "shrink-0 rounded-full border-[2.5px] border-ink",
-                compact ? "size-3" : "size-[18px]",
-              )}
-            />
-            <p
-              className={cn(
-                "min-w-0 font-sans font-semibold text-ink",
-                compact ? "line-clamp-2 text-xs" : "text-base",
-              )}
-            >
-              {message}
-            </p>
+                {message}
+              </p>
+            </div>
           </div>
-          <p className="shrink-0 rounded-full bg-panel px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink">
-            Step {step} of 4
+          <p className="shrink-0 font-mono text-[11px] font-bold tabular-nums text-muted">
+            {visiblePct}%
           </p>
+        </div>
+        <div className="h-[3px] w-full overflow-hidden rounded-full bg-line">
+          <div
+            className="h-full bg-ink motion-safe:transition-[width] motion-safe:duration-700"
+            style={{ width: `${visiblePct}%` }}
+            aria-hidden
+          />
         </div>
       </div>
 
-      {facts.length > 0 && !compact && (
-        <div className="flex gap-3.5 rounded-r-xl border-l-2 border-chrome bg-[#FFF9E0] py-4 pl-5 pr-4">
-          <span className="font-display text-[28px] font-black italic leading-none text-chrome">
-            †
-          </span>
+      {showFact ? (
+        <div className="relative flex gap-3.5 overflow-hidden rounded-r-xl border-l-2 border-chrome bg-[#FFF9E0] py-3.5 pl-4 pr-4">
+          <span
+            key={`glow-${factIndex}`}
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-linear-to-r from-transparent via-chrome/25 to-transparent motion-safe:animate-loader-fact-glow"
+          />
+          
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-chrome">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-black">
               Did you know
             </p>
-            <p className="text-[14px] leading-[145%] text-[#333]">
+            <p
+              key={`fact-${factIndex}`}
+              className={cn(
+                "leading-[145%] text-[#333] motion-safe:animate-loader-fact-in",
+                compact ? "text-[13px]" : "text-[14px]",
+              )}
+            >
               {facts[factIndex]}
             </p>
           </div>
         </div>
-      )}
-
-      {!compact && (
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-          Now composing · {b} → {t}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -285,7 +327,7 @@ function MobileGeneratingDock({ onCancel }: { onCancel: () => void }) {
   );
 }
 
-type Phase = "input" | "loading" | "result" | "error";
+type Phase = "input" | "loading" | "error";
 
 const defaultInputs: GenerationInputs = {
   builder: "",
@@ -297,26 +339,30 @@ type GeneratePageClientProps = {
   signedIn: boolean;
   initialBuilder?: string;
   initialTarget?: string;
-  companies: GeneratorCompanyOption[];
+  profileGroups: GeneratorProfileGroup[];
 };
 
 export function GeneratePageClient({
   signedIn,
   initialBuilder,
   initialTarget,
-  companies,
+  profileGroups,
 }: GeneratePageClientProps) {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("input");
   const [currentInputs, setCurrentInputs] = useState<GenerationInputs>({
     ...defaultInputs,
     builder: initialBuilder ?? "",
     target: initialTarget ?? "",
   });
-  const [lastInputs, setLastInputs] = useState<GenerationInputs>(defaultInputs);
-  const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [resumeChecked, setResumeChecked] = useState(false);
+  const [pendingGeneration, setPendingGeneration] = useState<{
+    id: number;
+    slug: string;
+  } | null>(null);
 
   const startersRef = useRef<HTMLDivElement | null>(null);
   const abortGenRef = useRef<(() => void) | null>(null);
@@ -324,6 +370,68 @@ export function GeneratePageClient({
   const { setGenerating, clearGenerating } = useNavigationGenerating();
 
   const submittedInputsRef = useRef<GenerationInputs>(defaultInputs);
+
+  const finishGeneration = useCallback(
+    (slug: string) => {
+      clearActiveGenerationId();
+      setPendingGeneration(null);
+      void refreshCredits();
+      router.push(`/g/${slug}`);
+    },
+    [refreshCredits, router],
+  );
+
+  useGenerationStatus({
+    generationId: pendingGeneration?.id ?? 0,
+    enabled: Boolean(pendingGeneration),
+    onCompleted: (payload) => {
+      finishGeneration(payload.slug);
+    },
+    onFailed: (payload) => {
+      clearActiveGenerationId();
+      setPendingGeneration(null);
+      setError(payload.errorMessage ?? "Generation failed");
+      setPhase("error");
+    },
+  });
+
+  useEffect(() => {
+    if (!signedIn || resumeChecked) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/generations/latest-in-progress");
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        const item = data.item as {
+          slug?: string;
+          id?: number;
+          builder?: string;
+          target?: string;
+        } | null;
+        if (item?.slug && item.id) {
+          saveActiveGenerationId(item.id);
+          setPendingGeneration({ id: item.id, slug: item.slug });
+          setCurrentInputs((prev) => ({
+            ...prev,
+            builder: item.builder ?? prev.builder,
+            target: item.target ?? prev.target,
+          }));
+          setPhase("loading");
+          return;
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setResumeChecked(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn, resumeChecked]);
 
   useEffect(() => {
     if (phase !== "loading") {
@@ -341,11 +449,11 @@ export function GeneratePageClient({
   }, [phase, setGenerating, clearGenerating]);
 
   const starters = useMemo(() => {
-    const pool = buildCompanyPairPool(companies);
+    const pool = buildCompanyPairPool(profileGroups);
     if (pool.length === 0) return [];
     const shuffled = shuffle(pool, shuffleKey);
     return shuffled.slice(0, 4).map((p, i) => pairToStarter(p, i));
-  }, [companies, shuffleKey]);
+  }, [profileGroups, shuffleKey]);
 
   const handleGenerating = useCallback((inputs: GenerationInputs) => {
     submittedInputsRef.current = inputs;
@@ -354,15 +462,11 @@ export function GeneratePageClient({
     setError(null);
   }, []);
 
-  const handleGenerated = useCallback(
-    (result: GenerationResult) => {
-      setGenerationResult(result);
-      setLastInputs(submittedInputsRef.current);
-      setPhase("result");
-      void refreshCredits();
-    },
-    [refreshCredits],
-  );
+  const handleGenerated = useCallback((result: GenerationResult) => {
+    saveActiveGenerationId(result.id);
+    setPendingGeneration({ id: result.id, slug: result.slug });
+    // Stay on loading UI until status polling reports completed.
+  }, []);
 
   const handleError = useCallback((errorMsg: string, inputs: GenerationInputs) => {
     setError(errorMsg);
@@ -375,119 +479,36 @@ export function GeneratePageClient({
     setShowCreditsModal(true);
   }, []);
 
-  const handleReset = useCallback(() => {
-    setPhase("input");
-    setGenerationResult(null);
-    setError(null);
-    setCurrentInputs(defaultInputs);
-    setLastInputs(defaultInputs);
-  }, []);
-
-  const handleRegenerate = useCallback(
-    async (inputs: GenerationInputs) => {
-      setCurrentInputs(inputs);
-      setPhase("loading");
-      setError(null);
-
-      try {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(inputs),
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          const code = (body as { code?: string }).code;
-          if (code === "insufficient_credits") {
-            setPhase("input");
-            setShowCreditsModal(true);
-            return;
-          }
-          const message =
-            (body as { error?: string }).error || `Generation failed (${res.status})`;
-          setError(message);
-          setPhase("error");
-          return;
-        }
-
-        const data = await res.json();
-        const result: GenerationResult = {
-          id: data.id,
-          slug: data.slug,
-          imageUrl: data.imageUrl,
-          builder: inputs.builder,
-          target: inputs.target,
-        };
-
-        setGenerationResult(result);
-        setLastInputs(inputs);
-        setPhase("result");
-        void refreshCredits();
-      } catch {
-        setError("Network error. Please check your connection and try again.");
-        setPhase("error");
-      }
-    },
-    [refreshCredits],
-  );
-
-  if (phase === "result" && generationResult) {
+  if (!resumeChecked && signedIn) {
     return (
-      <>
-        <div className="flex w-full flex-1 min-h-0 flex-col px-3 py-2 sm:px-8 lg:px-10 lg:py-3">
-          <div className="mx-auto flex min-h-0 w-full max-w-[1200px] flex-1 flex-col">
-            <GenerationResultView
-              variant="paper"
-              viewportContained
-              result={generationResult}
-              currentInputs={currentInputs}
-              lastInputs={lastInputs}
-              onReset={handleReset}
-              onRegenerate={handleRegenerate}
-            />
-          </div>
-        </div>
-
-        <CreditsModal
-          open={showCreditsModal}
-          onClose={() => setShowCreditsModal(false)}
-        />
-      </>
+      <div className="flex flex-1 items-center justify-center px-6 py-16">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted">
+          Checking for in-progress generations…
+        </p>
+      </div>
     );
   }
 
   return (
     <>
       <div className="flex w-full flex-1 min-h-0 flex-col px-4 py-2 sm:px-8 md:px-10 lg:flex-row lg:gap-10 lg:px-16 lg:py-4">
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col lg:max-w-[560px] lg:shrink-0">
-          <div className="shrink-0 lg:mb-2">
+        <div
+          className={cn(
+            "flex min-h-0 w-full min-w-0 flex-1 flex-col lg:max-w-[560px] lg:shrink-0",
+            phase === "loading" ? "lg:justify-center" : "",
+          )}
+        >
+          <div
+            className={cn(
+              "shrink-0 lg:mb-2",
+              phase === "loading" ? "lg:-translate-y-6" : "",
+            )}
+          >
             {phase === "loading" ? (
-              <>
-                <div className="hidden lg:block">
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-                    Now composing
-                  </p>
-                  <p className="mt-3 font-display text-[clamp(2.25rem,4.5vw,3.25rem)] font-black leading-[0.95] tracking-[-0.04em]">
-                    <span className="text-chrome">If</span>{" "}
-                    <span className="text-ink">{currentInputs.builder || "…"}</span>{" "}
-                    <span className="text-chrome">built</span>{" "}
-                    <span className="text-ink">
-                      {currentInputs.target ? `${currentInputs.target}.` : "…"}
-                    </span>
-                  </p>
-                </div>
-                <div className="lg:hidden">
-                  <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-                    One prompt. Infinite timelines.
-                  </p>
-                  <h1 className="mt-2 font-display text-[clamp(2.5rem,5.8vw,4.25rem)] font-black leading-[0.88] tracking-[-0.045em] text-ink">
-                    What if X
-                    <br />
-                    built Y?
-                  </h1>
-                </div>
-              </>
+              <PromptComposition
+                builder={currentInputs.builder}
+                target={currentInputs.target}
+              />
             ) : (
               <>
                 <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
@@ -521,14 +542,16 @@ export function GeneratePageClient({
           <div
             className={cn(
               "mt-auto flex min-h-0 w-full flex-col pt-4",
-              phase === "loading" ? "pointer-events-none opacity-60" : "",
+              phase === "loading"
+                ? "pointer-events-none opacity-50 lg:hidden"
+                : "",
             )}
           >
             <GeneratorForm
               signedIn={signedIn}
               variant="paper"
               paperDensity="flush"
-              companyOptions={companies}
+              profileGroups={profileGroups}
               initialValues={
                 phase === "error"
                   ? currentInputs
@@ -549,7 +572,7 @@ export function GeneratePageClient({
 
         <div className="hidden min-h-0 min-w-0 flex-1 flex-col gap-3 lg:flex">
           {phase === "loading" ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex w-full min-w-0 flex-col">
               <PaperGeneratingPanel
                 key={`${currentInputs.builder}-${currentInputs.target}-d`}
                 inputs={currentInputs}
@@ -658,6 +681,7 @@ export function GeneratePageClient({
         <MobileGeneratingDock
           onCancel={() => {
             abortGenRef.current?.();
+            setPendingGeneration(null);
             setPhase("input");
             clearGenerating();
           }}

@@ -1,32 +1,40 @@
-import { Buffer } from "node:buffer";
-
-import { generateImage } from "ai";
 import { NextResponse } from "next/server";
 
-import { getAllCompanyProfiles, getCompanyScreenshots } from "@/data/company-profiles";
+import { getCompanyProfileById } from "@/data/company-profiles";
+import { mergeCompanyPair } from "@/lib/prompt/merge-company-pair";
 
-import {
-  assertAiGatewayConfigured,
-  getGenerationImagesBucket,
-} from "@/lib/env-server";
+import { assertAiGatewayConfigured } from "@/lib/env-server";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
 import { buildGenerationPrompt } from "@/lib/prompt/build-generation-prompt";
+import { normalizeRenderMode } from "@/lib/screen-type";
 import { makeGenerationSlugSnippet } from "@/lib/slug";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 import { getDodoClient, assertDodoEntitlementConfigured } from "@/lib/dodo/client";
-export const runtime = "nodejs";
+import { dispatchGenerationJob } from "@/lib/generation/dispatch-generation";
+import { updateGenerationStatus } from "@/lib/generation/db";
+import { logGenerationTiming } from "@/lib/generation/timing";
 
-const DEFAULT_GATEWAY_IMAGE_MODEL = "openai/gpt-image-2";
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 type GenerateBody = {
   builder?: unknown;
   target?: unknown;
+  builderId?: unknown;
+  targetId?: unknown;
   extraDetails?: unknown;
   tone?: unknown;
+  screenType?: unknown;
   remixParentId?: unknown;
 };
+
+function parseProfileId(v: unknown): string | null {
+  if (v == null || v === "") return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
+}
 
 function parseRemixParentId(v: unknown): number | null {
   if (v == null || v === "") return null;
@@ -38,14 +46,19 @@ function parseRemixParentId(v: unknown): number | null {
   return n;
 }
 
-function extFromMediaType(mediaType: string): string {
-  if (mediaType === "image/png") return "png";
-  if (mediaType === "image/jpeg" || mediaType === "image/jpg") return "jpg";
-  if (mediaType === "image/webp") return "webp";
-  return "png";
+async function assertCompanyDataAvailable(): Promise<void> {
+  const service = createSupabaseServiceClient();
+  const { error } = await service
+    .from("company_profiles")
+    .select("id")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
 }
 
 export async function POST(request: Request) {
+  const requestStarted = performance.now();
+
   let body: GenerateBody;
   try {
     body = (await request.json()) as GenerateBody;
@@ -61,25 +74,62 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
+  const builderId = parseProfileId(body.builderId);
+  const targetId = parseProfileId(body.targetId);
+
+  let builderName = String(body.builder ?? "").trim();
+  let targetName = String(body.target ?? "").trim();
+  let extraDetails = String(body.extraDetails ?? "");
+  let builderDefaultVibeTags: string[] = [];
+
+  const mergeStarted = performance.now();
+  if (builderId && targetId) {
+    try {
+      const merged = await mergeCompanyPair(builderId, targetId);
+      builderName = merged.builder;
+      targetName = merged.target;
+      builderDefaultVibeTags = merged.builderDefaultVibeTags;
+      const userExtra = String(body.extraDetails ?? "").trim();
+      extraDetails = userExtra
+        ? `${merged.extraDetails}
+
+Additional notes from user:
+${userExtra}`
+        : merged.extraDetails;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Invalid profile selection";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+  } else if (builderId || targetId) {
+    return NextResponse.json(
+      { error: "Both builderId and targetId are required when using profile ids" },
+      { status: 400 },
+    );
+  }
+  logGenerationTiming("api_merge_profiles", performance.now() - mergeStarted, {
+    hasProfileIds: Boolean(builderId && targetId),
+  });
+
+  const screenTypeRaw =
+    typeof body.screenType === "string" ? body.screenType.trim() : "";
+  const screenType = normalizeRenderMode(screenTypeRaw || "desktop");
+
   let prompt: string;
   try {
     prompt = buildGenerationPrompt({
-      builder: String(body.builder ?? ""),
-      target: String(body.target ?? ""),
-      extraDetails: String(body.extraDetails ?? ""),
+      builder: builderName,
+      target: targetName,
+      extraDetails,
       tone: typeof body.tone === "string" ? body.tone : "",
+      screenType,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Invalid prompt fields";
-    const status =
-      e instanceof TypeError || e instanceof RangeError ? 400 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  let bucket: string;
   try {
     assertAiGatewayConfigured();
-    bucket = getGenerationImagesBucket();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Server misconfiguration";
     return NextResponse.json({ error: msg }, { status: 503 });
@@ -94,10 +144,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Validate company data is accessible from the database.
-  // If the DB is unreachable, return 503 so callers know to retry later.
   try {
-    await getAllCompanyProfiles();
+    await assertCompanyDataAvailable();
   } catch {
     return NextResponse.json(
       { error: "Company data unavailable", code: "db_unavailable" },
@@ -105,14 +153,39 @@ export async function POST(request: Request) {
     );
   }
 
+  const parallelStarted = performance.now();
+  const remixParentPromise =
+    remixParentId != null
+      ? supabase
+          .from("generations")
+          .select("id")
+          .eq("id", remixParentId)
+          .eq("visibility", "published")
+          .eq("moderation_status", "visible")
+          .eq("status", "completed")
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null });
+
+  const dodoMappingPromise = supabase
+    .from("dodo_customers")
+    .select("customer_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const builderProfilePromise =
+    builderId && builderDefaultVibeTags.length === 0
+      ? getCompanyProfileById(builderId)
+      : Promise.resolve(null);
+
+  const [remixParentResult, dodoMappingResult, builderProfile] = await Promise.all([
+    remixParentPromise,
+    dodoMappingPromise,
+    builderProfilePromise,
+  ]);
+  logGenerationTiming("api_parallel_prefetch", performance.now() - parallelStarted);
+
   if (remixParentId != null) {
-    const { data: parent, error: pErr } = await supabase
-      .from("generations")
-      .select("id")
-      .eq("id", remixParentId)
-      .eq("visibility", "published")
-      .eq("moderation_status", "visible")
-      .maybeSingle();
+    const { data: parent, error: pErr } = remixParentResult;
     if (pErr || !parent) {
       return NextResponse.json(
         { error: "Remix parent not found or not public" },
@@ -121,18 +194,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // Dodo Payments: verify prepaid Image Credits before generating
-  let dodoCustomerId: string | null = null;
-  try {
-    const { data: mapping } = await supabase
-      .from("dodo_customers")
-      .select("customer_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    dodoCustomerId = mapping?.customer_id ?? null;
-  } catch {
-    // ignore; handled below
-  }
+  const dodoCustomerId = dodoMappingResult.data?.customer_id ?? null;
 
   if (!dodoCustomerId) {
     return NextResponse.json(
@@ -144,6 +206,7 @@ export async function POST(request: Request) {
   const entitlementId = assertDodoEntitlementConfigured();
   const dodoClient = getDodoClient();
 
+  const creditCheckStarted = performance.now();
   let availableCredits = 0;
   try {
     const bal = await dodoClient.creditEntitlements.balances.retrieve(dodoCustomerId, {
@@ -156,6 +219,7 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
+  logGenerationTiming("api_credit_check", performance.now() - creditCheckStarted);
 
   if (!Number.isFinite(availableCredits) || availableCredits <= 0) {
     return NextResponse.json(
@@ -164,153 +228,55 @@ export async function POST(request: Request) {
     );
   }
 
-  const imageModel =
-    process.env.AI_GATEWAY_IMAGE_MODEL?.trim() || DEFAULT_GATEWAY_IMAGE_MODEL;
-
-  // Fetch reference screenshots for the builder company (if any exist).
-  // Look up the builder by name to get its company_id, then download screenshot bytes.
-  const screenshotBuffers: Buffer[] = [];
-  let builderDefaultVibeTags: string[] = [];
-  try {
-    const serviceForScreenshots = createSupabaseServiceClient();
-    const builderName = String(body.builder ?? "").trim();
-    if (builderName) {
-      const { data: companyRow } = await serviceForScreenshots
-        .from("company_profiles")
-        .select("id, default_vibe_tags")
-        .ilike("name", builderName)
-        .maybeSingle();
-
-      if (companyRow) {
-        builderDefaultVibeTags = Array.isArray(companyRow.default_vibe_tags)
-          ? (companyRow.default_vibe_tags as string[])
-          : [];
-
-        const screenshotPaths = await getCompanyScreenshots(companyRow.id);
-        for (const path of screenshotPaths) {
-          const { data: fileData } = await serviceForScreenshots.storage
-            .from("company-screenshots")
-            .download(path);
-          if (fileData) {
-            const arrayBuf = await fileData.arrayBuffer();
-            screenshotBuffers.push(Buffer.from(arrayBuf));
-          }
-        }
-      }
-    }
-  } catch {
-    // Non-fatal: if screenshot fetching fails, proceed with text-only prompt
-  }
-
-  // Build the prompt input: use structured format with images if screenshots exist,
-  // otherwise fall back to text-only prompt (current behavior).
-  const promptInput: string | { images: Buffer[]; text: string } =
-    screenshotBuffers.length > 0
-      ? { images: screenshotBuffers, text: prompt }
-      : prompt;
-
-  let imageBytes: Buffer;
-  let uploadContentType: string;
-  try {
-    const result = await generateImage({
-      model: imageModel,
-      prompt: promptInput,
-      size: "1024x1024",
-      providerOptions: {
-        gateway: {
-          user: user.id,
-          tags: ["feature:generate", "app:ifxbuilty"],
-        },
-      },
-    });
-
-    const file = result.image;
-    uploadContentType = file.mediaType;
-    imageBytes = Buffer.from(file.uint8Array);
-  } catch (e: unknown) {
-    const message =
-      e && typeof e === "object" && "message" in e
-        ? String((e as { message?: unknown }).message)
-        : "Image generation failed";
-    return NextResponse.json(
-      { error: message, code: "gateway_error" },
-      { status: 502 },
-    );
-  }
-
-  if (imageBytes.length === 0) {
-    return NextResponse.json(
-      { error: "No image data returned", code: "gateway_empty" },
-      { status: 502 },
-    );
+  if (builderDefaultVibeTags.length === 0 && builderProfile) {
+    builderDefaultVibeTags = builderProfile.defaultVibeTags;
   }
 
   const service = createSupabaseServiceClient();
   const baseSlug = makeGenerationSlugSnippet({
-    builder: String(body.builder ?? ""),
-    target: String(body.target ?? ""),
+    builder: builderName,
+    target: targetName,
   });
-
-  const ext = extFromMediaType(uploadContentType);
+  const plannedExt = "png";
 
   let inserted:
     | {
         id: number;
         slug: string;
-        builder: string;
-        target: string;
-        extra_details: string;
-        image_path: string | null;
       }
     | undefined;
 
+  const insertStarted = performance.now();
   for (let attempt = 0; attempt < 8; attempt++) {
     const slug =
       attempt === 0 ? baseSlug : `${baseSlug.slice(0, 32)}-${attempt}`;
-    const objectPath = `${user.id}/${slug}.${ext}`;
-
-    const { error: upErr } = await service.storage
-      .from(bucket)
-      .upload(objectPath, imageBytes, {
-        contentType: uploadContentType,
-        upsert: true,
-      });
-
-    if (upErr) {
-      return NextResponse.json(
-        { error: "Storage upload failed", detail: upErr.message },
-        { status: 500 },
-      );
-    }
+    const objectPath = `${user.id}/${slug}.${plannedExt}`;
 
     const { data: row, error: insErr } = await supabase
       .from("generations")
       .insert({
         creator_id: user.id,
         slug,
-        builder: String(body.builder ?? ""),
-        target: String(body.target ?? ""),
+        builder: builderName,
+        target: targetName,
         tone: typeof body.tone === "string" ? body.tone.slice(0, 80) : "",
         vibe_tags: sanitizeVibeTags(builderDefaultVibeTags),
-        screen_type: "",
+        screen_type: screenType,
         region: "",
-        extra_details: String(body.extraDetails ?? ""),
+        extra_details: extraDetails,
         generated_prompt: prompt,
         image_path: objectPath,
-        visibility: "draft",
+        visibility: "published",
+        status: "queued",
         remix_parent_id: remixParentId,
       })
-      .select(
-        "id, slug, builder, target, extra_details, image_path",
-      )
+      .select("id, slug")
       .maybeSingle();
 
     if (!insErr && row) {
       inserted = row;
       break;
     }
-
-    await service.storage.from(bucket).remove([objectPath]);
 
     if (insErr?.code === "23505") {
       continue;
@@ -321,6 +287,7 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+  logGenerationTiming("api_insert_generation", performance.now() - insertStarted);
 
   if (!inserted) {
     return NextResponse.json(
@@ -329,71 +296,47 @@ export async function POST(request: Request) {
     );
   }
 
-  // Deduct 1 credit via Dodo ledger entry (deterministic credit consumption).
+  const workflowStart = performance.now();
   try {
-    const dodoClient2 = getDodoClient();
-    await dodoClient2.creditEntitlements.balances.createLedgerEntry(dodoCustomerId!, {
-      credit_entitlement_id: entitlementId,
-      entry_type: "debit",
-      amount: "1",
-      reason: "image.generated",
-      idempotency_key: `gen_${inserted.id}`,
-      metadata: { generation_id: String(inserted.id) },
+    const run = await dispatchGenerationJob({
+      generationId: inserted.id,
+      userId: user.id,
+      dodoCustomerId,
+      builderId,
     });
-  } catch {
-    const obj = inserted.image_path;
-    if (obj) {
-      await service.storage.from(bucket).remove([obj]);
-    }
-    await supabase.from("generations").delete().eq("id", inserted.id);
+
+    await updateGenerationStatus(inserted.id, {
+      status: "queued",
+      workflowRunId: run.runId,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Could not start generation";
+    await updateGenerationStatus(inserted.id, {
+      status: "failed",
+      errorMessage: msg,
+      completedAt: new Date().toISOString(),
+    });
     return NextResponse.json(
-      { error: "Credit debit failed. Please retry.", code: "billing_debit_failed" },
-      { status: 502 },
-    );
-  }
-
-  // Track quota/audit event after successful credit debit
-  const { error: evErr } = await supabase.from("generation_events").insert({
-    user_id: user.id,
-    event_type: "generation",
-    payload: { generation_id: inserted.id },
-  });
-
-  if (evErr) {
-    console.error("generation_events insert failed", evErr);
-  }
-
-  const pathForSign = inserted.image_path;
-  if (!pathForSign) {
-    return NextResponse.json(
-      { error: "Generation row missing image_path" },
+      { error: "Could not start generation workflow", detail: msg },
       { status: 500 },
     );
   }
-
-  const { data: signed, error: signErr } = await service.storage
-    .from(bucket)
-    .createSignedUrl(pathForSign, 3600);
-
-  const imageUrl =
-    !signErr && signed?.signedUrl ? signed.signedUrl : null;
-
-  return NextResponse.json({
-    id: inserted.id,
-    slug: inserted.slug,
-    imageUrl,
-    imagePath: pathForSign,
-    prompt: {
-      builder: inserted.builder,
-      target: inserted.target,
-      extraDetails: inserted.extra_details,
-      generatedPrompt: prompt,
-    },
-    ...(signErr || !imageUrl
-      ? {
-          warning:
-            "Image saved but signed URL could not be created; use storage with service credentials.",
-        }
-      : {}),
+  logGenerationTiming("api_workflow_start", performance.now() - workflowStart, {
+    generationId: inserted.id,
   });
+
+  logGenerationTiming("api_post_total", performance.now() - requestStarted, {
+    generationId: inserted.id,
+  });
+
+  return NextResponse.json(
+    {
+      id: inserted.id,
+      slug: inserted.slug,
+      status: "queued" as const,
+      builder: builderName,
+      target: targetName,
+    },
+    { status: 202 },
+  );
 }

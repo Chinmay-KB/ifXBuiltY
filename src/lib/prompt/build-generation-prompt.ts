@@ -1,8 +1,14 @@
+import {
+  normalizeRenderMode,
+  screenTypePromptFragment,
+} from "@/lib/screen-type";
+
 type GenerationFields = {
   builder: string;
   target: string;
   extraDetails: string;
   tone?: string;
+  screenType?: string;
 };
 
 /**
@@ -20,7 +26,7 @@ export function buildGenerationPrompt(fields: GenerationFields): string {
   }
 
   const lines = [
-    `Satirical UI screenshot: fictional software for a "${target}"-like scenario, built entirely in the style of "${builder}" (stylistic reference — not corporate endorsement).`,
+    `Satirical UI screenshot: fictional "${target}" product experience, built entirely in the visual and UX style of "${builder}" (company or product — stylistic reference only, not corporate endorsement).`,
 
     // 3-layer humor system
     `HUMOR LAYERS (all three must be present):`,
@@ -31,6 +37,10 @@ export function buildGenerationPrompt(fields: GenerationFields): string {
     // Optional user-specified vibe label (legacy / future use)
     fields.tone?.trim()
       ? `Overall vibe: ${fields.tone.trim()} — make microcopy, density, and UI personality match this register (satirical).`
+      : "",
+
+    fields.screenType?.trim()
+      ? screenTypePromptFragment(normalizeRenderMode(fields.screenType))
       : "",
 
     // Extra details from company profile data

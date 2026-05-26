@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 
 import { FEED_MAX_LIMIT } from "@/lib/constants";
 import type { FeedResponse, FeedSort } from "@/lib/feed-types";
+import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
@@ -69,14 +70,11 @@ export async function queryFeed(
   const targets = normalizeList(opts.targets);
   const tones = sanitizeVibeTags(normalizeList(opts.tones));
 
-  let q = supabase
-    .from("generations")
-    .select(
+  let q = applyPublicFeedFilters(
+    supabase.from("generations").select(
       "id, slug, builder, target, tone, vibe_tags, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
-    )
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible")
-    .range(offset, offset + limit);
+    ),
+  ).range(offset, offset + limit);
 
   if (builders.length > 0) {
     q = q.in("builder", builders);
@@ -108,12 +106,9 @@ export async function queryFeed(
   const countPromise =
     opts.includeIdeasThisWeek === false
       ? Promise.resolve({ count: undefined, error: null })
-      : supabase
-          .from("generations")
-          .select("*", { count: "exact", head: true })
-          .eq("visibility", "published")
-          .eq("moderation_status", "visible")
-          .gte("created_at", weekAgoIso);
+      : applyPublicFeedFilters(
+          supabase.from("generations").select("*", { count: "exact", head: true }),
+        ).gte("created_at", weekAgoIso);
 
   const [{ data: rows, error }, countResult] = await Promise.all([
     q,

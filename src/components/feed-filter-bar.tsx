@@ -30,7 +30,6 @@ type FeedFilterBarProps = {
 const sortOptions: { value: FeedSort; label: string }[] = [
   { value: "trending", label: "Trending" },
   { value: "newest", label: "Newest" },
-  { value: "remixes", label: "Most remixed" },
   { value: "top", label: "Staff picks" },
 ];
 
@@ -305,7 +304,7 @@ export function FeedFilterBar({
           className={cn(
             "flex items-center gap-1.5",
             isPaper
-              ? "overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              ? "scrollbar-none overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden"
               : "flex-wrap",
             !isPaper &&
               "gap-1 rounded-tile bg-panel p-1 sm:rounded-tile",

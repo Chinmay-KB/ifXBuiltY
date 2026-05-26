@@ -1,7 +1,7 @@
 {
   "id": "tinder",
   "name": "Tinder",
-  "parent_company_id": "tinder",
+  "parent_company_id": "tinder-co",
   "category": "dating",
   "screen_type": "mobile app",
   "popularity_tier": 1,

@@ -1,37 +1,13 @@
 "use client";
 
-import Link from "next/link";
-
 import { cn } from "@/lib/cn";
 
 type CardActionBarProps = {
-  generationId: number;
   slug: string;
   imageUrl: string | null;
 };
 
 /* ─── Icons (inline SVG, no emoji) ─── */
-
-function RemixIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("size-5", className)}
-      aria-hidden="true"
-    >
-      <polyline points="17 1 21 5 17 9" />
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-      <polyline points="7 23 3 19 7 15" />
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-    </svg>
-  );
-}
 
 function DownloadIcon({ className }: { className?: string }) {
   return (
@@ -120,7 +96,6 @@ async function handleShare(slug: string) {
 /* ─── Main Component ─── */
 
 export function CardActionBar({
-  generationId,
   slug,
   imageUrl,
 }: CardActionBarProps) {
@@ -134,31 +109,15 @@ export function CardActionBar({
       role="toolbar"
       aria-label="Card actions"
     >
-      {/* Remix */}
-      <Link
-        href={`/remix/${generationId}`}
-        className={cn(
-          "inline-flex items-center justify-center rounded-[var(--radius-tile)]",
-          "text-remix transition-colors",
-          "duration-[var(--transition-duration-default)]",
-          "hover:bg-remix/10",
-          // 44×44 touch targets on mobile
-          "max-md:size-[44px] md:size-8",
-        )}
-        aria-label="Remix this generation"
-      >
-        <RemixIcon />
-      </Link>
-
       {/* Download */}
       <button
         type="button"
         onClick={() => handleDownload(imageUrl)}
         disabled={!imageUrl}
         className={cn(
-          "inline-flex items-center justify-center rounded-[var(--radius-tile)]",
+          "inline-flex items-center justify-center rounded-tile",
           "text-ink transition-colors",
-          "duration-[var(--transition-duration-default)]",
+          "duration-(--transition-duration-default)",
           "hover:bg-ink/10",
           "disabled:opacity-40 disabled:cursor-not-allowed",
           // 44×44 touch targets on mobile
@@ -174,9 +133,9 @@ export function CardActionBar({
         type="button"
         onClick={() => handleShare(slug)}
         className={cn(
-          "inline-flex items-center justify-center rounded-[var(--radius-tile)]",
+          "inline-flex items-center justify-center rounded-tile",
           "text-ink transition-colors",
-          "duration-[var(--transition-duration-default)]",
+          "duration-(--transition-duration-default)",
           "hover:bg-ink/10",
           // 44×44 touch targets on mobile
           "max-md:size-[44px] md:size-8",

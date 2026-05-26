@@ -58,18 +58,22 @@ vi.mock("@/hooks/use-generate", () => ({
  */
 describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
   // Constrained arbitraries matching the actual select option values
-  const builderArb = fc.constantFrom(...FLAT_OPTIONS.map((b) => b.name));
-  const targetArb = fc.constantFrom(...FLAT_OPTIONS.map((t) => t.name));
+  const builderArb = fc.constantFrom(...FLAT_OPTIONS.map((b) => b.id));
+  const targetArb = fc.constantFrom(...FLAT_OPTIONS.map((t) => t.id));
 
   // Arbitrary for extra details (free text)
   const extraDetailsArb = fc.string({ minLength: 0, maxLength: 100 });
 
   it("should pre-fill builder, target, and extra details with exact values from source generation", () => {
     fc.assert(
-      fc.property(builderArb, targetArb, extraDetailsArb, (builder, target, extraDetails) => {
+      fc.property(builderArb, targetArb, extraDetailsArb, (builderId, targetId, extraDetails) => {
+        const builderOpt = FLAT_OPTIONS.find((o) => o.id === builderId)!;
+        const targetOpt = FLAT_OPTIONS.find((o) => o.id === targetId)!;
         const sourceInputs: GenerationInputs = {
-          builder,
-          target,
+          builder: builderOpt.name,
+          target: targetOpt.name,
+          builderId,
+          targetId,
           extraDetails,
         };
 
@@ -79,20 +83,26 @@ describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
             initialValues={sourceInputs}
             remixSource={{
               id: 1,
-              label: `if ${builder} built ${target}`,
+              label: `if ${builderOpt.name} built ${targetOpt.name}`,
               imageUrl: null,
             }}
             onGenerated={vi.fn()}
           />
         );
 
-        // Verify builder select
-        const builderInput = screen.getByLabelText(/builder/i) as HTMLSelectElement;
-        expect(builderInput.value).toBe(builder);
+        const builderInput = screen.getByLabelText(/builder/i);
+        expect(builderInput.textContent).toContain(
+          builderOpt.name.includes(" — ")
+            ? builderOpt.name.split(" — ").pop()!
+            : builderOpt.name,
+        );
 
-        // Verify target select
-        const targetInput = screen.getByLabelText(/target/i) as HTMLSelectElement;
-        expect(targetInput.value).toBe(target);
+        const targetInput = screen.getByLabelText(/target/i);
+        expect(targetInput.textContent).toContain(
+          targetOpt.name.includes(" — ")
+            ? targetOpt.name.split(" — ").pop()!
+            : targetOpt.name,
+        );
 
         // Verify extraDetails textarea
         const extraDetailsTextarea = screen.getByLabelText(/extra details/i) as HTMLTextAreaElement;

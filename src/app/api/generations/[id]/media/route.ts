@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { getGenerationImagesBucket } from "@/lib/env-server";
 import type { GenerationMediaVariant } from "@/lib/generation-media-url";
 import { guessImageMimeFromPath } from "@/lib/image-mime";
+import { markGenerationImageUnavailable } from "@/lib/generation/mark-image-unavailable";
 import { getPublishedImagePathBySlug } from "@/lib/public-generation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -53,6 +54,7 @@ export async function GET(request: Request, context: RouteContext) {
     .download(imagePath);
 
   if (dlErr || !blob) {
+    void markGenerationImageUnavailable(slug);
     return NextResponse.json(
       { error: "Could not load image" },
       { status: 502 },

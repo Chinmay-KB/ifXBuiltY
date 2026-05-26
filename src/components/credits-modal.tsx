@@ -9,9 +9,10 @@ import { cn } from "@/lib/cn";
 type CreditsModalProps = {
   open: boolean;
   onClose: () => void;
+  currentCredits?: number | null;
 };
 
-export function CreditsModal({ open, onClose }: CreditsModalProps) {
+export function CreditsModal({ open, onClose, currentCredits = null }: CreditsModalProps) {
   const [loading, setLoading] = useState(false);
   const {
     product,
@@ -51,10 +52,15 @@ export function CreditsModal({ open, onClose }: CreditsModalProps) {
   }, [product]);
 
   if (!open) return null;
+  const isOutOfCredits = currentCredits == null ? true : currentCredits <= 0;
+  const title = isOutOfCredits ? "You're out of credits" : "Top up your credits";
+  const description = isOutOfCredits
+    ? "Grab more credits to keep exploring parallel universes. Each generation uses 1 credit."
+    : `You still have ${currentCredits} credit${currentCredits === 1 ? "" : "s"}. Stock up now so you can keep generating without interruption.`;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -64,21 +70,7 @@ export function CreditsModal({ open, onClose }: CreditsModalProps) {
     >
       <div className="flex w-full max-w-[440px] flex-col gap-6 rounded-[20px] bg-canvas p-9 shadow-modal">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-chrome">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M11 2L13.5 7.5L19 8.5L15 12.5L16 18L11 15.5L6 18L7 12.5L3 8.5L8.5 7.5L11 2Z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
+        <div className="flex items-start justify-end">
           <button
             onClick={onClose}
             className="flex size-8 items-center justify-center rounded-lg bg-panel text-muted transition-colors hover:bg-line hover:text-ink"
@@ -101,11 +93,10 @@ export function CreditsModal({ open, onClose }: CreditsModalProps) {
             id="credits-modal-title"
             className="font-display text-[26px] font-black leading-tight tracking-tight text-ink"
           >
-            You&apos;re out of credits
+            {title}
           </h2>
           <p className="text-[15px] leading-relaxed text-muted">
-            Grab more credits to keep exploring parallel universes. Each
-            generation uses 1 credit.
+            {description}
           </p>
         </div>
 

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
+import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 const REVALIDATE_SECONDS = 60 * 60; // 1 hour
@@ -18,11 +19,9 @@ async function fetchTotalPublishedCount(): Promise<number> {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { count, error } = await supabase
-    .from("generations")
-    .select("*", { count: "exact", head: true })
-    .eq("visibility", "published")
-    .eq("moderation_status", "visible");
+  const { count, error } = await applyPublicFeedFilters(
+    supabase.from("generations").select("*", { count: "exact", head: true }),
+  );
 
   if (error || count === null) return 0;
   return count;

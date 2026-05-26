@@ -11,7 +11,7 @@ const ACCENTS = [
   "bg-vote text-white",
   "bg-ink text-white",
   "bg-barrier text-white",
-  "bg-remix text-white",
+  "bg-panel text-ink",
 ] as const;
 
 type Props = {
@@ -58,8 +58,8 @@ export function FeedTile({ item, index, offsetClass }: Props) {
       </div>
       <div className="flex justify-between gap-2 text-[13px] font-semibold text-ink">
         <span>↑ {formatCompactCount(item.upvoteCount)}</span>
-        <span>{item.remixCount} remixes</span>
-        <span className="text-remix">Fork</span>
+        <span>{item.builder}</span>
+        <span>Open</span>
       </div>
     </Link>
   );

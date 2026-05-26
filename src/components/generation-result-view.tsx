@@ -35,11 +35,6 @@ export function GenerationResultView({
   variant = "default",
   viewportContained = false,
 }: GenerationResultViewProps) {
-  const [publishState, setPublishState] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
   const [downloadState, setDownloadState] = useState<"idle" | "saved">("idle");
   const shareResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -66,31 +61,6 @@ export function GenerationResultView({
     if (downloadResetRef.current) clearTimeout(downloadResetRef.current);
     downloadResetRef.current = setTimeout(() => setDownloadState("idle"), 1800);
   }, []);
-
-  const handlePublish = useCallback(async () => {
-    setPublishState("loading");
-    setPublishError(null);
-
-    try {
-      const res = await fetch(`/api/generations/${result.id}/publish`, {
-        method: "POST",
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Could not publish");
-      }
-
-      const data = await res.json();
-      setPublishedSlug(data.slug ?? result.slug);
-      setPublishState("success");
-    } catch (err) {
-      setPublishError(
-        err instanceof Error ? err.message : "Could not publish",
-      );
-      setPublishState("error");
-    }
-  }, [result.id, result.slug]);
 
   const handleShare = useCallback(async () => {
     const shareUrl = `${window.location.origin}/g/${result.slug}`;
@@ -146,7 +116,7 @@ export function GenerationResultView({
 
   if (variant === "paper") {
     const vc = viewportContained;
-    const liveSlug = publishedSlug ?? result.slug;
+    const liveSlug = result.slug;
     const actionMotion =
       "transition-[transform,background-color,color,filter,border-color] duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.98]";
     const quietActionClass = cn(
@@ -210,7 +180,7 @@ export function GenerationResultView({
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-panel py-1.5 pl-2.5 pr-3 lg:gap-2.5 lg:py-2 lg:pl-3 lg:pr-3.5">
               <span className="size-2 rounded-full bg-[#58CC02]" />
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink lg:text-[11px]">
-                Draft ready
+                Ready
               </span>
             </div>
             <h2
@@ -226,7 +196,7 @@ export function GenerationResultView({
               built {result.target}.
             </h2>
             <p className="max-w-136 text-sm leading-[1.45] text-muted">
-              Save the artifact, publish a public link, or remix the premise while the joke is still warm.
+              Save the artifact and share the public link while the joke is still warm.
             </p>
             {currentInputs.tone ? (
               <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted lg:mt-2 lg:text-[11px]">
@@ -252,36 +222,14 @@ export function GenerationResultView({
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {publishState === "success" ? (
-                <Link
-                  href={`/g/${liveSlug}`}
-                  className={quietActionClass}
-                >
-                  <CheckIcon />
-                  View live
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void handlePublish()}
-                  disabled={publishState === "loading"}
-                  className={cn(quietActionClass, "disabled:opacity-50")}
-                >
-                  <PublishIcon />
-                  {publishState === "loading" ? "Publishing…" : "Publish"}
-                </button>
-              )}
-              <Link
-                href={`/remix/${result.id}`}
-                className={quietActionClass}
-              >
-                <RemixIcon />
-                Remix
+              <Link href={`/g/${liveSlug}`} className={quietActionClass}>
+                <CheckIcon />
+                View live
               </Link>
               <button
                 type="button"
                 onClick={() => void handleShare()}
-                className={cn(quietActionClass, "col-span-2")}
+                className={quietActionClass}
               >
                 {shareState === "idle" ? <ShareIcon /> : <CheckIcon />}
                 {shareState === "copied"
@@ -294,11 +242,7 @@ export function GenerationResultView({
           </div>
 
           <div className="min-h-5" aria-live="polite">
-            {publishState === "success" ? (
-              <p className="rounded-r-xl border-l-2 border-chrome bg-[#FFF9E0] py-2 pl-3 pr-2 text-xs font-semibold leading-snug text-ink">
-                Live link unlocked. Go make the internet worse.
-              </p>
-            ) : shareState !== "idle" ? (
+            {shareState !== "idle" ? (
               <p className="text-xs font-semibold text-muted">
                 {shareState === "copied" ? "Link copied to clipboard." : "Shared from this timeline."}
               </p>
@@ -306,12 +250,6 @@ export function GenerationResultView({
               <p className="text-xs font-semibold text-muted">Image handed to your downloads folder.</p>
             ) : null}
           </div>
-
-          {publishState === "error" && publishError && (
-            <p className="text-sm font-medium text-barrier" role="alert">
-              {publishError}
-            </p>
-          )}
 
           <div className={cn("mt-auto border-t border-line pt-4", vc ? "flex flex-col gap-2" : "flex flex-wrap items-center gap-2")}>
             <Button
@@ -366,29 +304,13 @@ export function GenerationResultView({
 
         {/* Right — Actions */}
         <div className="flex flex-col gap-3 lg:w-[200px] lg:shrink-0">
-          {/* Publish */}
-          {publishState === "success" ? (
-            <Link
-              href={`/g/${publishedSlug}`}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-line-strong bg-canvas px-4 py-3 text-[14px] font-bold text-ink transition-colors hover:bg-panel"
-            >
-              <PublishIcon />
-              Published — View
-            </Link>
-          ) : (
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full justify-center font-bold"
-              onClick={() => void handlePublish()}
-              disabled={publishState === "loading"}
-            >
-              <span className="flex items-center gap-2">
-                <PublishIcon />
-                {publishState === "loading" ? "Publishing…" : "Publish"}
-              </span>
-            </Button>
-          )}
+          <Link
+            href={`/g/${result.slug}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-line-strong bg-canvas px-4 py-3 text-[14px] font-bold text-ink transition-colors hover:bg-panel"
+          >
+            <CheckIcon />
+            View live
+          </Link>
 
           {/* Share */}
           <Button
@@ -416,22 +338,6 @@ export function GenerationResultView({
               Download
             </span>
           </Button>
-
-          {/* Remix */}
-          <Link
-            href={`/remix/${result.id}`}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-line-strong bg-canvas px-4 py-3 text-[14px] font-bold text-ink transition-colors hover:bg-panel"
-          >
-            <RemixIcon />
-            Remix
-          </Link>
-
-          {/* Publish error */}
-          {publishState === "error" && publishError && (
-            <p className="text-sm font-medium text-barrier" role="alert">
-              {publishError}
-            </p>
-          )}
 
           {/* Spacer to push generate buttons to bottom on desktop */}
           <div className="hidden lg:flex lg:flex-1" />
@@ -483,26 +389,6 @@ function CheckIcon() {
   );
 }
 
-function PublishIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 2L12 16" />
-      <path d="M17 7L12 2L7 7" />
-      <path d="M20 21H4" />
-    </svg>
-  );
-}
-
 function ShareIcon() {
   return (
     <svg
@@ -545,23 +431,3 @@ function DownloadIcon() {
   );
 }
 
-function RemixIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="17 1 21 5 17 9" />
-      <path d="M3 11V9a4 4 0 014-4h14" />
-      <polyline points="7 23 3 19 7 15" />
-      <path d="M21 13v2a4 4 0 01-4 4H3" />
-    </svg>
-  );
-}

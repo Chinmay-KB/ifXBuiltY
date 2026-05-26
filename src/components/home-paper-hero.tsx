@@ -152,10 +152,6 @@ function HeroGenerationCard({
 }) {
   const label = `${item.builder} built ${item.target}`;
   const score = formatCompactCount(item.netScore);
-  const remixLabel =
-    item.remixCount > 0
-      ? `${formatCompactCount(item.remixCount)} remix${item.remixCount === 1 ? "" : "es"}`
-      : "Fresh";
 
   return (
     <Link
@@ -194,7 +190,7 @@ function HeroGenerationCard({
           </p>
           <div className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.06em] text-muted">
             <span>↑ {score}</span>
-            <span>{remixLabel}</span>
+            <span>Featured</span>
           </div>
         </div>
       </div>

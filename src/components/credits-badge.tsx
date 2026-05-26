@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { CreditsModal } from "@/components/credits-modal";
 import { onCreditsChanged } from "@/lib/credits-events";
 
 /**
@@ -12,6 +13,7 @@ import { onCreditsChanged } from "@/lib/credits-events";
 export function CreditsBadge() {
   const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
 
   const fetchBalance = useCallback(async () => {
     try {
@@ -52,14 +54,24 @@ export function CreditsBadge() {
   if (credits == null) return null;
 
   return (
-    <div
-      className="flex items-center gap-1.5 rounded-full border border-ink py-2 px-3 font-mono text-[11px] font-bold text-ink"
-      title={`${credits} credit${credits === 1 ? "" : "s"} remaining`}
-    >
-      <span className="size-1.5 shrink-0 rounded-full bg-chrome" aria-hidden />
-      <span>
-        {credits} credit{credits === 1 ? "" : "s"}
-      </span>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setShowCreditsModal(true)}
+        className="flex items-center gap-1.5 rounded-full border border-ink py-2 px-3 font-mono text-[11px] font-bold text-ink transition-colors hover:bg-line/60"
+        title={`${credits} credit${credits === 1 ? "" : "s"} remaining. Tap to buy more.`}
+        aria-label={`You have ${credits} credit${credits === 1 ? "" : "s"}. Buy more credits.`}
+      >
+        <span className="size-1.5 shrink-0 rounded-full bg-chrome" aria-hidden />
+        <span>
+          {credits} credit{credits === 1 ? "" : "s"}
+        </span>
+      </button>
+      <CreditsModal
+        open={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        currentCredits={credits}
+      />
+    </>
   );
 }

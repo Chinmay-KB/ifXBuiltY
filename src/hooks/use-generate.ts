@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useRef } from "react";
 
+import { saveActiveGenerationId } from "@/lib/generation/active-generation-storage";
+import type { GenerationStatus } from "@/lib/generation/types";
 import type { GenerationInputs, GenerationResult } from "@/lib/ui/types";
 
 type UseGenerateReturn = {
-  generate: (inputs: GenerationInputs, options?: { remixParentId?: number }) => Promise<void>;
+  generate: (inputs: GenerationInputs, options?: { remixParentId?: number }) => Promise<GenerationResult | null>;
   /** Aborts the in-flight `/api/generate` request (no-op if idle). */
   cancelInflight: () => void;
   result: GenerationResult | null;
@@ -18,9 +20,7 @@ type UseGenerateReturn = {
 /**
  * useGenerate — generation lifecycle hook.
  *
- * Manages the full lifecycle: submit → loading → result/error.
- * Preserves form inputs on error so the user can retry.
- * Prevents concurrent generation requests.
+ * Starts a durable generation job and returns id/slug immediately (202).
  */
 export function useGenerate(): UseGenerateReturn {
   const [result, setResult] = useState<GenerationResult | null>(null);
@@ -28,7 +28,6 @@ export function useGenerate(): UseGenerateReturn {
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
 
-  // Guard against concurrent requests
   const inflightRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -36,63 +35,74 @@ export function useGenerate(): UseGenerateReturn {
     abortRef.current?.abort();
   }, []);
 
-  const generate = useCallback(async (inputs: GenerationInputs, options?: { remixParentId?: number }) => {
-    // Prevent concurrent generation requests
-    if (inflightRef.current) return;
+  const generate = useCallback(
+    async (
+      inputs: GenerationInputs,
+      options?: { remixParentId?: number },
+    ): Promise<GenerationResult | null> => {
+      if (inflightRef.current) return null;
 
-    inflightRef.current = true;
-    const ac = new AbortController();
-    abortRef.current = ac;
-    setIsLoading(true);
-    setError(null);
-    setErrorCode(null);
-    setResult(null);
+      inflightRef.current = true;
+      const ac = new AbortController();
+      abortRef.current = ac;
+      setIsLoading(true);
+      setError(null);
+      setErrorCode(null);
+      setResult(null);
 
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: ac.signal,
-        body: JSON.stringify({
-          ...inputs,
-          ...(options?.remixParentId ? { remixParentId: options.remixParentId } : {}),
-        }),
-      });
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            ...inputs,
+            ...(options?.remixParentId ? { remixParentId: options.remixParentId } : {}),
+          }),
+        });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const message =
-          (body as { error?: string }).error || `Generation failed (${res.status})`;
-        const code = (body as { code?: string }).code ?? null;
-        setError(message);
-        setErrorCode(code);
-        return;
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          const message =
+            (body as { error?: string }).error || `Generation failed (${res.status})`;
+          const code = (body as { code?: string }).code ?? null;
+          setError(message);
+          setErrorCode(code);
+          return null;
+        }
+
+        const data = await res.json();
+        const status = (data.status as GenerationStatus) ?? "queued";
+        const next: GenerationResult = {
+          id: data.id,
+          slug: data.slug,
+          imageUrl: null,
+          builder: inputs.builder,
+          target: inputs.target,
+          status,
+        };
+        setResult(next);
+        saveActiveGenerationId(data.id);
+        return next;
+      } catch (e) {
+        const aborted =
+          (e instanceof DOMException && e.name === "AbortError") ||
+          (e instanceof Error && e.name === "AbortError");
+        if (aborted) {
+          setError(null);
+          setErrorCode(null);
+          return null;
+        }
+        setError("Network error. Please check your connection and try again.");
+        return null;
+      } finally {
+        setIsLoading(false);
+        inflightRef.current = false;
+        abortRef.current = null;
       }
-
-      const data = await res.json();
-      setResult({
-        id: data.id,
-        slug: data.slug,
-        imageUrl: data.imageUrl,
-        builder: inputs.builder,
-        target: inputs.target,
-      });
-    } catch (e) {
-      const aborted =
-        (e instanceof DOMException && e.name === "AbortError") ||
-        (e instanceof Error && e.name === "AbortError");
-      if (aborted) {
-        setError(null);
-        setErrorCode(null);
-        return;
-      }
-      setError("Network error. Please check your connection and try again.");
-    } finally {
-      setIsLoading(false);
-      inflightRef.current = false;
-      abortRef.current = null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     setResult(null);

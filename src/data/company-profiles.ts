@@ -201,3 +201,29 @@ export async function listSelectableProfileIds(): Promise<string[]> {
   if (error) throw error;
   return (data ?? []).map((r: { id: string }) => r.id);
 }
+
+/**
+ * Groups for the generator picker: all companies plus approved products only.
+ */
+export async function getSelectableCompanyGroups(): Promise<CompanyGroup[]> {
+  const supabase = createSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("company_profiles")
+    .select("*")
+    .or("profile_type.eq.company,and(profile_type.eq.product,research_status.eq.approved)")
+    .order("name");
+
+  if (error) throw error;
+  const all = (data ?? []).map(mapRow);
+  const companies = all.filter((p) => p.profileType === "company");
+  const products = all.filter((p) => p.profileType === "product");
+
+  return companies
+    .map((company) => ({
+      company,
+      products: products
+        .filter((p) => p.parentCompanyId === company.id)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }))
+    .sort((a, b) => a.company.name.localeCompare(b.company.name));
+}

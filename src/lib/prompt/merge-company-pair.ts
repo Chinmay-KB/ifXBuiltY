@@ -10,7 +10,10 @@ const MAX_EXTRA = 4000;
 export type MergedGenerationFields = {
   builder: string;
   target: string;
+  builderId: string;
+  targetId: string;
   extraDetails: string;
+  builderDefaultVibeTags: string[];
 };
 
 function clampExtra(text: string): string {
@@ -51,6 +54,17 @@ function formatArchetype(name: string, arch: CompanyProfile["archetype"]): strin
  * Merge two company profiles into API fields for prompt building.
  * Builder supplies style DNA; target supplies archetype.
  */
+
+async function parentCompanyLabel(parentId: string | null): Promise<string | null> {
+  if (!parentId) return null;
+  const parent = await getCompanyProfileById(parentId);
+  return parent?.name ?? parentId;
+}
+
+function profileRoleLabel(profile: CompanyProfile): string {
+  return profile.profileType === "product" ? "product" : "company";
+}
+
 export async function mergeCompanyPair(
   builderId: string,
   targetId: string,
@@ -67,6 +81,9 @@ export async function mergeCompanyPair(
     throw new RangeError("builder and target must differ for merged prompts");
   }
 
+  const builderParent = await parentCompanyLabel(builder.parentCompanyId);
+  const targetParent = await parentCompanyLabel(target.parentCompanyId);
+
   const extraDetails = clampExtra(
     [
       // Layer 1: Visual Recognition
@@ -74,12 +91,16 @@ export async function mergeCompanyPair(
       formatArchetype(target.name, target.archetype),
 
       // Parent company context for products
-      builder.parentCompanyId
-        ? `Note: ${builder.name} is a product of ${builder.parentCompanyId} — use the product's specific style, not the parent company's branding.`
-        : "",
-      target.parentCompanyId
-        ? `Note: ${target.name} is a product of ${target.parentCompanyId} — the target domain is this specific product, not the parent company.`
-        : "",
+      builder.parentCompanyId && builderParent
+        ? `Builder context: "${builder.name}" is the ${profileRoleLabel(builder)} from ${builderParent}. Use this product's specific visual and UX DNA — do not default to ${builderParent}'s corporate branding or unrelated products.`
+        : builder.profileType === "product"
+          ? `Builder context: "${builder.name}" is a specific product — apply its product-level style DNA, not a generic company umbrella brand.`
+          : "",
+      target.parentCompanyId && targetParent
+        ? `Target context: "${target.name}" is the ${profileRoleLabel(target)} from ${targetParent}. Recreate this product's domain and archetype, not the parent company's full portfolio.`
+        : target.profileType === "product"
+          ? `Target context: "${target.name}" is a specific product domain — match its screens, sections, and user jobs.`
+          : "",
 
       // Layer 2: UX Recognition
       builder.styleDna.ux_traits.length > 0
@@ -101,6 +122,7 @@ export async function mergeCompanyPair(
         ? `Behavioral Stereotypes (${builder.name}): ${builder.styleDna.behavioral_stereotypes.join("; ")}. Lean into these organizational behaviors — the humor comes from believable overcommitment to ${builder.name}'s product philosophy.`
         : "",
 
+      `Archetype target: The screenshot should look like a real ${target.profileType === "product" ? "product" : "software"} surface for "${target.name}" (sections, layout, content style from archetype above).`,
       `Blend: Recreate a plausible UI for "${target.name}" as if ${builder.name} shipped the product — match ${builder.name}'s interaction patterns, density, and tone, but applied to ${target.name}'s domain in a way that is immediately funny and shareable.`,
       `On-screen branding: never show "${builder.name}" or "${target.name}" as logos, lockups, or combined wordmarks; no official marks—invented product/org titles and generic icons only.`,
     ].filter(Boolean).join("\n\n"),
@@ -109,7 +131,10 @@ export async function mergeCompanyPair(
   return {
     builder: builder.name,
     target: target.name,
+    builderId: builder.id,
+    targetId: target.id,
     extraDetails,
+    builderDefaultVibeTags: builder.defaultVibeTags,
   };
 }
 

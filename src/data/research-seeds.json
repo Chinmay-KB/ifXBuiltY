@@ -1,0 +1,34 @@
+{
+  "waves": [
+    { "id": "wave-1", "label": "Wave 1 — 5 seed companies", "maxProductsPerRun": 5, "targetReviewReady": 5 },
+    { "id": "wave-2", "label": "Wave 2 — 25 review-ready", "maxProductsPerRun": 8, "targetReviewReady": 25 },
+    { "id": "wave-3", "label": "Wave 3 — 50 review-ready", "maxProductsPerRun": 10, "targetReviewReady": 50 }
+  ],
+  "companies": [
+    { "name": "Google", "maxProducts": 5 },
+    { "name": "Microsoft", "maxProducts": 5 },
+    { "name": "Apple", "maxProducts": 5 },
+    { "name": "Meta", "maxProducts": 5 },
+    { "name": "Amazon", "maxProducts": 5 },
+    { "name": "Adobe", "maxProducts": 5 },
+    { "name": "Atlassian", "maxProducts": 5 },
+    { "name": "GitHub", "maxProducts": 5 },
+    { "name": "Stripe", "maxProducts": 5 },
+    { "name": "Shopify", "maxProducts": 5 },
+    { "name": "OpenAI", "maxProducts": 5 },
+    { "name": "Vercel", "maxProducts": 5 },
+    { "name": "Supabase", "maxProducts": 5 }
+  ],
+  "categories": [
+    { "name": "social", "maxProducts": 5 },
+    { "name": "payments", "maxProducts": 5 },
+    { "name": "developer tools", "maxProducts": 5 },
+    { "name": "productivity", "maxProducts": 5 },
+    { "name": "media", "maxProducts": 5 },
+    { "name": "commerce", "maxProducts": 5 },
+    { "name": "travel", "maxProducts": 5 },
+    { "name": "food", "maxProducts": 5 },
+    { "name": "health", "maxProducts": 5 },
+    { "name": "education", "maxProducts": 5 }
+  ]
+}

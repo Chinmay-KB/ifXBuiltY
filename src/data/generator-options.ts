@@ -31,10 +31,14 @@ export const GENERATOR_OPTIONS: CompanyOption[] = companyProfiles.map((c) => ({
 /** Flat list of all selectable entries (company + products) for simple selects */
 export type FlatOption = { id: string; name: string; groupId?: string };
 
-export const FLAT_OPTIONS: FlatOption[] = GENERATOR_OPTIONS.flatMap((group) => [
-  { id: group.id, name: group.name, groupId: group.id },
-  ...group.products.map((p) => ({ id: p.id, name: `${group.name} — ${p.name}`, groupId: group.id })),
-]);
+export const FLAT_OPTIONS: FlatOption[] = GENERATOR_OPTIONS.flatMap((group) => {
+  const items: FlatOption[] = [{ id: group.id, name: group.name, groupId: group.id }];
+  for (const p of group.products) {
+    if (p.id === group.id) continue;
+    items.push({ id: p.id, name: `${group.name} — ${p.name}`, groupId: group.id });
+  }
+  return items;
+});
 
 /** Backward-compatible: flat company-only list (legacy) */
 export const BUILDER_OPTIONS = GENERATOR_OPTIONS.map((c) => ({ id: c.id, name: c.name }));

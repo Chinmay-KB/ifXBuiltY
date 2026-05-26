@@ -81,7 +81,7 @@ function buildMeanwhileCards(builder: string, target: string) {
     {
       k: "queue",
       eyebrow: "Next up",
-      title: "Queue a remix idea.",
+      title: "Queue another idea.",
       body: "You can keep browsing — we’ll keep cooking.",
     },
   ];
@@ -415,12 +415,6 @@ export function ImageGenerator({ signedIn }: Props) {
               </div>
               {result ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/remix/${result.id}`}
-                    className="inline-flex h-8 items-center rounded-full border border-white/20 bg-white/10 px-2.5 text-[13px] font-semibold text-white hover:bg-white/15"
-                  >
-                    Remix
-                  </Link>
                   {publishedSlug ? (
                     <Link
                       href={`/g/${publishedSlug}`}
@@ -496,7 +490,7 @@ export function ImageGenerator({ signedIn }: Props) {
             <br />
             {headlineTarget ? (
               <>
-                <span className="underline decoration-[#E8E306] decoration-[10px] underline-offset-[12px]">
+                <span className="underline decoration-[#E8E306] decoration-10 underline-offset-12">
                   {titleCase(headlineTarget)}
                 </span>
               </>

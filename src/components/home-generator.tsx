@@ -8,10 +8,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Zoom from "@/components/image-zoom";
 import { Button, Chip, FieldShell, MicroLabel, Surface } from "@/components/ui";
 import { useCreditProduct } from "@/hooks/use-credit-product";
+import { pollGenerationUntilDone } from "@/lib/generation/poll-until-done";
 import { cn } from "@/lib/cn";
 
 const TONE_CHIPS = ["absurdly polished", "dead serious", "unhinged"] as const;
-const SCREEN_CHIPS = ["mobile app", "desktop web", "kiosk"] as const;
+const SCREEN_CHIPS = ["mobile", "desktop"] as const;
 const REGION_CHIPS = ["US", "EU", "Global south"] as const;
 
 type GenResult = {
@@ -34,7 +35,7 @@ export function HomeGenerator({ signedIn }: Props) {
   const [builder, setBuilder] = useState(initialBuilder);
   const [target, setTarget] = useState(initialTarget);
   const [tone, setTone] = useState<string>("absurdly polished");
-  const [screenType, setScreenType] = useState("mobile app");
+  const [screenType, setScreenType] = useState("mobile");
   const [region, setRegion] = useState("US");
   const [extraDetails, setExtraDetails] = useState(
     "Make it feel like a serious onboarding flow with one line that should not have shipped.",
@@ -47,8 +48,6 @@ export function HomeGenerator({ signedIn }: Props) {
   const { product: creditProduct, priceLabel, creditsLabel: productCreditsLabel } = useCreditProduct();
 
   const [result, setResult] = useState<GenResult | null>(null);
-  const [publishing, setPublishing] = useState(false);
-  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [creditsLoading, setCreditsLoading] = useState(false);
   const [creditsSyncing, setCreditsSyncing] = useState(false);
@@ -67,7 +66,6 @@ export function HomeGenerator({ signedIn }: Props) {
     setError(null);
     setShowPaywall(false);
     setResult(null);
-    setPublishedSlug(null);
     setToast(null);
   }, []);
 
@@ -188,7 +186,6 @@ export function HomeGenerator({ signedIn }: Props) {
 
     setError(null);
     setShowPaywall(false);
-    setPublishedSlug(null);
     setLoading(true);
     try {
       const res = await fetch("/api/generate", {
@@ -229,40 +226,21 @@ export function HomeGenerator({ signedIn }: Props) {
         return;
       }
       if (data.id != null && data.slug) {
-        setResult({
-          id: data.id,
-          slug: data.slug,
-          imageUrl: data.imageUrl ?? null,
-          builder: data.prompt?.builder ?? builder,
-          target: data.prompt?.target ?? target,
-        });
+        const final = await pollGenerationUntilDone(data.id);
+        if (final.status === "failed") {
+          setError(final.errorMessage ?? "Generation failed");
+          setLoading(false);
+          void refreshCredits();
+          return;
+        }
+        router.push(`/g/${final.slug}`);
+        return;
       }
     } catch {
       setError("Network error");
     }
     setLoading(false);
     void refreshCredits();
-  }
-
-  async function publish() {
-    if (!result || !signedIn) return;
-    setPublishing(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/generations/${result.id}/publish`, {
-        method: "POST",
-      });
-      const data = (await res.json()) as { error?: string; slug?: string };
-      if (!res.ok) {
-        setError(data.error ?? "Could not publish");
-        setPublishing(false);
-        return;
-      }
-      setPublishedSlug(data.slug ?? result.slug);
-    } catch {
-      setError("Publish request failed");
-    }
-    setPublishing(false);
   }
 
   const headline = result ? "Freshly forged" : "Sample interfaces";
@@ -464,29 +442,11 @@ export function HomeGenerator({ signedIn }: Props) {
               {result ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
-                    href={`/remix/${result.id}`}
+                    href={`/g/${result.slug}`}
                     className="inline-flex h-8 items-center rounded-full border border-white/20 bg-white/10 px-2.5 text-[13px] font-semibold text-white hover:bg-white/15"
                   >
-                    Remix
+                    View generation
                   </Link>
-                  {publishedSlug ? (
-                    <Link
-                      href={`/g/${publishedSlug}`}
-                      className="inline-flex h-8 items-center rounded-full border border-white/20 bg-white/10 px-2.5 text-[13px] font-semibold text-white hover:bg-white/15"
-                    >
-                      View public
-                    </Link>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-white/25 bg-white/10 text-white hover:bg-white/15"
-                      disabled={publishing || !signedIn}
-                      onClick={() => void publish()}
-                    >
-                      {publishing ? "Publishing…" : "Publish"}
-                    </Button>
-                  )}
                 </div>
               ) : null}
             </div>

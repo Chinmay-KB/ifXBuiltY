@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { GeneratorForm } from "../generator-form";
+import { buildGeneratorProfileGroups } from "@/data/generator-profile-options";
+import companyProfilesJson from "@/data/company-profiles.json";
+import type { CompanyGroup } from "@/data/company-profiles";
 
-// Mock next/link
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -19,7 +21,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Mock next/image
 vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => <img {...props} />,
 }));
@@ -28,13 +29,11 @@ vi.mock("@/components/image-zoom", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock sign-in modal provider
 const mockOpenSignIn = vi.fn();
 vi.mock("@/components/sign-in-modal-provider", () => ({
   useSignInModal: () => ({ openSignIn: mockOpenSignIn }),
 }));
 
-// Mock useGenerate hook
 const mockGenerate = vi.fn().mockResolvedValue(undefined);
 const mockReset = vi.fn();
 
@@ -46,6 +45,7 @@ let mockIsLoading = false;
 vi.mock("@/hooks/use-generate", () => ({
   useGenerate: () => ({
     generate: mockGenerate,
+    cancelInflight: vi.fn(),
     result: mockResult,
     isLoading: mockIsLoading,
     error: mockError,
@@ -54,9 +54,69 @@ vi.mock("@/hooks/use-generate", () => ({
   }),
 }));
 
+function mockProfileGroups() {
+  const companies = (companyProfilesJson as { id: string; name: string; products?: { id: string; name: string; screenType?: string }[] }[]).slice(0, 3);
+  const groups: CompanyGroup[] = companies.map((c) => ({
+    company: {
+      id: c.id,
+      name: c.name,
+      styleDna: {
+        tone: [],
+        colors: [],
+        visual_traits: [],
+        ux_traits: [],
+        meme_exaggeration: [],
+        iconic_elements: [],
+        behavioral_stereotypes: [],
+        satirical_patterns: [],
+      },
+      archetype: { type: "", sections: [], layout: "desktop web", content_style: [] },
+      logoPath: null,
+      defaultVibeTags: [],
+      parentCompanyId: null,
+      profileType: "company",
+      category: "search",
+      popularityTier: 1,
+      researchStatus: "approved",
+      memeStrength: 3,
+    },
+    products: (c.products ?? []).slice(0, 2).map((p) => ({
+      id: p.id,
+      name: p.name,
+      styleDna: {
+        tone: [],
+        colors: [],
+        visual_traits: [],
+        ux_traits: [],
+        meme_exaggeration: [],
+        iconic_elements: [],
+        behavioral_stereotypes: [],
+        satirical_patterns: [],
+      },
+      archetype: {
+        type: "",
+        sections: [],
+        layout: p.screenType ?? "desktop web",
+        content_style: [],
+      },
+      logoPath: null,
+      defaultVibeTags: [],
+      parentCompanyId: c.id,
+      profileType: "product" as const,
+      category: "search",
+      popularityTier: 1,
+      researchStatus: "approved",
+      memeStrength: 3,
+    })),
+  }));
+  return buildGeneratorProfileGroups(groups);
+}
+
 describe("GeneratorForm", () => {
+  const profileGroups = mockProfileGroups();
   const defaultProps = {
     signedIn: true,
+    profileGroups,
     onGenerated: vi.fn(),
   };
 
@@ -68,12 +128,10 @@ describe("GeneratorForm", () => {
     mockIsLoading = false;
   });
 
-  it("renders builder and target inputs", () => {
+  it("renders builder and target pickers", () => {
     render(<GeneratorForm {...defaultProps} />);
-    const builderInput = screen.getByLabelText(/builder/i);
-    const targetInput = screen.getByLabelText(/target/i);
-    expect(builderInput).toBeDefined();
-    expect(targetInput).toBeDefined();
+    expect(screen.getByLabelText(/builder/i)).toBeDefined();
+    expect(screen.getByLabelText(/target/i)).toBeDefined();
   });
 
   it("renders extra details textarea", () => {
@@ -89,7 +147,15 @@ describe("GeneratorForm", () => {
 
   it("enables Generate button when both builder and target have values", () => {
     render(
-      <GeneratorForm {...defaultProps} initialValues={{ builder: "Apple", target: "LinkedIn" }} />
+      <GeneratorForm
+        {...defaultProps}
+        initialValues={{
+          builder: "Google",
+          target: "YouTube",
+          builderId: "google",
+          targetId: "google-youtube",
+        }}
+      />,
     );
     const button = screen.getByRole("button", { name: /generate/i });
     expect(button.hasAttribute("disabled")).toBe(false);
@@ -97,13 +163,11 @@ describe("GeneratorForm", () => {
 
   it("shows sign-in prompt when not authenticated", () => {
     render(<GeneratorForm {...defaultProps} signedIn={false} />);
-    const button = screen.getByRole("button", { name: /sign in to generate/i });
-    expect(button).toBeDefined();
+    expect(screen.getByRole("button", { name: /sign in to generate/i })).toBeDefined();
   });
 
   it("does not show Generate button when not signed in", () => {
     render(<GeneratorForm {...defaultProps} signedIn={false} />);
-    // The "Generate" button is replaced by "Sign in to generate" button
     expect(screen.queryByRole("button", { name: /^generate$/i })).toBeNull();
   });
 
@@ -112,59 +176,83 @@ describe("GeneratorForm", () => {
       <GeneratorForm
         {...defaultProps}
         initialValues={{
-          builder: "Spotify",
-          target: "LinkedIn",
+          builder: "Google",
+          target: "YouTube",
+          builderId: "google",
+          targetId: "google-youtube",
           extraDetails: "Make it corporate",
         }}
-      />
+      />,
     );
-    expect((screen.getByLabelText(/builder/i) as HTMLSelectElement).value).toBe("Spotify");
-    expect((screen.getByLabelText(/target/i) as HTMLSelectElement).value).toBe("LinkedIn");
-    expect((screen.getByLabelText(/extra details/i) as HTMLTextAreaElement).value).toBe("Make it corporate");
+    const builderBtn = screen.getByLabelText(/builder/i);
+    expect(within(builderBtn).getByText("Google")).toBeDefined();
+    expect((screen.getByLabelText(/extra details/i) as HTMLTextAreaElement).value).toBe(
+      "Make it corporate",
+    );
   });
 
-  it("uses default values when no initialValues provided", () => {
+  it("shows empty placeholder when no selection", () => {
     render(<GeneratorForm {...defaultProps} />);
-    expect((screen.getByLabelText(/builder/i) as HTMLSelectElement).value).toBe("");
-    expect((screen.getByLabelText(/target/i) as HTMLSelectElement).value).toBe("");
-    expect((screen.getByLabelText(/extra details/i) as HTMLTextAreaElement).value).toBe("");
+    expect(screen.getAllByText(/select company or product/i).length).toBeGreaterThan(0);
   });
 
-  it("displays remix attribution strip when remixSource is provided", () => {
+  it("passes remix parent id while keeping remix UI hidden", () => {
     render(
       <GeneratorForm
         {...defaultProps}
+        initialValues={{
+          builder: "Google",
+          target: "YouTube",
+          builderId: "google",
+          targetId: "google-youtube",
+        }}
         remixSource={{
           id: 42,
           label: "if Duolingo built airport security",
           imageUrl: "https://example.com/img.png",
         }}
-      />
+      />,
     );
-    expect(screen.getByText("Remixing from")).toBeDefined();
-    expect(screen.getByText("if Duolingo built airport security")).toBeDefined();
+    expect(screen.queryByText("Remixing from")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /generate/i }));
+    expect(mockGenerate).toHaveBeenCalledWith(expect.anything(), { remixParentId: 42 });
   });
 
-  it("does not display remix strip when remixSource is null", () => {
-    render(<GeneratorForm {...defaultProps} remixSource={null} />);
-    expect(screen.queryByText("Remixing from")).toBeNull();
+  it("opens picker and selects a product", () => {
+    render(<GeneratorForm {...defaultProps} />);
+    fireEvent.click(screen.getByLabelText(/builder/i));
+    expect(screen.getByRole("dialog")).toBeDefined();
+    const youtube = screen.getAllByText("YouTube")[0]!;
+    fireEvent.click(youtube);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByLabelText(/builder/i).textContent).toMatch(/YouTube/i);
   });
 
   it("calls generate with form values on submit", () => {
     render(
       <GeneratorForm
         {...defaultProps}
-        initialValues={{ builder: "Apple", target: "LinkedIn" }}
-      />
+        initialValues={{
+          builder: "Google",
+          target: "YouTube",
+          builderId: "google",
+          targetId: "google-youtube",
+        }}
+      />,
     );
-    const button = screen.getByRole("button", { name: /generate/i });
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: /generate/i }));
 
-    expect(mockGenerate).toHaveBeenCalledWith({
-      builder: "Apple",
-      target: "LinkedIn",
-      extraDetails: "",
-    }, undefined);
+    expect(mockGenerate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        builder: "Google",
+        target: "YouTube",
+        builderId: "google",
+        targetId: "google-youtube",
+        extraDetails: "",
+        screenType: "desktop",
+      }),
+      undefined,
+    );
   });
 
   it("displays error message when error is present", () => {
@@ -172,10 +260,14 @@ describe("GeneratorForm", () => {
     render(
       <GeneratorForm
         {...defaultProps}
-        initialValues={{ builder: "Apple", target: "LinkedIn" }}
-      />
+        initialValues={{
+          builder: "Google",
+          target: "YouTube",
+          builderId: "google",
+          targetId: "google-youtube",
+        }}
+      />,
     );
-    const alert = screen.getByRole("alert");
-    expect(alert.textContent).toBe("Generation failed (500)");
+    expect(screen.getByRole("alert").textContent).toBe("Generation failed (500)");
   });
 });

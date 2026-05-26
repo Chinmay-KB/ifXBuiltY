@@ -100,19 +100,32 @@ function loadProfiles() {
 // ---------------------------------------------------------------------------
 
 function profileToRow(profile) {
+  const archetype = { ...(profile.archetype ?? {}) };
+  if (profile.screen_type && !archetype.layout) {
+    archetype.layout = profile.screen_type;
+  }
+
+  const styleDna = profile.style_dna ?? {};
+  const hasRichProfile =
+    Array.isArray(styleDna.meme_exaggeration) && styleDna.meme_exaggeration.length > 0;
+
+  let researchStatus = profile.research_status ?? "seed";
+  if (hasRichProfile && researchStatus === "seed") {
+    researchStatus = "approved";
+  }
+
   return {
     id: profile.id,
     name: profile.name,
     parent_company_id: profile.parent_company_id ?? null,
     profile_type: "product",
     category: profile.category ?? "",
-    screen_type: profile.screen_type ?? "",
     popularity_tier: profile.popularity_tier ?? 2,
-    research_status: profile.research_status ?? "seed",
+    research_status: researchStatus,
     source_urls: Array.isArray(profile.reference_urls) ? profile.reference_urls : [],
     meme_strength: profile.meme_strength ?? 3,
-    style_dna: profile.style_dna ?? {},
-    archetype: profile.archetype ?? {},
+    style_dna: styleDna,
+    archetype,
     default_vibe_tags: Array.isArray(profile.default_vibe_tags) ? profile.default_vibe_tags : [],
     logo_path: null,
   };

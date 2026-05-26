@@ -121,15 +121,16 @@ These may be smaller than the giants, but the jokes are crisp.
 | Headspace | Calm copy, illustrated mindfulness, soft progress loops |
 | Calm | Sleep stories, serene visuals, subscription nudges |
 
-## Research Workflow
+## Agent-Led Research Workflow
 
-Vercel Workflow is a good fit because each product profile is a multi-step job with retryable external calls, long-running screenshot collection, and human review.
+Vercel Workflow is a good fit because the system should run a durable research agent, not ask a person to type products in one by one. Each workflow run starts from a broad seed like `Google`, `Microsoft`, or `developer tools`, then discovers products, researches them, captures references, drafts prompt-ready profiles, and waits for review.
 
 Proposed workflow:
 
 1. `seedProductCandidates`
-   - Input: company slug or broad category.
+   - Input: company name, website, or broad category.
    - Output: normalized candidate products with official URLs and priority score.
+   - Agent responsibility: discover the products instead of relying on a hand-written list.
 
 2. `researchProductProfile`
    - Read official product pages and selected public references.
@@ -156,6 +157,16 @@ Proposed workflow:
 7. `publishProductProfile`
    - Upsert a profile row and screenshot rows.
    - Mark status as approved.
+
+Human responsibility:
+
+- Start or schedule research runs.
+- Review drafts, screenshots, citations, and meme factors.
+- Approve, edit, reject, or rerun drafts.
+
+Non-goal:
+
+- Manually adding every product. Manual entry should exist only as an override or emergency escape hatch.
 
 ## Data Model Options
 
@@ -185,28 +196,36 @@ yarn add workflow
 Example shape:
 
 ```ts
-export async function researchProduct(productId: string) {
+export async function discoverAndResearchProducts(seed: {
+  companyName?: string;
+  category?: string;
+  maxProducts?: number;
+}) {
   "use workflow";
 
-  const sources = await findOfficialSources(productId);
+  const candidates = await discoverProductCandidates(seed);
   "use step";
 
-  const profileDraft = await summarizeProductProfile(productId, sources);
+  const scoredCandidates = await scoreAndDeduplicateCandidates(candidates);
   "use step";
 
-  const memeDraft = await summarizeMemeDna(productId, sources);
+  const profileDrafts = await researchProductProfiles(scoredCandidates);
   "use step";
 
-  const screenshots = await captureReferenceScreenshots(productId, sources);
+  const memeDrafts = await researchMemeDna(scoredCandidates);
   "use step";
 
-  return {
-    productId,
-    profileDraft,
-    memeDraft,
+  const screenshots = await collectReferenceScreenshots(scoredCandidates);
+  "use step";
+
+  const drafts = await mergeAndValidateDrafts({
+    profileDrafts,
+    memeDrafts,
     screenshots,
-    status: "needs_review",
-  };
+  });
+  "use step";
+
+  return await persistDraftsForReview(drafts);
 }
 ```
 
@@ -222,140 +241,125 @@ The exact API surface should be checked against the installed `workflow` package
 
 ## Tick-Off Task Plan
 
-### Phase 1: Decide the Data Shape
+The workflow should be the researcher and importer. The human role should be review, approval, and occasional correction.
 
-- [ ] Confirm whether products should initially be stored as first-class `company_profiles` rows.
-- [ ] Decide whether parent company metadata should be added now or deferred.
-- [ ] Pick the minimum fields needed for v1 product entries: `id`, `name`, `parent_company_id`, `screen_type`, `style_dna`, `archetype`, `default_vibe_tags`.
-- [ ] Define slug rules for product IDs, e.g. `google-maps`, `microsoft-excel`, `adobe-photoshop`.
-- [ ] Decide whether broad companies like `google` and specific products like `youtube` can both appear in the picker.
+### Phase 1: Define the Agent Contract
 
-### Phase 2: Clean the Seed Catalog
+- [ ] Define a `ProductResearchAgentInput` shape with seed company, optional category, max products, region, and run mode.
+- [ ] Define a `ProductResearchAgentOutput` shape with discovered products, rejected products, source citations, screenshots, and draft profiles.
+- [ ] Define strict JSON schemas for discovered product candidates.
+- [ ] Define strict JSON schemas for researched product profiles.
+- [ ] Define strict JSON schemas for meme DNA.
+- [ ] Define strict JSON schemas for screenshot candidates.
+- [ ] Add validation that rejects drafts missing sources, screen type, style DNA, archetype, or meme DNA.
 
-- [ ] Validate the current `src/data/company-profiles.json` shape.
-- [ ] Remove duplicate product concepts across parent companies where needed.
-- [ ] Add missing Priority 1 products from this document.
-- [ ] Add missing Priority 2 products from this document.
-- [ ] Add missing Priority 3 products from this document.
-- [ ] Add Priority 4 meme-heavy products.
-- [ ] Add a simple script that counts companies, products, duplicate IDs, and missing `screenType`.
-- [ ] Run the script and fix every duplicate or malformed entry.
+### Phase 2: Create Draft Storage
 
-### Phase 3: Choose the First Batch
+- [ ] Add a table for research runs.
+- [ ] Add a table for discovered product candidates.
+- [ ] Add a table for researched product drafts.
+- [ ] Add a table or JSONB field for citations per draft.
+- [ ] Add a table or JSONB field for screenshot candidates per draft.
+- [ ] Add status values: `queued`, `discovering`, `researching`, `screenshots`, `needs_review`, `approved`, `rejected`, `published`, `failed`.
+- [ ] Add error fields for failed agent/workflow steps.
+- [ ] Add uniqueness rules so repeated runs update existing candidates instead of creating duplicates.
 
-- [ ] Select 25 products for the first production-quality batch.
-- [ ] Include at least 5 Google products.
-- [ ] Include at least 5 Microsoft products.
-- [ ] Include at least 5 Apple/Meta/Amazon products.
-- [ ] Include at least 5 work/dev products.
-- [ ] Include at least 5 meme-heavy products.
-- [ ] Mark everything else as backlog.
+### Phase 3: Build the Discovery Agent
 
-### Phase 4: Research Profile Template
+- [ ] Create an agent step that starts from a company name or category, not a manually curated product list.
+- [ ] Search official product indexes first.
+- [ ] Search official app/product pages second.
+- [ ] Search app stores, help centers, docs, and public product pages as supporting sources.
+- [ ] Extract product names, official URLs, parent company, category, and likely screen type.
+- [ ] Score each product for popularity, recognizability, and meme potential.
+- [ ] Reject discontinued, duplicate, tiny, or visually generic products.
+- [ ] Persist discovered candidates with citations.
+- [ ] Return the top N candidates for the next workflow step.
 
-- [ ] Create a reusable JSON template for a researched product profile.
-- [ ] Add fields for official sources.
-- [ ] Add fields for visual/style observations.
-- [ ] Add fields for UX patterns.
-- [ ] Add fields for meme factors and recurring jokes.
-- [ ] Add fields for target archetype and screen layout.
-- [ ] Add fields for screenshot candidates.
-- [ ] Add a status field: `seed`, `researched`, `reviewed`, `approved`, `rejected`.
+### Phase 4: Build the Profile Research Agent
 
-### Phase 5: Manual Research Pilot
+- [ ] For each candidate, read official sources.
+- [ ] Extract visual identity: colors, typography cues, layout patterns, components, density, motion, imagery.
+- [ ] Extract UX identity: onboarding, navigation, empty states, notifications, search, feeds, dashboards, settings.
+- [ ] Extract product archetype: core screens, sections, user jobs, content style, interaction model.
+- [ ] Extract common vocabulary and microcopy patterns.
+- [ ] Generate `style_dna` in the existing prompt-compatible shape.
+- [ ] Generate `archetype` in the existing prompt-compatible shape.
+- [ ] Generate `default_vibe_tags`.
+- [ ] Persist a draft profile with citations for every non-obvious claim.
 
-- [ ] Research one Google product manually.
-- [ ] Research one Microsoft product manually.
-- [ ] Research one creative/dev product manually.
-- [ ] Research one consumer/social product manually.
-- [ ] Compare the four profiles for consistency.
-- [ ] Tighten the template based on what felt missing.
-- [ ] Convert the four pilot profiles into Supabase-ready rows.
-- [ ] Generate test images from the four pilot profiles.
-- [ ] Note which profile fields actually improved the output.
+### Phase 5: Build the Meme Research Agent
 
-### Phase 6: Database Migration
+- [ ] Search public web references for recurring jokes, user frustrations, and cultural shorthand.
+- [ ] Search communities, articles, reviews, and social posts only as supporting cultural signals.
+- [ ] Keep official factual notes separate from satirical inference.
+- [ ] Extract meme factors as concise, reusable prompt ingredients.
+- [ ] Reject claims that are defamatory, too niche, or not source-backed.
+- [ ] Score each meme factor for recognizability and usefulness in image generation.
+- [ ] Store meme factors inside `style_dna.meme_exaggeration`, `behavioral_stereotypes`, and `satirical_patterns`.
+- [ ] Persist source URLs and confidence scores.
 
-- [ ] Decide whether to add product metadata columns to `company_profiles`.
-- [ ] If needed, add `parent_company_id`.
-- [ ] If needed, add `profile_type` with values like `company` and `product`.
-- [ ] If needed, add `category`.
-- [ ] If needed, add `research_status`.
-- [ ] If needed, add `source_urls` as JSONB.
-- [ ] If needed, add `meme_strength` or `popularity_tier`.
-- [ ] Write the Supabase migration.
-- [ ] Run the migration locally.
-- [ ] Verify existing company rows still load.
+### Phase 6: Build the Screenshot Agent
 
-### Phase 7: Import Script
+- [ ] Find official public pages that visually represent the product.
+- [ ] Find public documentation/help pages with UI screenshots.
+- [ ] Find app store or marketplace screenshots where relevant.
+- [ ] Capture only public, non-authenticated pages by default.
+- [ ] Store raw screenshots in the chosen bucket.
+- [ ] Store screenshot metadata: source URL, captured at, viewport, product ID, and notes.
+- [ ] Generate thumbnails for review.
+- [ ] Mark blocked or low-quality captures as failed without failing the whole run.
 
-- [ ] Create a script to read researched product profiles from disk.
-- [ ] Validate required fields before import.
-- [ ] Upsert rows into `company_profiles`.
-- [ ] Preserve existing manually edited rows unless explicitly overwritten.
-- [ ] Print a summary of created, updated, skipped, and failed rows.
-- [ ] Add a dry-run mode.
-- [ ] Test dry-run with the pilot profiles.
-- [ ] Test real import locally.
-
-### Phase 8: Screenshot Storage
-
-- [ ] Decide whether product screenshots should reuse `company_screenshots`.
-- [ ] If not, create a `product_screenshots` table.
-- [ ] Decide whether screenshots should reuse the `company-screenshots` bucket.
-- [ ] Define storage paths for products, e.g. `google-maps/home.png`.
-- [ ] Add screenshot metadata fields: source URL, captured at, kind, notes.
-- [ ] Add import support for local screenshot files.
-- [ ] Verify screenshots are passed into generation for product builders.
-
-### Phase 9: Workflow Prototype
+### Phase 7: Orchestrate with Vercel Workflow
 
 - [ ] Add the Workflow dependency with Yarn.
 - [ ] Check the installed Workflow SDK docs/API after install.
-- [ ] Create a minimal workflow function that accepts one product ID.
-- [ ] Add a step to collect official source URLs.
-- [ ] Add a step to draft style DNA.
-- [ ] Add a step to draft meme DNA.
-- [ ] Add a step to draft archetype.
-- [ ] Add a step to collect screenshot candidates.
-- [ ] Return a structured `needs_review` profile draft.
-- [ ] Run the workflow locally with one product.
+- [ ] Create `discoverCompanyProductsWorkflow`.
+- [ ] Add step: create research run.
+- [ ] Add step: invoke discovery agent.
+- [ ] Add step: dedupe and score candidates.
+- [ ] Add step: fan out profile research jobs.
+- [ ] Add step: fan out meme research jobs.
+- [ ] Add step: fan out screenshot capture jobs.
+- [ ] Add step: merge agent outputs into product drafts.
+- [ ] Add step: validate draft schemas.
+- [ ] Add step: persist drafts as `needs_review`.
+- [ ] Add step: notify/admin-surface that drafts are ready.
+- [ ] Make each step idempotent so retries do not duplicate rows or screenshots.
 
-### Phase 10: Research Automation
+### Phase 8: Publish Automatically After Approval
 
-- [ ] Add web search/source collection for official pages.
-- [ ] Add guarded public-reference search for meme factors.
-- [ ] Store citations with each extracted claim.
-- [ ] Separate factual product notes from inferred satire notes.
-- [ ] Add retry/error handling for source fetch failures.
-- [ ] Add a maximum source count per product.
-- [ ] Add a confidence score per section.
-- [ ] Persist workflow output to a draft table or JSON file.
+- [ ] Add an approval action for a draft product.
+- [ ] On approval, upsert the draft into `company_profiles` or the chosen product table.
+- [ ] On approval, attach approved screenshots to the generated profile.
+- [ ] On rejection, preserve the draft and reason for future agent tuning.
+- [ ] Allow "approve all above score X" only after individual review works.
+- [ ] Preserve manually edited profiles unless the reviewer opts into overwrite.
 
-### Phase 11: Screenshot Automation
+### Phase 9: Build Admin Review
 
-- [ ] Decide which screenshot capture tool to use.
-- [ ] Capture only public, non-authenticated pages by default.
-- [ ] Capture official product pages first.
-- [ ] Capture public help/docs/app-store images where useful.
-- [ ] Generate thumbnails for admin review.
-- [ ] Store raw screenshots.
-- [ ] Store screenshot metadata and source URLs.
-- [ ] Add failure handling for blocked pages.
+- [ ] Add an admin view for research runs.
+- [ ] Add an admin view for discovered candidates.
+- [ ] Add an admin view for product drafts.
+- [ ] Show agent confidence and rejection reasons.
+- [ ] Show official citations.
+- [ ] Show meme citations separately from official sources.
+- [ ] Show screenshot candidates and thumbnails.
+- [ ] Allow inline edits before approval.
+- [ ] Allow rerunning a failed product draft.
+- [ ] Allow rerunning an entire company/category discovery job.
 
-### Phase 12: Admin Review
+### Phase 10: Seed the Agent, Not the Products
 
-- [ ] Add an admin view for draft product profiles.
-- [ ] Show product identity and parent company.
-- [ ] Show style DNA fields.
-- [ ] Show meme DNA fields.
-- [ ] Show archetype fields.
-- [ ] Show citations/source URLs.
-- [ ] Show screenshot candidates.
-- [ ] Add approve/reject controls.
-- [ ] On approval, publish to `company_profiles`.
+- [ ] Create a short seed list of companies/categories for the workflow to research.
+- [ ] Include Google as a seed company.
+- [ ] Include Microsoft as a seed company.
+- [ ] Include Apple, Meta, Amazon, Adobe, Atlassian, GitHub, Stripe, Shopify, OpenAI, Vercel, and Supabase as seed companies.
+- [ ] Include categories like social, payments, developer tools, productivity, media, commerce, travel, food, health, and education.
+- [ ] Run discovery with a small `maxProducts` value first.
+- [ ] Expand max products only after draft quality is acceptable.
 
-### Phase 13: Generator UI
+### Phase 11: Generator UI
 
 - [ ] Rename picker copy from "company" to "company/product" where appropriate.
 - [ ] Group picker options by company.
@@ -366,7 +370,7 @@ The exact API surface should be checked against the installed `workflow` package
 - [ ] Update batch generation to sample product profiles too.
 - [ ] Verify builder and target cannot be the exact same profile.
 
-### Phase 14: Prompt Improvements
+### Phase 12: Prompt Improvements
 
 - [ ] Update prompt copy to understand product-level builders.
 - [ ] Include parent company context without forcing parent branding.
@@ -376,7 +380,7 @@ The exact API surface should be checked against the installed `workflow` package
 - [ ] Add tests for company x product, product x company, and product x product.
 - [ ] Generate sample outputs for each pairing type.
 
-### Phase 15: Quality Bar
+### Phase 13: Quality Bar
 
 - [ ] Define what counts as a good profile.
 - [ ] Define what counts as a good screenshot reference set.
@@ -386,22 +390,24 @@ The exact API surface should be checked against the installed `workflow` package
 - [ ] Remove or rewrite weak profiles.
 - [ ] Lock the first approved batch.
 
-### Phase 16: Expand in Waves
+### Phase 14: Expand in Waves
 
-- [ ] Wave 1: 25 approved products.
-- [ ] Wave 2: 50 approved products.
-- [ ] Wave 3: 100 approved products.
-- [ ] Wave 4: 150+ approved products.
+- [ ] Wave 1: agent discovers candidates for 5 seed companies.
+- [ ] Wave 2: agent drafts 25 review-ready products.
+- [ ] Wave 3: agent drafts 50 review-ready products.
+- [ ] Wave 4: agent drafts 100 review-ready products.
+- [ ] Wave 5: agent drafts 150+ review-ready products.
 - [ ] After each wave, generate a random sample set.
 - [ ] After each wave, remove products that do not produce recognizable outputs.
-- [ ] Keep a backlog of requested products from users.
+- [ ] Feed rejected drafts back into agent scoring rules.
 
-### Phase 17: Documentation and Maintenance
+### Phase 15: Documentation and Maintenance
 
-- [ ] Document how to add a product manually.
-- [ ] Document how to run the import script.
-- [ ] Document how to run the research workflow.
+- [ ] Document how to start a company/category discovery run.
+- [ ] Document how the agent chooses products.
+- [ ] Document how to rerun failed research.
 - [ ] Document how to approve/reject drafts.
 - [ ] Document screenshot capture rules.
 - [ ] Document source/citation expectations.
-- [ ] Add a recurring review process for stale or discontinued products.
+- [ ] Document how to tune scoring prompts after bad drafts.
+- [ ] Add a recurring workflow to check stale or discontinued products.

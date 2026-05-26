@@ -81,20 +81,22 @@ export function FeedPageClient({
       </div>
 
       {/* Masonry Grid with empty state handling */}
-      <div className="mt-7 flex-1 px-6 lg:px-10">
-        {initialItems.length === 0 && hasActiveFilters ? (
-          <EmptyFilterState />
-        ) : (
-          <FeedMasonryGrid
-            initialItems={initialItems}
-            sort={sort}
-            builders={
-              selectedBuilders.length > 0 ? selectedBuilders : undefined
-            }
-            targets={selectedTargets.length > 0 ? selectedTargets : undefined}
-            tones={selectedTones.length > 0 ? selectedTones : undefined}
-          />
-        )}
+      <div className="mt-6 flex-1 px-4 pb-10 sm:px-6 lg:px-10">
+        <div className="rounded-[20px] border border-line/80 bg-linear-to-b from-panel/55 via-canvas to-panel/40 p-3 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.75)] sm:p-4 lg:p-5">
+          {initialItems.length === 0 && hasActiveFilters ? (
+            <EmptyFilterState />
+          ) : (
+            <FeedMasonryGrid
+              initialItems={initialItems}
+              sort={sort}
+              builders={
+                selectedBuilders.length > 0 ? selectedBuilders : undefined
+              }
+              targets={selectedTargets.length > 0 ? selectedTargets : undefined}
+              tones={selectedTones.length > 0 ? selectedTones : undefined}
+            />
+          )}
+        </div>
       </div>
     </>
   );

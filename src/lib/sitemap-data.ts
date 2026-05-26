@@ -9,6 +9,8 @@ export async function getPublishedGenerationsForSitemap(): Promise<
     .select("slug, updated_at")
     .eq("visibility", "published")
     .eq("moderation_status", "visible")
+    .eq("status", "completed")
+    .eq("image_ready", true)
     .order("updated_at", { ascending: false })
     .limit(50_000);
 

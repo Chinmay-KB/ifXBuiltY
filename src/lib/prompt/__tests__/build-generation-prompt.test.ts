@@ -1,16 +1,38 @@
 import { describe, expect, it } from "vitest";
-
 import { buildGenerationPrompt } from "@/lib/prompt/build-generation-prompt";
 
 describe("buildGenerationPrompt", () => {
-  it("includes branding guardrails and stylistic framing", () => {
-    const p = buildGenerationPrompt({
-      builder: "Microsoft",
-      target: "Indian Government portal",
-      extraDetails: "Dense dashboards with tricolor accents.",
+  it("mentions product experience in intro", () => {
+    const prompt = buildGenerationPrompt({
+      builder: "Google Maps",
+      target: "Microsoft Teams",
+      extraDetails: "Extra",
     });
-    expect(p).toContain("Branding guardrails");
-    expect(p).toContain("stylistic reference");
-    expect(p).not.toMatch(/as if built by/i);
+    expect(prompt).toContain("product experience");
+    expect(prompt).toContain("Google Maps");
+  });
+
+  it("requires builder and target", () => {
+    expect(() =>
+      buildGenerationPrompt({ builder: "", target: "X", extraDetails: "" }),
+    ).toThrow();
+  });
+
+  it("includes explicit aspect framing when screen type is provided", () => {
+    const mobile = buildGenerationPrompt({
+      builder: "Google",
+      target: "YouTube",
+      extraDetails: "",
+      screenType: "mobile",
+    });
+    expect(mobile).toContain("9:16");
+
+    const desktop = buildGenerationPrompt({
+      builder: "Google",
+      target: "YouTube",
+      extraDetails: "",
+      screenType: "desktop",
+    });
+    expect(desktop).toContain("16:9");
   });
 });
