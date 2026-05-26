@@ -63,7 +63,7 @@ export function HomepageHero({ thumbnails, ideasThisWeek, totalPublished }: Home
 
         {/* Mobile thumbnail strip — smaller, fewer */}
         <div className="mb-6 flex items-center gap-3 md:hidden">
-          {thumbnails.slice(0, 5).map((thumb, i) => (
+          {thumbnails.slice(0, 3).map((thumb, i) => (
             <Link
               key={thumb.id}
               href={`/g/${thumb.slug}`}
@@ -221,10 +221,12 @@ function FloatingThumbnail({
     "--float-delay": `${index * 0.4}s`,
     transform: mounted
       ? `rotate(${pos.rotate}deg) scale(1)`
-      : `rotate(${pos.rotate}deg) scale(0.8)`,
-    opacity: mounted ? pos.opacity : 0,
-    transition: `transform 800ms cubic-bezier(0.22, 1, 0.36, 1), opacity 800ms cubic-bezier(0.22, 1, 0.36, 1)`,
-    transitionDelay: `${index * 80 + 150}ms`,
+      : `rotate(${pos.rotate}deg) scale(0.98)`,
+    opacity: pos.opacity,
+    transition: mounted
+      ? `transform 800ms cubic-bezier(0.22, 1, 0.36, 1)`
+      : undefined,
+    transitionDelay: mounted ? `${index * 80 + 150}ms` : undefined,
   } as React.CSSProperties;
 
   return (

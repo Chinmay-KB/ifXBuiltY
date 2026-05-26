@@ -1,8 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { createContext, useCallback, useContext, useState } from "react";
 
-import { SignInModal } from "@/components/sign-in-modal";
+const SignInModal = dynamic(
+  () => import("@/components/sign-in-modal").then((mod) => mod.SignInModal),
+  { ssr: false },
+);
 
 type SignInModalContextValue = {
   openSignIn: () => void;
@@ -25,7 +29,7 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
   return (
     <SignInModalContext.Provider value={{ openSignIn }}>
       {children}
-      <SignInModal open={open} onClose={closeSignIn} />
+      {open ? <SignInModal open onClose={closeSignIn} /> : null}
     </SignInModalContext.Provider>
   );
 }

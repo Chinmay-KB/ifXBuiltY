@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import Link from "next/link";
 
+import { DeferredAnalytics } from "@/components/deferred-analytics";
 import { NavigationGeneratingProvider } from "@/components/navigation-generating-context";
 import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
@@ -124,7 +124,7 @@ export default function RootLayout({
             .
           </p>
         </footer>
-        <Analytics />
+        <DeferredAnalytics />
       </body>
     </html>
   );

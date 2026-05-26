@@ -1,18 +1,36 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { FeedFilterBar } from "@/components/feed-filter-bar";
-import { FeedMasonryGrid } from "@/components/feed-masonry-grid";
+import {
+  buildFeedApiQuery,
+  isDefaultFeedUrlParams,
+  parseFeedUrlParams,
+} from "@/lib/feed-url-params";
 import type { FeedItem, FeedSort } from "@/lib/ui/types";
+
+const DynamicFeedMasonryGrid = dynamic(
+  () =>
+    import("@/components/feed-masonry-grid").then(
+      (module) => module.FeedMasonryGrid,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-8">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
+        <span className="sr-only">Loading feed...</span>
+      </div>
+    ),
+  },
+);
 
 type FeedPageClientProps = {
   initialItems: FeedItem[];
-  initialSort: FeedSort;
-  initialBuilders: string[];
-  initialTargets: string[];
-  initialTones: string[];
   availableBuilders: string[];
   availableTargets: string[];
 };
@@ -21,24 +39,65 @@ type FeedPageClientProps = {
  * FeedPageClient — client wrapper that manages filter state and coordinates
  * between FeedFilterBar and FeedMasonryGrid. Also handles the empty state
  * when no results match the active filters.
- *
- * Validates: Requirements 2.1, 2.2, 2.6, 2.7
  */
 export function FeedPageClient({
   initialItems,
-  initialSort,
-  initialBuilders,
-  initialTargets,
-  initialTones,
   availableBuilders,
   availableTargets,
 }: FeedPageClientProps) {
-  const [sort, setSort] = useState<FeedSort>(initialSort);
-  const [selectedBuilders, setSelectedBuilders] =
-    useState<string[]>(initialBuilders);
-  const [selectedTargets, setSelectedTargets] =
-    useState<string[]>(initialTargets);
-  const [selectedTones, setSelectedTones] = useState<string[]>(initialTones);
+  const searchParams = useSearchParams();
+  const urlParams = useMemo(
+    () => parseFeedUrlParams(searchParams),
+    [searchParams],
+  );
+
+  const [sort, setSort] = useState<FeedSort>(urlParams.sort);
+  const [selectedBuilders, setSelectedBuilders] = useState<string[]>(
+    urlParams.builders,
+  );
+  const [selectedTargets, setSelectedTargets] = useState<string[]>(
+    urlParams.targets,
+  );
+  const [selectedTones, setSelectedTones] = useState<string[]>(urlParams.tones);
+  const [items, setItems] = useState<FeedItem[]>(initialItems);
+  const [isSyncing, setIsSyncing] = useState(
+    () => !isDefaultFeedUrlParams(urlParams),
+  );
+
+  useEffect(() => {
+    setSort(urlParams.sort);
+    setSelectedBuilders(urlParams.builders);
+    setSelectedTargets(urlParams.targets);
+    setSelectedTones(urlParams.tones);
+
+    if (isDefaultFeedUrlParams(urlParams)) {
+      setItems(initialItems);
+      setIsSyncing(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSyncing(true);
+
+    void fetch(`/api/feed?${buildFeedApiQuery(urlParams)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Feed request failed");
+        return res.json() as Promise<{ items: FeedItem[] }>;
+      })
+      .then((data) => {
+        if (!cancelled) setItems(data.items ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsSyncing(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [urlParams, initialItems]);
 
   const handleSortChange = useCallback((newSort: FeedSort) => {
     setSort(newSort);
@@ -56,7 +115,6 @@ export function FeedPageClient({
     setSelectedTones(next);
   }, []);
 
-  // Determine if filters are active (for empty state messaging)
   const hasActiveFilters =
     selectedBuilders.length > 0 ||
     selectedTargets.length > 0 ||
@@ -80,19 +138,26 @@ export function FeedPageClient({
         />
       </div>
 
-      {/* Masonry Grid with empty state handling */}
       <div className="mt-6 flex-1 px-4 pb-10 sm:px-6 lg:px-10">
         <div className="rounded-[20px] border border-line/80 bg-linear-to-b from-panel/55 via-canvas to-panel/40 p-3 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.75)] sm:p-4 lg:p-5">
-          {initialItems.length === 0 && hasActiveFilters ? (
+          {isSyncing ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
+              <span className="sr-only">Loading filtered feed...</span>
+            </div>
+          ) : items.length === 0 && hasActiveFilters ? (
             <EmptyFilterState />
           ) : (
-            <FeedMasonryGrid
-              initialItems={initialItems}
+            <DynamicFeedMasonryGrid
+              key={`${sort}|${selectedBuilders.join(",")}|${selectedTargets.join(",")}|${selectedTones.join(",")}`}
+              initialItems={items}
               sort={sort}
               builders={
                 selectedBuilders.length > 0 ? selectedBuilders : undefined
               }
-              targets={selectedTargets.length > 0 ? selectedTargets : undefined}
+              targets={
+                selectedTargets.length > 0 ? selectedTargets : undefined
+              }
               tones={selectedTones.length > 0 ? selectedTones : undefined}
             />
           )}

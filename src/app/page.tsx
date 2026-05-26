@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+/** Align with cached feed queries used on the homepage. */
+export const revalidate = 120;
+
+const HERO_THUMBNAIL_LIMIT = 8;
+
 export default async function HomePage() {
   // Fetch featured generations for hero thumbnails + initial feed items in parallel
   const [featuredGenerations, feed, totalPublished, filterOptions] = await Promise.all([
@@ -39,7 +44,7 @@ export default async function HomePage() {
   const featuredIds = new Set(featuredThumbs.map((t) => t.id));
   const supplementThumbs = feed.items
     .filter((item) => !featuredIds.has(item.id) && item.imageUrl)
-    .slice(0, 15 - featuredThumbs.length)
+    .slice(0, HERO_THUMBNAIL_LIMIT - featuredThumbs.length)
     .map((item) => ({
       id: item.id,
       slug: item.slug,
@@ -48,7 +53,10 @@ export default async function HomePage() {
       imageUrl: item.imageUrl!,
     }));
 
-  const heroThumbnails = [...featuredThumbs, ...supplementThumbs];
+  const heroThumbnails = [...featuredThumbs, ...supplementThumbs].slice(
+    0,
+    HERO_THUMBNAIL_LIMIT,
+  );
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-canvas">

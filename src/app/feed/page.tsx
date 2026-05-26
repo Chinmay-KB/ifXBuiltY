@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
-import { FeedPaperHero } from "@/components/feed-paper-hero";
 import { FeedPageClient } from "@/components/feed-page-client";
+import { FeedPaperHero } from "@/components/feed-paper-hero";
 import { getFeedFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import type { FeedSort } from "@/lib/feed-types";
 
 export const metadata: Metadata = {
   title: "Browse cursed AI screenshots",
@@ -14,40 +14,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/feed" },
 };
 
-type Props = {
-  searchParams: Promise<{ sort?: string; builder?: string; target?: string; tone?: string }>;
-};
+/** Cached default feed shell; filter query params are applied on the client. */
+export const revalidate = 120;
 
-function parseSort(raw: string | undefined): FeedSort {
-  if (raw === "trending") return "trending";
-  if (raw === "top") return "top";
-  if (raw === "remixes") return "remixes";
-  return "newest";
-}
-
-function parseCommaSeparated(raw: string | undefined): string[] {
-  if (!raw || raw.trim() === "") return [];
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
-export default async function FeedPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const sort = parseSort(params.sort);
-  const builders = parseCommaSeparated(params.builder);
-  const targets = parseCommaSeparated(params.target);
-  const tones = parseCommaSeparated(params.tone);
-
+export default async function FeedPage() {
   const [feed, filterOptions] = await Promise.all([
-    fetchFeedServer({
-      sort,
-      limit: 24,
-      builders: builders.length > 0 ? builders : undefined,
-      targets: targets.length > 0 ? targets : undefined,
-      tones: tones.length > 0 ? tones : undefined,
-    }),
+    fetchFeedServer({ sort: "newest", limit: 24 }),
     getFeedFilterOptions(),
   ]);
 
@@ -56,25 +28,29 @@ export default async function FeedPage({ searchParams }: Props) {
       <FeedPaperHero ideasThisWeek={feed.ideasThisWeek ?? 0} />
 
       <div className="flex flex-1 flex-col pb-10 pt-0">
-        {feed.items.length === 0 &&
-        builders.length === 0 &&
-        targets.length === 0 &&
-        tones.length === 0 ? (
+        {feed.items.length === 0 ? (
           <div className="px-6 lg:px-10">
             <EmptyFeedState />
           </div>
         ) : (
-          <FeedPageClient
-            initialItems={feed.items}
-            initialSort={sort}
-            initialBuilders={builders}
-            initialTargets={targets}
-            initialTones={tones}
-            availableBuilders={filterOptions.builders}
-            availableTargets={filterOptions.targets}
-          />
+          <Suspense fallback={<FeedClientFallback />}>
+            <FeedPageClient
+              initialItems={feed.items}
+              availableBuilders={filterOptions.builders}
+              availableTargets={filterOptions.targets}
+            />
+          </Suspense>
         )}
       </div>
+    </div>
+  );
+}
+
+function FeedClientFallback() {
+  return (
+    <div className="mt-6 flex flex-1 items-center justify-center px-4 pb-10">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
+      <span className="sr-only">Loading feed...</span>
     </div>
   );
 }

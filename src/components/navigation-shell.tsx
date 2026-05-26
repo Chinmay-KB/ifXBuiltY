@@ -1,8 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import { CreditsBadge } from "@/components/credits-badge";
+const CreditsBadge = dynamic(
+  () => import("@/components/credits-badge").then((mod) => mod.CreditsBadge),
+  { ssr: false },
+);
 import { useSignInModal } from "@/components/sign-in-modal-provider";
 import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";

@@ -2,6 +2,13 @@ import { withWorkflow } from "workflow/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    localPatterns: [
+      {
+        pathname: "/api/generations/**",
+      },
+    ],
+  },
   async redirects() {
     return [
       {
