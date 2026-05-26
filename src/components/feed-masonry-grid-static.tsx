@@ -3,9 +3,13 @@ import type { FeedItem } from "@/lib/ui/types";
 
 type FeedMasonryGridStaticProps = {
   items: FeedItem[];
+  showActions?: boolean;
 };
 
-export function FeedMasonryGridStatic({ items }: FeedMasonryGridStaticProps) {
+export function FeedMasonryGridStatic({
+  items,
+  showActions = false,
+}: FeedMasonryGridStaticProps) {
   if (items.length === 0) {
     return (
       <p className="py-12 text-center text-muted">
@@ -22,6 +26,7 @@ export function FeedMasonryGridStatic({ items }: FeedMasonryGridStaticProps) {
             item={item}
             variant="paper"
             imagePriority={index < 2}
+            showActions={showActions}
           />
         </div>
       ))}

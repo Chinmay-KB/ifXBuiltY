@@ -3,15 +3,28 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { FeedFilterBar } from "@/components/feed-filter-bar";
+import { FeedFilterBarSkeleton } from "@/components/feed-filter-bar-skeleton";
+import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
+import { FeedMasonryGridStatic } from "@/components/feed-masonry-grid-static";
 import {
   buildFeedApiQuery,
+  feedUrlParamsKey,
   isDefaultFeedUrlParams,
   parseFeedUrlParams,
 } from "@/lib/feed-url-params";
-import type { FeedItem, FeedSort } from "@/lib/ui/types";
+import { useEnhanceWhenNearViewport } from "@/lib/use-enhance-when-near-viewport";
+import type { FeedItem } from "@/lib/ui/types";
+
+const FeedFilterBar = dynamic(
+  () =>
+    import("@/components/feed-filter-bar").then((mod) => mod.FeedFilterBar),
+  {
+    ssr: false,
+    loading: () => <FeedFilterBarSkeleton />,
+  },
+);
 
 const DynamicFeedMasonryGrid = dynamic(
   () =>
@@ -21,10 +34,10 @@ const DynamicFeedMasonryGrid = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center py-8">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
-        <span className="sr-only">Loading feed...</span>
-      </div>
+      <FeedLoadingSpinner
+        className="py-8"
+        label="Loading feed..."
+      />
     ),
   },
 );
@@ -36,9 +49,8 @@ type FeedPageClientProps = {
 };
 
 /**
- * FeedPageClient — client wrapper that manages filter state and coordinates
- * between FeedFilterBar and FeedMasonryGrid. Also handles the empty state
- * when no results match the active filters.
+ * Static feed shell first; loads filter/infinite-scroll JS when near viewport
+ * (or immediately when URL filters are active).
  */
 export function FeedPageClient({
   initialItems,
@@ -50,27 +62,67 @@ export function FeedPageClient({
     () => parseFeedUrlParams(searchParams),
     [searchParams],
   );
+  const hasFilteredUrl = !isDefaultFeedUrlParams(urlParams);
 
-  const [sort, setSort] = useState<FeedSort>(urlParams.sort);
-  const [selectedBuilders, setSelectedBuilders] = useState<string[]>(
-    urlParams.builders,
+  const { ref: sectionRef, enhanced } = useEnhanceWhenNearViewport({
+    rootMargin: "320px 0px",
+    immediate: hasFilteredUrl,
+  });
+
+  if (!enhanced) {
+    return (
+      <div ref={sectionRef} className="flex flex-1 flex-col">
+        <FeedSectionChrome filterBar={<FeedFilterBarSkeleton />}>
+          {hasFilteredUrl ? (
+            <FeedLoadingSpinner
+              className="py-16"
+              label="Loading filtered feed..."
+            />
+          ) : (
+            <FeedMasonryGridStatic items={initialItems} />
+          )}
+        </FeedSectionChrome>
+      </div>
+    );
+  }
+
+  return (
+    <FeedPageInteractive
+      initialItems={initialItems}
+      availableBuilders={availableBuilders}
+      availableTargets={availableTargets}
+      urlParams={urlParams}
+    />
   );
-  const [selectedTargets, setSelectedTargets] = useState<string[]>(
-    urlParams.targets,
+}
+
+type FeedPageInteractiveProps = FeedPageClientProps & {
+  urlParams: ReturnType<typeof parseFeedUrlParams>;
+};
+
+function FeedPageInteractive({
+  initialItems,
+  availableBuilders,
+  availableTargets,
+  urlParams,
+}: FeedPageInteractiveProps) {
+  const { sort, builders, targets, tones } = urlParams;
+  const paramsKey = feedUrlParamsKey(urlParams);
+  const hasFilteredUrl = !isDefaultFeedUrlParams(urlParams);
+
+  const [items, setItems] = useState<FeedItem[]>(
+    hasFilteredUrl ? [] : initialItems,
   );
-  const [selectedTones, setSelectedTones] = useState<string[]>(urlParams.tones);
-  const [items, setItems] = useState<FeedItem[]>(initialItems);
-  const [isSyncing, setIsSyncing] = useState(
-    () => !isDefaultFeedUrlParams(urlParams),
+  const [isSyncing, setIsSyncing] = useState(hasFilteredUrl);
+  const [enableInfiniteScroll, setEnableInfiniteScroll] = useState(
+    hasFilteredUrl,
   );
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+
+  const useInteractiveGrid = hasFilteredUrl || enableInfiniteScroll;
 
   useEffect(() => {
-    setSort(urlParams.sort);
-    setSelectedBuilders(urlParams.builders);
-    setSelectedTargets(urlParams.targets);
-    setSelectedTones(urlParams.tones);
-
-    if (isDefaultFeedUrlParams(urlParams)) {
+    if (!hasFilteredUrl) {
       setItems(initialItems);
       setIsSyncing(false);
       return;
@@ -97,81 +149,107 @@ export function FeedPageClient({
     return () => {
       cancelled = true;
     };
-  }, [urlParams, initialItems]);
+  }, [paramsKey, initialItems, hasFilteredUrl]);
 
-  const handleSortChange = useCallback((newSort: FeedSort) => {
-    setSort(newSort);
-  }, []);
+  useEffect(() => {
+    if (useInteractiveGrid) return;
 
-  const handleBuildersChange = useCallback((newBuilders: string[]) => {
-    setSelectedBuilders(newBuilders);
-  }, []);
+    const node = loadMoreSentinelRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setEnableInfiniteScroll(true);
+      return;
+    }
 
-  const handleTargetsChange = useCallback((newTargets: string[]) => {
-    setSelectedTargets(newTargets);
-  }, []);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setEnableInfiniteScroll(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px 400px 0px" },
+    );
 
-  const handleTonesChange = useCallback((next: string[]) => {
-    setSelectedTones(next);
-  }, []);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [useInteractiveGrid]);
+
+  const noop = useCallback(() => {}, []);
 
   const hasActiveFilters =
-    selectedBuilders.length > 0 ||
-    selectedTargets.length > 0 ||
-    selectedTones.length > 0;
+    builders.length > 0 || targets.length > 0 || tones.length > 0;
 
   return (
     <>
-      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
-        <FeedFilterBar
-          variant="paper"
-          currentSort={sort}
-          builders={availableBuilders}
-          targets={availableTargets}
-          selectedBuilders={selectedBuilders}
-          selectedTargets={selectedTargets}
-          selectedTones={selectedTones}
-          onSortChange={handleSortChange}
-          onBuildersChange={handleBuildersChange}
-          onTargetsChange={handleTargetsChange}
-          onTonesChange={handleTonesChange}
-        />
-      </div>
+      <FeedSectionChrome
+        filterBar={
+          <FeedFilterBar
+            variant="paper"
+            currentSort={sort}
+            builders={availableBuilders}
+            targets={availableTargets}
+            selectedBuilders={builders}
+            selectedTargets={targets}
+            selectedTones={tones}
+            onSortChange={noop}
+            onBuildersChange={noop}
+            onTargetsChange={noop}
+            onTonesChange={noop}
+          />
+        }
+      >
+        {isSyncing ? (
+          <FeedLoadingSpinner
+            className="py-16"
+            label="Loading filtered feed..."
+          />
+        ) : items.length === 0 && hasActiveFilters ? (
+          <EmptyFilterState />
+        ) : useInteractiveGrid ? (
+          <DynamicFeedMasonryGrid
+            key={feedUrlParamsKey(urlParams)}
+            initialItems={items}
+            sort={sort}
+            builders={builders.length > 0 ? builders : undefined}
+            targets={targets.length > 0 ? targets : undefined}
+            tones={tones.length > 0 ? tones : undefined}
+          />
+        ) : (
+          <>
+            <FeedMasonryGridStatic items={items} />
+            <div ref={loadMoreSentinelRef} aria-hidden className="h-px w-full" />
+          </>
+        )}
+      </FeedSectionChrome>
+    </>
+  );
+}
 
+function FeedSectionChrome({
+  filterBar,
+  children,
+}: {
+  filterBar: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
+        {filterBar}
+      </div>
       <div className="mt-6 flex-1 px-4 pb-10 sm:px-6 lg:px-10">
         <div className="rounded-[20px] border border-line/80 bg-linear-to-b from-panel/55 via-canvas to-panel/40 p-3 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.75)] sm:p-4 lg:p-5">
-          {isSyncing ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
-              <span className="sr-only">Loading filtered feed...</span>
-            </div>
-          ) : items.length === 0 && hasActiveFilters ? (
-            <EmptyFilterState />
-          ) : (
-            <DynamicFeedMasonryGrid
-              key={`${sort}|${selectedBuilders.join(",")}|${selectedTargets.join(",")}|${selectedTones.join(",")}`}
-              initialItems={items}
-              sort={sort}
-              builders={
-                selectedBuilders.length > 0 ? selectedBuilders : undefined
-              }
-              targets={
-                selectedTargets.length > 0 ? selectedTargets : undefined
-              }
-              tones={selectedTones.length > 0 ? selectedTones : undefined}
-            />
-          )}
+          {children}
         </div>
       </div>
     </>
   );
 }
 
-/** Empty state shown when no results match the active filters */
 function EmptyFilterState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="rounded-xl bg-panel p-8 max-w-md">
+      <div className="max-w-md rounded-xl bg-panel p-8">
         <p className="text-xl font-bold text-ink">
           No generations match your filters
         </p>

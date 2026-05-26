@@ -1,5 +1,4 @@
-import { FeedMasonryGridStatic } from "@/components/feed-masonry-grid-static";
-import { HomepageFeedClient } from "@/components/homepage-feed-client";
+import { HomepageFeedDeferred } from "@/components/homepage-feed-deferred";
 import type { FeedHierarchicalFilterOptions } from "@/lib/feed-profile-filter";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -18,10 +17,9 @@ export function HomepageFeed({
   filterOptions,
 }: HomepageFeedProps) {
   return (
-    <div id="feed" className="relative flex flex-1 flex-col">
-      <HomepageFeedClient filterOptions={filterOptions}>
-        <FeedMasonryGridStatic items={initialItems} />
-      </HomepageFeedClient>
-    </div>
+    <HomepageFeedDeferred
+      initialItems={initialItems}
+      filterOptions={filterOptions}
+    />
   );
 }

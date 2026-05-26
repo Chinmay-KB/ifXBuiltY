@@ -6,19 +6,14 @@ import { usePathname } from "next/navigation";
 import { useNavigationGenerating } from "@/components/navigation-generating-context";
 import { NavigationShell } from "@/components/navigation-shell";
 import { isSuperadmin as isSuperadminEmail } from "@/lib/admin-constants";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useDeferUntilIdle } from "@/lib/defer-until-idle";
 
-type User = {
+type NavUser = {
   id: string;
   email?: string;
   avatar_url?: string;
   display_name?: string;
 } | null;
-
-type NavigationShellWrapperProps = {
-  user: User;
-  isSuperadmin: boolean;
-};
 
 function getActiveSection(
   pathname: string,
@@ -27,7 +22,8 @@ function getActiveSection(
   if (pathname.startsWith("/about")) return "about";
   if (pathname.startsWith("/feed")) return "feed";
   if (pathname.startsWith("/g/")) return "feed";
-  if (pathname.startsWith("/generate") || pathname.startsWith("/remix")) return "generate";
+  if (pathname.startsWith("/generate") || pathname.startsWith("/remix"))
+    return "generate";
   return "home";
 }
 
@@ -37,19 +33,23 @@ function getNavVariant(pathname: string): "marketing" | "app" {
   return "app";
 }
 
-export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWrapperProps) {
+export function NavigationShellWrapper() {
   const pathname = usePathname();
   const { state: generatingNavState } = useNavigationGenerating();
-  const [resolvedUser, setResolvedUser] = useState(user);
-  const [resolvedIsSuperadmin, setResolvedIsSuperadmin] = useState(isSuperadmin);
+  const [user, setUser] = useState<NavUser>(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const readyToHydrate = useDeferUntilIdle(2500);
 
   useEffect(() => {
-    if (user) return;
+    if (!readyToHydrate) return;
 
     let cancelled = false;
 
     async function hydrateUserFromSession() {
       try {
+        const { createSupabaseBrowserClient } = await import(
+          "@/lib/supabase/client"
+        );
         const supabase = createSupabaseBrowserClient();
         const {
           data: { user: authUser },
@@ -57,13 +57,16 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
 
         if (cancelled || !authUser) return;
 
-        setResolvedUser({
+        setUser({
           id: authUser.id,
           email: authUser.email ?? undefined,
           avatar_url: authUser.user_metadata?.avatar_url ?? undefined,
-          display_name: authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? undefined,
+          display_name:
+            authUser.user_metadata?.full_name ??
+            authUser.user_metadata?.name ??
+            undefined,
         });
-        setResolvedIsSuperadmin(isSuperadminEmail(authUser.email));
+        setIsSuperadmin(isSuperadminEmail(authUser.email));
       } catch {
         // Keep anonymous shell on transient client auth failures.
       }
@@ -74,9 +77,8 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [readyToHydrate]);
 
-  // Don't render the main navigation on admin routes — admin uses its own AdminShell
   if (pathname.startsWith("/admin")) {
     return null;
   }
@@ -92,9 +94,9 @@ export function NavigationShellWrapper({ user, isSuperadmin }: NavigationShellWr
 
   return (
     <NavigationShell
-      user={resolvedUser}
+      user={user}
       activeSection={activeSection}
-      isSuperadmin={resolvedIsSuperadmin}
+      isSuperadmin={isSuperadmin}
       isGenerationDetail={isGenerationDetail}
       variant={navVariant}
       generatingChrome={generatingChrome}

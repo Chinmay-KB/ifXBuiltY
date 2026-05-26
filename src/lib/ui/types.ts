@@ -24,6 +24,15 @@ export type FeedItem = {
 
 export type FeedSort = "trending" | "newest" | "top" | "remixes";
 
+/** Hero floating thumbnail passed from the homepage server page. */
+export type HeroFloatingThumb = {
+  id: number;
+  slug: string;
+  builder: string;
+  target: string;
+  imageUrl: string;
+};
+
 export type GenerationInputs = {
   builder: string;
   target: string;

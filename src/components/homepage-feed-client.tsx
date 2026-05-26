@@ -4,7 +4,17 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useState, type ReactNode } from "react";
 
-import { FeedFilterBar } from "@/components/feed-filter-bar";
+import { FeedFilterBarSkeleton } from "@/components/feed-filter-bar-skeleton";
+import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
+
+const FeedFilterBar = dynamic(
+  () =>
+    import("@/components/feed-filter-bar").then((mod) => mod.FeedFilterBar),
+  {
+    ssr: false,
+    loading: () => <FeedFilterBarSkeleton />,
+  },
+);
 import {
   expandProfileSelectionsToNames,
   type FeedHierarchicalFilterOptions,
@@ -20,10 +30,10 @@ const DynamicFeedMasonryGrid = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex items-center justify-center py-8">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
-        <span className="sr-only">Loading filtered feed...</span>
-      </div>
+      <FeedLoadingSpinner
+        className="py-8"
+        label="Loading filtered feed..."
+      />
     ),
   },
 );

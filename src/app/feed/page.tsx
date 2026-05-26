@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { FeedPageClient } from "@/components/feed-page-client";
+import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
 import { FeedPaperHero } from "@/components/feed-paper-hero";
 import { getFeedFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
@@ -33,7 +34,11 @@ export default async function FeedPage() {
             <EmptyFeedState />
           </div>
         ) : (
-          <Suspense fallback={<FeedClientFallback />}>
+          <Suspense
+            fallback={
+              <FeedLoadingSpinner className="mt-6 flex-1 px-4 pb-10" />
+            }
+          >
             <FeedPageClient
               initialItems={feed.items}
               availableBuilders={filterOptions.builders}
@@ -42,15 +47,6 @@ export default async function FeedPage() {
           </Suspense>
         )}
       </div>
-    </div>
-  );
-}
-
-function FeedClientFallback() {
-  return (
-    <div className="mt-6 flex flex-1 items-center justify-center px-4 pb-10">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-ink" />
-      <span className="sr-only">Loading feed...</span>
     </div>
   );
 }

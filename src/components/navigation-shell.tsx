@@ -8,7 +8,11 @@ const CreditsBadge = dynamic(
   { ssr: false },
 );
 import { useSignInModal } from "@/components/sign-in-modal-provider";
-import { UserMenu } from "@/components/user-menu";
+
+const UserMenu = dynamic(
+  () => import("@/components/user-menu").then((mod) => mod.UserMenu),
+  { ssr: false },
+);
 import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
 

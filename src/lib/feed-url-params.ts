@@ -42,6 +42,10 @@ export function isDefaultFeedUrlParams(params: FeedUrlParams): boolean {
   );
 }
 
+export function feedUrlParamsKey(params: FeedUrlParams): string {
+  return `${params.sort}|${params.builders.join(",")}|${params.targets.join(",")}|${params.tones.join(",")}`;
+}
+
 export function buildFeedApiQuery(params: FeedUrlParams, limit = 24): string {
   const query = new URLSearchParams();
   query.set("sort", params.sort);

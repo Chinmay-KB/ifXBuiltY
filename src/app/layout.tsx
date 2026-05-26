@@ -102,7 +102,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SignInModalProvider>
-          <NavigationShellWrapper user={null} isSuperadmin={false} />
+          <NavigationShellWrapper />
           {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
           <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
             {children}

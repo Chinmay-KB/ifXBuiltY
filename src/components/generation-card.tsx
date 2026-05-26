@@ -1,8 +1,13 @@
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { CardShareAction } from "@/components/card-share-action";
+const CardShareAction = dynamic(
+  () =>
+    import("@/components/card-share-action").then((mod) => mod.CardShareAction),
+  { ssr: false },
+);
 import { cn } from "@/lib/cn";
 import { GENERATION_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
 import { formatScreenBadge, getDisplayAspectClass } from "@/lib/screen-type";

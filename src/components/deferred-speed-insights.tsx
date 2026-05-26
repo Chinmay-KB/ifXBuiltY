@@ -1,17 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { createDeferredVercelWidget } from "@/components/deferred-vercel-widget";
 
-import { useDeferUntilIdle } from "@/lib/defer-until-idle";
-
-const SpeedInsights = dynamic(
+export const DeferredSpeedInsights = createDeferredVercelWidget(
   () =>
-    import("@vercel/speed-insights/next").then((mod) => mod.SpeedInsights),
-  { ssr: false },
+    import("@vercel/speed-insights/next").then((mod) => ({
+      default: mod.SpeedInsights,
+    })),
+  4000,
 );
-
-export function DeferredSpeedInsights() {
-  const ready = useDeferUntilIdle(4000);
-  if (!ready) return null;
-  return <SpeedInsights />;
-}

@@ -1,12 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { createDeferredVercelWidget } from "@/components/deferred-vercel-widget";
 
-const Analytics = dynamic(
-  () => import("@vercel/analytics/next").then((mod) => mod.Analytics),
-  { ssr: false },
+export const DeferredAnalytics = createDeferredVercelWidget(
+  () =>
+    import("@vercel/analytics/next").then((mod) => ({ default: mod.Analytics })),
+  3500,
 );
-
-export function DeferredAnalytics() {
-  return <Analytics />;
-}
