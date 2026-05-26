@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
-import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
+import {
+  publicGenerationsQuery,
+  type GenerationsSelectClient,
+} from "@/lib/feed-public-filters";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 type FeedFilterOptions = {
@@ -41,10 +44,11 @@ async function fetchFeedFilterOptions(): Promise<FeedFilterOptions> {
       persistSession: false,
       autoRefreshToken: false,
     },
-  });
+  }) as unknown as GenerationsSelectClient;
 
-  const { data, error } = await applyPublicFeedFilters(
-    supabase.from("generations").select("builder, target"),
+  const { data, error } = await publicGenerationsQuery(
+    supabase,
+    "builder, target",
   ).range(0, MAX_OPTION_ROWS - 1);
 
   if (error) {

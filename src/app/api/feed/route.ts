@@ -4,6 +4,7 @@ import {
   FEED_DEFAULT_LIMIT,
   FEED_MAX_LIMIT,
 } from "@/lib/constants";
+import type { GenerationsSelectClient } from "@/lib/feed-public-filters";
 import { queryFeed } from "@/lib/feed-query";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
   const supabase = await createSupabaseServerClient();
 
   try {
-    const feed = await queryFeed(supabase, {
+    const feed = await queryFeed(supabase as unknown as GenerationsSelectClient, {
       sort,
       limit,
       offset,

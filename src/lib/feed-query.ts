@@ -1,9 +1,12 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
 import { FEED_MAX_LIMIT } from "@/lib/constants";
 import type { FeedResponse, FeedSort } from "@/lib/feed-types";
-import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
+import {
+  publicGenerationsQuery,
+  type GenerationsSelectClient,
+} from "@/lib/feed-public-filters";
 import { generationMediaPath } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
@@ -38,7 +41,7 @@ type GenerationFeedRow = {
   created_at: string;
 };
 
-function createPublicSupabaseClient() {
+function createPublicSupabaseClient(): GenerationsSelectClient | null {
   const env = tryGetSupabasePublicEnv();
   if (!env) return null;
 
@@ -47,7 +50,7 @@ function createPublicSupabaseClient() {
       persistSession: false,
       autoRefreshToken: false,
     },
-  });
+  }) as unknown as GenerationsSelectClient;
 }
 
 function clampLimit(limit: number): number {
@@ -60,7 +63,7 @@ function normalizeList(values: string[] | undefined): string[] {
 }
 
 export async function queryFeed(
-  supabase: SupabaseClient,
+  supabase: GenerationsSelectClient,
   opts: FeedQueryOptions,
 ): Promise<FeedResponse> {
   const sort = opts.sort;
@@ -70,10 +73,9 @@ export async function queryFeed(
   const targets = normalizeList(opts.targets);
   const tones = sanitizeVibeTags(normalizeList(opts.tones));
 
-  let q = applyPublicFeedFilters(
-    supabase.from("generations").select(
-      "id, slug, builder, target, tone, vibe_tags, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
-    ),
+  let q = publicGenerationsQuery(
+    supabase,
+    "id, slug, builder, target, tone, vibe_tags, screen_type, region, extra_details, image_path, upvote_count, downvote_count, net_score, remix_count, created_at",
   ).range(offset, offset + limit);
 
   if (builders.length > 0) {
@@ -106,9 +108,10 @@ export async function queryFeed(
   const countPromise =
     opts.includeIdeasThisWeek === false
       ? Promise.resolve({ count: undefined, error: null })
-      : applyPublicFeedFilters(
-          supabase.from("generations").select("*", { count: "exact", head: true }),
-        ).gte("created_at", weekAgoIso);
+      : publicGenerationsQuery(supabase, "*", {
+          count: "exact",
+          head: true,
+        }).gte("created_at", weekAgoIso);
 
   const [{ data: rows, error }, countResult] = await Promise.all([
     q,

@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
-import { applyPublicFeedFilters } from "@/lib/feed-public-filters";
+import {
+  publicGenerationsQuery,
+  type GenerationsSelectClient,
+} from "@/lib/feed-public-filters";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 const REVALIDATE_SECONDS = 60 * 60; // 1 hour
@@ -17,13 +20,14 @@ async function fetchTotalPublishedCount(): Promise<number> {
 
   const supabase = createClient(env.url, env.anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
+  }) as unknown as GenerationsSelectClient;
+
+  const { count, error } = await publicGenerationsQuery(supabase, "*", {
+    count: "exact",
+    head: true,
   });
 
-  const { count, error } = await applyPublicFeedFilters(
-    supabase.from("generations").select("*", { count: "exact", head: true }),
-  );
-
-  if (error || count === null) return 0;
+  if (error || count == null) return 0;
   return count;
 }
 
