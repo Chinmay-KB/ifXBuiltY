@@ -1,124 +1,34 @@
-import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
 import { getSelectableCompanyGroups } from "@/data/company-profiles";
-import {
-  publicGenerationsQuery,
-  type GenerationsSelectClient,
-} from "@/lib/feed-public-filters";
-import type { FeedHierarchicalFilterOptions, FeedProfileFilterGroup } from "@/lib/feed-profile-filter";
-import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
+import type {
+  FeedHierarchicalFilterOptions,
+  FeedProfileFilterGroup,
+} from "@/lib/feed-profile-filter";
 
-export type FeedFilterOptions = {
-  builders: string[];
-  targets: string[];
-};
-
-type GenerationFilterRow = {
-  builder: string | null;
-  target: string | null;
-};
-
-const MAX_OPTION_ROWS = 5000;
 const FILTER_OPTIONS_REVALIDATE_SECONDS = 60 * 60;
 
-function addTrimmed(set: Set<string>, value: string | null | undefined) {
-  const trimmed = value?.trim();
-  if (trimmed) set.add(trimmed);
-}
-
-function sortOptions(options: Iterable<string>): string[] {
-  return Array.from(options).sort((a, b) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" }),
-  );
+function mapSelectableGroupsToFilterGroups(
+  companyGroups: Awaited<ReturnType<typeof getSelectableCompanyGroups>>,
+): FeedProfileFilterGroup[] {
+  return companyGroups.map((group) => ({
+    companyId: group.company.id,
+    companyName: group.company.name,
+    products: group.products.map((p) => ({ id: p.id, name: p.name })),
+  }));
 }
 
 /**
- * Fetch filter dropdown options from the full published feed, not just the
- * currently-rendered page of cards.
+ * Builder/target filter options from the current generator catalog only
+ * (approved companies + products), not historical generation strings.
  */
-async function fetchFeedFilterOptions(): Promise<FeedFilterOptions> {
-  const env = tryGetSupabasePublicEnv();
-  if (!env) return { builders: [], targets: [] };
-
-  const supabase = createClient(env.url, env.anonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  }) as unknown as GenerationsSelectClient;
-
-  const { data, error } = await publicGenerationsQuery(
-    supabase,
-    "builder, target",
-  ).range(0, MAX_OPTION_ROWS - 1);
-
-  if (error) {
-    console.error("Could not load feed filter options", error);
-    return { builders: [], targets: [] };
-  }
-
-  const builders = new Set<string>();
-  const targets = new Set<string>();
-
-  for (const row of (data ?? []) as GenerationFilterRow[]) {
-    addTrimmed(builders, row.builder);
-    addTrimmed(targets, row.target);
-  }
-
-  return {
-    builders: sortOptions(builders),
-    targets: sortOptions(targets),
-  };
-}
-
-export const getFeedFilterOptions = unstable_cache(
-  fetchFeedFilterOptions,
-  ["feed-filter-options"],
-  { revalidate: FILTER_OPTIONS_REVALIDATE_SECONDS },
-);
-
-function nameSet(names: string[]): Set<string> {
-  return new Set(names.map((n) => n.toLowerCase()));
-}
-
-function buildProfileGroupsForSide(
-  companyGroups: Awaited<ReturnType<typeof getSelectableCompanyGroups>>,
-  publishedNames: Set<string>,
-): FeedProfileFilterGroup[] {
-  const result: FeedProfileFilterGroup[] = [];
-
-  for (const group of companyGroups) {
-    const products = group.products.map((p) => ({ id: p.id, name: p.name }));
-    const companyMatches = publishedNames.has(group.company.name.toLowerCase());
-    const hasPublishedProduct = products.some((p) =>
-      publishedNames.has(p.name.toLowerCase()),
-    );
-
-    if (!companyMatches && !hasPublishedProduct) continue;
-
-    result.push({
-      companyId: group.company.id,
-      companyName: group.company.name,
-      products,
-    });
-  }
-
-  return result;
-}
-
 async function fetchFeedHierarchicalFilterOptions(): Promise<FeedHierarchicalFilterOptions> {
-  const [flat, companyGroups] = await Promise.all([
-    fetchFeedFilterOptions(),
-    getSelectableCompanyGroups(),
-  ]);
-
-  const builderNames = nameSet(flat.builders);
-  const targetNames = nameSet(flat.targets);
+  const companyGroups = await getSelectableCompanyGroups();
+  const groups = mapSelectableGroupsToFilterGroups(companyGroups);
 
   return {
-    builderGroups: buildProfileGroupsForSide(companyGroups, builderNames),
-    targetGroups: buildProfileGroupsForSide(companyGroups, targetNames),
+    builderGroups: groups,
+    targetGroups: groups,
   };
 }
 

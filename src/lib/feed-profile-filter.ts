@@ -52,6 +52,39 @@ export function clearCompanyPicks(
  * Expand profile picks into generation `builder` / `target` name strings.
  * Company-only picks include the company name plus all child product names.
  */
+/**
+ * Map URL / API name filters back to profile picks for the two-step dropdown.
+ * Unknown legacy names are ignored.
+ */
+export function namesToProfilePicks(
+  names: string[],
+  groups: FeedProfileFilterGroup[],
+): FeedProfileFilterPick[] {
+  if (names.length === 0) return [];
+
+  const normalized = new Set(names.map((n) => n.trim().toLowerCase()).filter(Boolean));
+  const picks: FeedProfileFilterPick[] = [];
+
+  for (const group of groups) {
+    if (normalized.has(group.companyName.toLowerCase())) {
+      picks.push({ kind: "company", companyId: group.companyId });
+      continue;
+    }
+
+    for (const product of group.products) {
+      if (normalized.has(product.name.toLowerCase())) {
+        picks.push({
+          kind: "product",
+          companyId: group.companyId,
+          productId: product.id,
+        });
+      }
+    }
+  }
+
+  return picks;
+}
+
 export function expandProfileSelectionsToNames(
   picks: FeedProfileFilterPick[],
   groups: FeedProfileFilterGroup[],

@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { FeedPageClient } from "@/components/feed-page-client";
 import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
 import { FeedPaperHero } from "@/components/feed-paper-hero";
-import { getFeedFilterOptions } from "@/lib/feed-filter-options";
+import { getFeedHierarchicalFilterOptions } from "@/lib/feed-filter-options";
 import { fetchFeedServer } from "@/lib/fetch-feed";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const revalidate = 120;
 export default async function FeedPage() {
   const [feed, filterOptions] = await Promise.all([
     fetchFeedServer({ sort: "newest", limit: 24 }),
-    getFeedFilterOptions(),
+    getFeedHierarchicalFilterOptions(),
   ]);
 
   return (
@@ -41,8 +41,7 @@ export default async function FeedPage() {
           >
             <FeedPageClient
               initialItems={feed.items}
-              availableBuilders={filterOptions.builders}
-              availableTargets={filterOptions.targets}
+              filterOptions={filterOptions}
             />
           </Suspense>
         )}

@@ -2,20 +2,27 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FeedFilterBarSkeleton } from "@/components/feed-filter-bar-skeleton";
 import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
 import { FeedMasonryGridStatic } from "@/components/feed-masonry-grid-static";
 import {
+  expandProfileSelectionsToNames,
+  namesToProfilePicks,
+  type FeedHierarchicalFilterOptions,
+  type FeedProfileFilterPick,
+} from "@/lib/feed-profile-filter";
+import {
   buildFeedApiQuery,
   feedUrlParamsKey,
   isDefaultFeedUrlParams,
   parseFeedUrlParams,
+  type FeedUrlParams,
 } from "@/lib/feed-url-params";
 import { useEnhanceWhenNearViewport } from "@/lib/use-enhance-when-near-viewport";
-import type { FeedItem } from "@/lib/ui/types";
+import type { FeedItem, FeedSort } from "@/lib/ui/types";
 
 const FeedFilterBar = dynamic(
   () =>
@@ -44,8 +51,7 @@ const DynamicFeedMasonryGrid = dynamic(
 
 type FeedPageClientProps = {
   initialItems: FeedItem[];
-  availableBuilders: string[];
-  availableTargets: string[];
+  filterOptions: FeedHierarchicalFilterOptions;
 };
 
 /**
@@ -54,8 +60,7 @@ type FeedPageClientProps = {
  */
 export function FeedPageClient({
   initialItems,
-  availableBuilders,
-  availableTargets,
+  filterOptions,
 }: FeedPageClientProps) {
   const searchParams = useSearchParams();
   const urlParams = useMemo(
@@ -89,8 +94,7 @@ export function FeedPageClient({
   return (
     <FeedPageInteractive
       initialItems={initialItems}
-      availableBuilders={availableBuilders}
-      availableTargets={availableTargets}
+      filterOptions={filterOptions}
       urlParams={urlParams}
     />
   );
@@ -102,13 +106,78 @@ type FeedPageInteractiveProps = FeedPageClientProps & {
 
 function FeedPageInteractive({
   initialItems,
-  availableBuilders,
-  availableTargets,
+  filterOptions,
   urlParams,
 }: FeedPageInteractiveProps) {
+  const router = useRouter();
   const { sort, builders, targets, tones } = urlParams;
-  const paramsKey = feedUrlParamsKey(urlParams);
-  const hasFilteredUrl = !isDefaultFeedUrlParams(urlParams);
+
+  const selectedBuilderPicks = useMemo(
+    () => namesToProfilePicks(builders, filterOptions.builderGroups),
+    [builders, filterOptions.builderGroups],
+  );
+  const selectedTargetPicks = useMemo(
+    () => namesToProfilePicks(targets, filterOptions.targetGroups),
+    [targets, filterOptions.targetGroups],
+  );
+
+  const expandedBuilders = useMemo(
+    () =>
+      expandProfileSelectionsToNames(
+        selectedBuilderPicks,
+        filterOptions.builderGroups,
+      ),
+    [selectedBuilderPicks, filterOptions.builderGroups],
+  );
+  const expandedTargets = useMemo(
+    () =>
+      expandProfileSelectionsToNames(
+        selectedTargetPicks,
+        filterOptions.targetGroups,
+      ),
+    [selectedTargetPicks, filterOptions.targetGroups],
+  );
+
+  const feedQueryParams = useMemo(
+    (): FeedUrlParams => ({
+      sort,
+      builders:
+        selectedBuilderPicks.length > 0 ? expandedBuilders : builders,
+      targets: selectedTargetPicks.length > 0 ? expandedTargets : targets,
+      tones,
+    }),
+    [
+      sort,
+      builders,
+      targets,
+      tones,
+      selectedBuilderPicks.length,
+      selectedTargetPicks.length,
+      expandedBuilders,
+      expandedTargets,
+    ],
+  );
+
+  const paramsKey = feedUrlParamsKey(feedQueryParams);
+  const hasFilteredUrl = !isDefaultFeedUrlParams(feedQueryParams);
+
+  const syncFeedUrl = useCallback(
+    (next: Pick<FeedUrlParams, "sort" | "builders" | "targets" | "tones">) => {
+      const params = new URLSearchParams();
+      params.set("sort", next.sort);
+      if (next.builders.length > 0) {
+        params.set("builder", next.builders.join(","));
+      }
+      if (next.targets.length > 0) {
+        params.set("target", next.targets.join(","));
+      }
+      if (next.tones.length > 0) {
+        params.set("tone", next.tones.join(","));
+      }
+      router.push(`/feed?${params.toString()}`, { scroll: false });
+    },
+    [router],
+  );
 
   const [items, setItems] = useState<FeedItem[]>(
     hasFilteredUrl ? [] : initialItems,
@@ -131,7 +200,7 @@ function FeedPageInteractive({
     let cancelled = false;
     setIsSyncing(true);
 
-    void fetch(`/api/feed?${buildFeedApiQuery(urlParams)}`)
+    void fetch(`/api/feed?${buildFeedApiQuery(feedQueryParams)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Feed request failed");
         return res.json() as Promise<{ items: FeedItem[] }>;
@@ -149,7 +218,7 @@ function FeedPageInteractive({
     return () => {
       cancelled = true;
     };
-  }, [paramsKey, initialItems, hasFilteredUrl]);
+  }, [paramsKey, initialItems, hasFilteredUrl, feedQueryParams]);
 
   useEffect(() => {
     if (useInteractiveGrid) return;
@@ -174,10 +243,61 @@ function FeedPageInteractive({
     return () => observer.disconnect();
   }, [useInteractiveGrid]);
 
-  const noop = useCallback(() => {}, []);
+  const handleSortChange = useCallback(
+    (newSort: FeedSort) => {
+      syncFeedUrl({
+        sort: newSort,
+        builders: expandedBuilders,
+        targets: expandedTargets,
+        tones,
+      });
+    },
+    [syncFeedUrl, expandedBuilders, expandedTargets, tones],
+  );
 
-  const hasActiveFilters =
-    builders.length > 0 || targets.length > 0 || tones.length > 0;
+  const handleBuilderPicksChange = useCallback(
+    (picks: FeedProfileFilterPick[]) => {
+      syncFeedUrl({
+        sort,
+        builders: expandProfileSelectionsToNames(
+          picks,
+          filterOptions.builderGroups,
+        ),
+        targets: expandedTargets,
+        tones,
+      });
+    },
+    [syncFeedUrl, sort, filterOptions.builderGroups, expandedTargets, tones],
+  );
+
+  const handleTargetPicksChange = useCallback(
+    (picks: FeedProfileFilterPick[]) => {
+      syncFeedUrl({
+        sort,
+        builders: expandedBuilders,
+        targets: expandProfileSelectionsToNames(
+          picks,
+          filterOptions.targetGroups,
+        ),
+        tones,
+      });
+    },
+    [syncFeedUrl, sort, expandedBuilders, filterOptions.targetGroups, tones],
+  );
+
+  const handleTonesChange = useCallback(
+    (newTones: string[]) => {
+      syncFeedUrl({
+        sort,
+        builders: expandedBuilders,
+        targets: expandedTargets,
+        tones: newTones,
+      });
+    },
+    [syncFeedUrl, sort, expandedBuilders, expandedTargets],
+  );
+
+  const hasActiveFilters = !isDefaultFeedUrlParams(feedQueryParams);
 
   return (
     <>
@@ -185,16 +305,17 @@ function FeedPageInteractive({
         filterBar={
           <FeedFilterBar
             variant="paper"
+            syncUrl={false}
             currentSort={sort}
-            builders={availableBuilders}
-            targets={availableTargets}
-            selectedBuilders={builders}
-            selectedTargets={targets}
+            builderGroups={filterOptions.builderGroups}
+            targetGroups={filterOptions.targetGroups}
+            selectedBuilderPicks={selectedBuilderPicks}
+            selectedTargetPicks={selectedTargetPicks}
             selectedTones={tones}
-            onSortChange={noop}
-            onBuildersChange={noop}
-            onTargetsChange={noop}
-            onTonesChange={noop}
+            onSortChange={handleSortChange}
+            onBuilderPicksChange={handleBuilderPicksChange}
+            onTargetPicksChange={handleTargetPicksChange}
+            onTonesChange={handleTonesChange}
           />
         }
       >
@@ -207,11 +328,19 @@ function FeedPageInteractive({
           <EmptyFilterState />
         ) : useInteractiveGrid ? (
           <DynamicFeedMasonryGrid
-            key={feedUrlParamsKey(urlParams)}
+            key={feedUrlParamsKey(feedQueryParams)}
             initialItems={items}
             sort={sort}
-            builders={builders.length > 0 ? builders : undefined}
-            targets={targets.length > 0 ? targets : undefined}
+            builders={
+              feedQueryParams.builders.length > 0
+                ? feedQueryParams.builders
+                : undefined
+            }
+            targets={
+              feedQueryParams.targets.length > 0
+                ? feedQueryParams.targets
+                : undefined
+            }
             tones={tones.length > 0 ? tones : undefined}
           />
         ) : (
