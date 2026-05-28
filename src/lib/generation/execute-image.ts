@@ -43,8 +43,8 @@ function extFromMediaType(mediaType: string): string {
 
 function imageQualitySetting(): "low" | "medium" | "high" {
   const raw = process.env.GENERATION_IMAGE_QUALITY?.trim().toLowerCase();
-  if (raw === "low" || raw === "high") return raw;
-  return "medium";
+  if (raw === "low" || raw === "medium" || raw === "high") return raw;
+  return "high";
 }
 
 async function downloadScreenshot(

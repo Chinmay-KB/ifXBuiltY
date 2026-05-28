@@ -36,7 +36,9 @@ export function PublicProfilePageClient({
         )}
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-ink">{displayName}</h1>
-          <p className="text-xs text-muted">Public profile</p>
+          <p className="text-xs text-muted">
+            {items.length} generation{items.length === 1 ? "" : "s"}
+          </p>
         </div>
       </div>
 

@@ -25,13 +25,6 @@ type GenerationDetailClientProps = {
   related: FeedItem[];
 };
 
-function statusLabel(status: GenerationStatus): string {
-  if (status === "queued") return "Queued";
-  if (status === "processing") return "Rendering";
-  if (status === "failed") return "Failed";
-  return "Published specimen";
-}
-
 export function GenerationDetailClient({
   initial,
   related,
@@ -93,7 +86,7 @@ export function GenerationDetailClient({
 
   const creatorName =
     gen.creator?.displayName?.trim() ||
-    (gen.isOwner ? "You" : null);
+    (gen.isOwner ? "You" : "User");
   const creatorAvatarUrl = gen.creator?.avatarUrl?.trim() || null;
   const creatorInitial =
     creatorName?.trim().charAt(0).toUpperCase() ?? "?";
@@ -177,18 +170,7 @@ export function GenerationDetailClient({
         <aside className="flex w-full min-w-0 shrink-0 flex-col gap-5 overflow-x-hidden sm:gap-6 lg:sticky lg:top-28 lg:self-start">
           <div className="border-b border-line pb-4 sm:pb-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={
-                  failed || imageUnavailable
-                    ? "rounded-full bg-barrier/15 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-barrier"
-                    : pending
-                      ? "rounded-full bg-chrome/30 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink"
-                      : "rounded-full bg-chrome px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink"
-                }
-              >
-                {imageUnavailable ? "Unavailable" : statusLabel(gen.status)}
-              </span>
-              <span className="rounded-full bg-panel px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+              <span className="rounded-full bg-chrome px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-ink">
                 {screenType}
               </span>
             </div>

@@ -96,20 +96,37 @@ async function fetchCreatorSummary(creatorId: string): Promise<CreatorSummary | 
     return null;
   }
 
-  const { data, error } = await service
-    // Supabase Auth users table (requires service role; safe because we only read public metadata)
-    .from("auth.users")
-    .select("id, raw_user_meta_data")
+  const { data: profile } = await service
+    .from("profiles")
+    .select("id, display_name, avatar_url")
     .eq("id", creatorId)
     .maybeSingle();
 
-  if (error || !data?.id) return null;
+  if (profile?.id) {
+    return {
+      id: profile.id as string,
+      displayName:
+        typeof profile.display_name === "string" && profile.display_name.trim()
+          ? profile.display_name.trim()
+          : null,
+      avatarUrl:
+        typeof profile.avatar_url === "string" && profile.avatar_url.trim()
+          ? profile.avatar_url.trim()
+          : null,
+    };
+  }
 
-  const meta = data.raw_user_meta_data as
+  const { data, error } = await service.auth.admin.getUserById(creatorId);
+  if (error || !data?.user) return null;
+
+  const meta = data.user.user_metadata as
     | {
         full_name?: unknown;
         name?: unknown;
+        preferred_username?: unknown;
+        user_name?: unknown;
         avatar_url?: unknown;
+        picture?: unknown;
       }
     | null
     | undefined;
@@ -119,13 +136,19 @@ async function fetchCreatorSummary(creatorId: string): Promise<CreatorSummary | 
       ? meta.full_name
       : typeof meta?.name === "string"
         ? meta.name
+        : typeof meta?.preferred_username === "string"
+          ? meta.preferred_username
+          : typeof meta?.user_name === "string"
+            ? meta.user_name
         : "";
   const displayName = rawName.trim() || null;
 
-  const rawAvatar = typeof meta?.avatar_url === "string" ? meta.avatar_url : "";
+  const rawAvatar =
+    (typeof meta?.avatar_url === "string" ? meta.avatar_url : "") ||
+    (typeof meta?.picture === "string" ? meta.picture : "");
   const avatarUrl = rawAvatar.trim() || null;
 
-  return { id: data.id as string, displayName, avatarUrl };
+  return { id: data.user.id as string, displayName, avatarUrl };
 }
 
 function mapRow(

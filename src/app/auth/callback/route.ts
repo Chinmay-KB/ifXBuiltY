@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
+import { ensureProfileForUser } from "@/lib/profiles/ensure-profile";
 
 /**
  * Exchanges OAuth PKCE `code` for a session and sets auth cookies.
@@ -64,6 +65,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       `${url.origin}/login?error=${encodeURIComponent(error.message)}`,
     );
+  }
+
+  // Best-effort: persist display name + avatar into our `profiles` table
+  // so public pages can reliably show identity without depending on provider metadata shape.
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await ensureProfileForUser(user);
+    }
+  } catch {
+    // Ignore profile persistence failures (auth cookies already set).
   }
 
   // Clear the transient post-auth redirect cookie (best-effort).

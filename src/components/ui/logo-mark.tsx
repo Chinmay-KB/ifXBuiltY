@@ -1,15 +1,17 @@
 import { cn } from "@/lib/cn";
+import Image from "next/image";
+import appIcon from "@/app/icon.png";
 
 type Size = "sm" | "md";
 
-const sizes: Record<Size, { box: string; text: string }> = {
+const sizes: Record<Size, { box: string; img: { width: number; height: number } }> = {
   sm: {
     box: "size-7 rounded-md",
-    text: "text-sm font-black",
+    img: { width: 28, height: 28 },
   },
   md: {
     box: "size-8 rounded-md",
-    text: "text-base font-black",
+    img: { width: 32, height: 32 },
   },
 };
 
@@ -18,7 +20,7 @@ type Props = {
   className?: string;
 };
 
-/** Yellow "x" mark — matches Paper nav / system header. */
+/** App icon mark used in the system header. */
 export function LogoMark({ size = "md", className }: Props) {
   const s = sizes[size];
   return (
@@ -30,7 +32,13 @@ export function LogoMark({ size = "md", className }: Props) {
       )}
       aria-hidden
     >
-      <span className={cn("font-display text-ink", s.text)}>x</span>
+      <Image
+        src={appIcon}
+        alt=""
+        width={s.img.width}
+        height={s.img.height}
+        className="h-full w-full object-contain"
+      />
     </div>
   );
 }
