@@ -45,7 +45,7 @@ For auth, cookies, and SSR clients, follow current Supabase docs and reconcile w
 
 - Standard setup and run commands are in `README.md`, `package.json`, and `supabase/config.toml`; keep the VM startup update script limited to dependency refresh.
 - The local Supabase stack requires Docker. If a Cloud shell was opened before the `ubuntu` user joined the `docker` group, run Supabase commands through `sg docker -c 'yarn db:start'` (or open a fresh shell) so the CLI can access `/var/run/docker.sock`.
-- Full image generation needs real `AI_GATEWAY_API_KEY`, Dodo API/entitlement configuration, and an authenticated user with credits; without those, local dev can still lint, test, build, load the app, and exercise unauthenticated UI/feed flows.
+- Full image generation needs real `AI_GATEWAY_API_KEY`, Dodo API/entitlement/product configuration, and an authenticated user with credits; without those, local dev can still lint, test, build, load the app, and exercise unauthenticated UI/feed flows.
 
 <!-- Legacy banner from create-next-app; keep for tooling that keys off these markers. -->
 <!-- BEGIN:nextjs-agent-rules -->
