@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import { getGenerationBySlug } from "@/lib/public-generation";
+import { getGenerationBySlugCached } from "@/lib/public-generation";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const gen = await getGenerationBySlug(slug);
+  const gen = await getGenerationBySlugCached(slug);
 
   if (!gen) {
     return {
@@ -53,8 +54,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GenerationDetailPage({ params }: Props) {
   const { slug } = await params;
-  const gen = await getGenerationBySlug(slug);
+  const gen = await getGenerationBySlugCached(slug);
   if (!gen) notFound();
+
+  if (gen.status === "completed" && gen.imageUrl) {
+    preload(gen.imageUrl, { as: "image" });
+  }
 
   let related: FeedItem[] = [];
   if (gen.status === "completed") {

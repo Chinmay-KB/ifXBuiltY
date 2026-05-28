@@ -38,9 +38,11 @@ export function NavigationShellWrapper() {
   const { state: generatingNavState } = useNavigationGenerating();
   const [user, setUser] = useState<NavUser>(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
-  const readyToHydrate = useDeferUntilIdle(2500);
+  const navVariant = getNavVariant(pathname);
+  const readyToHydrate = useDeferUntilIdle(navVariant === "marketing" ? 6000 : 2500);
 
   useEffect(() => {
+    if (navVariant !== "app") return;
     if (!readyToHydrate) return;
 
     let cancelled = false;
@@ -84,7 +86,6 @@ export function NavigationShellWrapper() {
   }
 
   const activeSection = getActiveSection(pathname);
-  const navVariant = getNavVariant(pathname);
   const isGenerationDetail = pathname.startsWith("/g/");
 
   const generatingChrome =

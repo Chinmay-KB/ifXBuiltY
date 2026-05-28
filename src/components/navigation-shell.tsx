@@ -3,18 +3,19 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
+import { useSignInModal } from "@/components/sign-in-modal-provider";
+import { LogoMark, Wordmark } from "@/components/ui";
+import { cn } from "@/lib/cn";
+
 const CreditsBadge = dynamic(
   () => import("@/components/credits-badge").then((mod) => mod.CreditsBadge),
   { ssr: false },
 );
-import { useSignInModal } from "@/components/sign-in-modal-provider";
 
 const UserMenu = dynamic(
   () => import("@/components/user-menu").then((mod) => mod.UserMenu),
   { ssr: false },
 );
-import { LogoMark, Wordmark } from "@/components/ui";
-import { cn } from "@/lib/cn";
 
 type User = {
   id: string;

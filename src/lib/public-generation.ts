@@ -4,6 +4,7 @@ import type { GenerationStatus } from "@/lib/generation/types";
 import { isGenerationStatus } from "@/lib/generation/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { cache } from "react";
 
 export type PublicGeneration = {
   id: number;
@@ -165,6 +166,12 @@ export async function getGenerationBySlug(
 
   return mapRow(row, isOwner, userVote);
 }
+
+/**
+ * Request-scoped memoization so `generateMetadata` + page render
+ * don't re-query Supabase for the same slug.
+ */
+export const getGenerationBySlugCached = cache(getGenerationBySlug);
 
 /** @deprecated Use getGenerationBySlug */
 export async function getPublishedGenerationBySlug(

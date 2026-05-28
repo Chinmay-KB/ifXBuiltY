@@ -9,6 +9,7 @@ import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { getSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
+import "react-medium-image-zoom/dist/styles.css";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -27,6 +28,7 @@ const spaceMono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

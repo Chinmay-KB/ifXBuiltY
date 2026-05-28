@@ -17,14 +17,34 @@ export function HomepageHeroDecorations({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(t);
+    // Decorative only — let the main content paint first.
+    let cancelled = false;
+    const start = () => {
+      if (cancelled) return;
+      setMounted(true);
+    };
+
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(start, { timeout: 1500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(id);
+      };
+    }
+
+    const t = setTimeout(start, 900);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, []);
+
+  const desktopThumbs = thumbnails.slice(0, 8);
 
   return (
     <>
       <div className="pointer-events-none absolute inset-0 hidden md:block">
-        {thumbnails.slice(0, DESKTOP_POSITIONS.length).map((thumb, i) => (
+        {desktopThumbs.map((thumb, i) => (
           <FloatingThumbnail
             key={thumb.id}
             thumb={thumb}
@@ -153,8 +173,8 @@ function FloatingThumbnail({
           fill
           sizes="(max-width: 768px) 0px, 200px"
           className="object-cover transition-transform duration-300 hover:scale-105"
-          loading={index === 0 ? "eager" : "lazy"}
-          priority={index === 0}
+          loading="lazy"
+          priority={false}
           unoptimized
         />
       ) : (

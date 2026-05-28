@@ -1,4 +1,5 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { unstable_cache } from "next/cache";
 
 export type StyleDna = {
   tone: string[];
@@ -167,6 +168,9 @@ export type CompanyGroup = {
   products: CompanyProfile[];
 };
 
+const SELECTABLE_COMPANY_PROFILES_SELECT =
+  "id, name, archetype, logo_path, default_vibe_tags, parent_company_id, profile_type, category, popularity_tier, research_status, meme_strength";
+
 /**
  * Fetch all profiles grouped by parent company.
  * Companies with no products still appear with an empty products array.
@@ -206,24 +210,32 @@ export async function listSelectableProfileIds(): Promise<string[]> {
  * Groups for the generator picker: all companies plus approved products only.
  */
 export async function getSelectableCompanyGroups(): Promise<CompanyGroup[]> {
-  const supabase = createSupabaseServiceClient();
-  const { data, error } = await supabase
-    .from("company_profiles")
-    .select("*")
-    .or("profile_type.eq.company,and(profile_type.eq.product,research_status.eq.approved)")
-    .order("name");
+  return unstable_cache(
+    async () => {
+      const supabase = createSupabaseServiceClient();
+      const { data, error } = await supabase
+        .from("company_profiles")
+        .select(SELECTABLE_COMPANY_PROFILES_SELECT)
+        .or(
+          "profile_type.eq.company,and(profile_type.eq.product,research_status.eq.approved)",
+        )
+        .order("name");
 
-  if (error) throw error;
-  const all = (data ?? []).map(mapRow);
-  const companies = all.filter((p) => p.profileType === "company");
-  const products = all.filter((p) => p.profileType === "product");
+      if (error) throw error;
+      const all = (data ?? []).map(mapRow);
+      const companies = all.filter((p) => p.profileType === "company");
+      const products = all.filter((p) => p.profileType === "product");
 
-  return companies
-    .map((company) => ({
-      company,
-      products: products
-        .filter((p) => p.parentCompanyId === company.id)
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    }))
-    .sort((a, b) => a.company.name.localeCompare(b.company.name));
+      return companies
+        .map((company) => ({
+          company,
+          products: products
+            .filter((p) => p.parentCompanyId === company.id)
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        }))
+        .sort((a, b) => a.company.name.localeCompare(b.company.name));
+    },
+    ["selectable-company-groups-v2"],
+    { revalidate: 60 * 60 },
+  )();
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { HomepageHero } from "@/components/homepage-hero";
 import { HomepageFeed } from "@/components/homepage-feed";
@@ -22,13 +23,21 @@ export const revalidate = 120;
 
 const HERO_THUMBNAIL_LIMIT = 8;
 
-export default async function HomePage() {
-  // Fetch featured generations for hero thumbnails + initial feed items in parallel
-  const [featuredGenerations, feed, totalPublished, filterOptions] = await Promise.all([
-    getHomepageFeaturedGenerations(),
+async function HomepageFeedSection() {
+  const [feed, filterOptions] = await Promise.all([
     fetchFeedServer({ sort: "newest", limit: 24 }),
-    getTotalPublishedCount(),
     getFeedHierarchicalFilterOptions(),
+  ]);
+
+  return <HomepageFeed initialItems={feed.items} filterOptions={filterOptions} />;
+}
+
+export default async function HomePage() {
+  // Keep the above-the-fold hero unblocked by heavier feed/filter work.
+  const [featuredGenerations, heroFeed, totalPublished] = await Promise.all([
+    getHomepageFeaturedGenerations(),
+    fetchFeedServer({ sort: "newest", limit: 12 }),
+    getTotalPublishedCount(),
   ]);
 
   // Build hero thumbnails — use featured first, supplement with feed items if needed
@@ -42,7 +51,7 @@ export default async function HomePage() {
 
   // Fill remaining slots from feed items not already in featured
   const featuredIds = new Set(featuredThumbs.map((t) => t.id));
-  const supplementThumbs = feed.items
+  const supplementThumbs = heroFeed.items
     .filter((item) => !featuredIds.has(item.id) && item.imageUrl)
     .slice(0, HERO_THUMBNAIL_LIMIT - featuredThumbs.length)
     .map((item) => ({
@@ -62,13 +71,20 @@ export default async function HomePage() {
     <div className="flex min-h-full flex-1 flex-col bg-canvas">
       <HomepageHero
         thumbnails={heroThumbnails}
-        ideasThisWeek={feed.ideasThisWeek ?? 0}
+        ideasThisWeek={heroFeed.ideasThisWeek ?? 0}
         totalPublished={totalPublished}
       />
-      <HomepageFeed
-        initialItems={feed.items}
-        filterOptions={filterOptions}
-      />
+      <Suspense
+        fallback={
+          <div className="px-4 py-10 sm:px-8 md:px-10 lg:px-16">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted">
+              Loading the evidence locker…
+            </p>
+          </div>
+        }
+      >
+        <HomepageFeedSection />
+      </Suspense>
     </div>
   );
 }

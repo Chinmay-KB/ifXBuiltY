@@ -25,7 +25,7 @@ export function FeedMasonryGridStatic({
           <GenerationCard
             item={item}
             variant="paper"
-            imagePriority={index < 2}
+            imagePriority={index === 0}
             showActions={showActions}
           />
         </div>

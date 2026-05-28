@@ -22,6 +22,14 @@ const VARIANT_WIDTH_PX: Record<Exclude<GenerationMediaVariant, "full">, number> 
     og: 1200,
   };
 
+function variantObjectPath(
+  originalPath: string,
+  variant: Exclude<GenerationMediaVariant, "full">,
+): { path: string; contentType: string } {
+  if (variant === "og") return { path: `${originalPath}.og.jpg`, contentType: "image/jpeg" };
+  return { path: `${originalPath}.${variant}.webp`, contentType: "image/webp" };
+}
+
 function parseVariant(raw: string | null): GenerationMediaVariant | null {
   if (raw === "card" || raw === "detail" || raw === "full" || raw === "og") return raw;
   return null;
@@ -74,6 +82,26 @@ export async function GET(request: Request, context: RouteContext) {
         "Cache-Control": CACHE_CONTROL,
       },
     });
+  }
+
+  // If publish-time variants exist, serve them directly (no runtime sharp).
+  try {
+    const { path: variantPath, contentType } = variantObjectPath(imagePath, variant);
+    const { data: variantBlob } = await supabase.storage
+      .from(bucket)
+      .download(variantPath);
+
+    if (variantBlob) {
+      const out = Buffer.from(await variantBlob.arrayBuffer());
+      return new NextResponse(new Uint8Array(out), {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": CACHE_CONTROL,
+        },
+      });
+    }
+  } catch {
+    // Fall back to runtime transform.
   }
 
   const width = VARIANT_WIDTH_PX[variant];
