@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { RemixForm } from "@/components/remix-form";
 import { SiteHeader } from "@/components/site-header";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatResultTitle } from "@/lib/ui/format";
 import type { GenerationInputs, RemixSource } from "@/lib/ui/types";
@@ -74,9 +74,7 @@ export default async function RemixPage({ params }: Props) {
   }
 
   const imagePath = source.image_path?.trim();
-  const imageUrl = imagePath
-    ? generationMediaPath(source.slug, "card")
-    : null;
+  const imageUrl = imagePath ? generationImageUrl(imagePath, "card") : null;
 
   // Build the remix source and initial values
   const remixSource: RemixSource = {

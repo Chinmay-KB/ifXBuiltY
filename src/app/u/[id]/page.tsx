@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -111,19 +111,25 @@ async function fetchPublicGenerations(userId: string): Promise<FeedItem[]> {
 
   if (error || !data) return [];
 
-  return (data as GenerationRow[])
-    .filter((row) => Boolean(row.image_path?.trim()))
-    .map((row) => ({
+  const items: FeedItem[] = [];
+  for (const row of data as GenerationRow[]) {
+    const path = row.image_path?.trim();
+    const imageUrl = path ? generationImageUrl(path, "card") : null;
+    if (!path || !imageUrl) continue;
+    items.push({
       id: row.id,
       slug: row.slug,
       builder: row.builder,
       target: row.target,
-      imageUrl: generationMediaPath(row.slug, "card"),
+      imageUrl,
+      imagePath: path,
       netScore: row.net_score ?? 0,
       remixCount: row.remix_count ?? 0,
       createdAt: row.created_at,
       screenType: row.screen_type ?? undefined,
-    }));
+    });
+  }
+  return items;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -7,7 +7,7 @@ import {
   publicGenerationsQuery,
   type GenerationsSelectClient,
 } from "@/lib/feed-public-filters";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
@@ -139,7 +139,7 @@ export async function queryFeed(
       screenType: row.screen_type,
       region: row.region,
       extraDetails: row.extra_details,
-      imageUrl: row.image_path ? generationMediaPath(row.slug, "card") : null,
+      imageUrl: row.image_path ? generationImageUrl(row.image_path, "card") : null,
       imagePath: row.image_path,
       upvoteCount: row.upvote_count,
       downvoteCount: row.downvote_count,

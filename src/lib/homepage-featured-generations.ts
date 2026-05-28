@@ -5,7 +5,7 @@ import {
   publicGenerationsQuery,
   type GenerationsSelectClient,
 } from "@/lib/feed-public-filters";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 const HOMEPAGE_FEATURED_LIMIT = 8;
@@ -55,16 +55,22 @@ async function fetchHomepageFeaturedGenerations(): Promise<
   if (error || !data) return [];
 
   return (data as FeaturedGenerationRow[])
-    .filter((row) => row.image_path?.trim())
-    .map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      builder: row.builder,
-      target: row.target,
-      imageUrl: generationMediaPath(row.slug, "card"),
-      netScore: row.net_score,
-      remixCount: row.remix_count,
-    }));
+    .map((row) => {
+      const path = row.image_path?.trim();
+      const imageUrl = path ? generationImageUrl(path, "card") : null;
+      return imageUrl
+        ? {
+            id: row.id,
+            slug: row.slug,
+            builder: row.builder,
+            target: row.target,
+            imageUrl,
+            netScore: row.net_score,
+            remixCount: row.remix_count,
+          }
+        : null;
+    })
+    .filter((row): row is HomepageFeaturedGeneration => row !== null);
 }
 
 export const getHomepageFeaturedGenerations = unstable_cache(

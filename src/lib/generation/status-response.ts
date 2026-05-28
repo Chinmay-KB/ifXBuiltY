@@ -1,4 +1,4 @@
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import type { GenerationStatus } from "@/lib/generation/types";
 import { isGenerationStatus } from "@/lib/generation/types";
 
@@ -18,10 +18,9 @@ export function toGenerationStatusResponse(row: GenerationStatusRow) {
     ? row.status
     : "failed";
 
+  const path = row.image_path?.trim();
   const hasImage =
-    status === "completed" &&
-    row.image_ready === true &&
-    Boolean(row.image_path?.trim());
+    status === "completed" && row.image_ready === true && Boolean(path);
 
   return {
     id: row.id,
@@ -30,6 +29,7 @@ export function toGenerationStatusResponse(row: GenerationStatusRow) {
     builder: row.builder,
     target: row.target,
     errorMessage: row.error_message,
-    imageUrl: hasImage ? generationMediaPath(row.slug, "detail") : null,
+    imageUrl: hasImage && path ? generationImageUrl(path, "detail") : null,
+    imageDownloadUrl: hasImage && path ? generationImageUrl(path, "full") : null,
   };
 }

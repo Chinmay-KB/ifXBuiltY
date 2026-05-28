@@ -6,7 +6,6 @@ import { useCallback } from "react";
 
 import { GenerationCard } from "@/components/generation-card";
 import { VoteControls } from "@/components/vote-controls";
-import { generationMediaPath } from "@/lib/generation-media-url";
 import { clearActiveGenerationId } from "@/lib/generation/active-generation-storage";
 import type { GenerationStatus } from "@/lib/generation/types";
 import { isGenerationInProgress } from "@/lib/generation/types";
@@ -52,6 +51,7 @@ export function GenerationDetailClient({
           target: initial.target,
           errorMessage: initial.errorMessage,
           imageUrl: initial.imageUrl,
+          imageDownloadUrl: initial.imageDownloadUrl,
         }
       : null,
     enabled: inProgress && initial.isOwner,
@@ -65,10 +65,7 @@ export function GenerationDetailClient({
         status: statusData.status,
         errorMessage: statusData.errorMessage,
         imageUrl: statusData.imageUrl ?? initial.imageUrl,
-        imageDownloadUrl:
-          statusData.status === "completed"
-            ? generationMediaPath(statusData.slug, "full")
-            : initial.imageDownloadUrl,
+        imageDownloadUrl: statusData.imageDownloadUrl ?? initial.imageDownloadUrl,
       }
     : initial;
 

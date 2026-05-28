@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -51,10 +51,9 @@ export async function GET(request: Request) {
   const list = hasMore ? allRows.slice(0, limit) : allRows;
 
   const items = list.map((r) => {
+    const path = r.image_path?.trim();
     const hasDisplayableImage =
-      r.status === "completed" &&
-      r.image_ready === true &&
-      Boolean(r.image_path?.trim());
+      r.status === "completed" && r.image_ready === true && Boolean(path);
     return {
       id: r.id,
       slug: r.slug,
@@ -64,7 +63,7 @@ export async function GET(request: Request) {
       screenType: r.screen_type,
       region: r.region,
       extraDetails: r.extra_details,
-      imageUrl: hasDisplayableImage ? generationMediaPath(r.slug, "card") : null,
+      imageUrl: hasDisplayableImage && path ? generationImageUrl(path, "card") : null,
       imagePath: r.image_path,
       imageReady: r.image_ready === true,
       visibility: r.visibility,

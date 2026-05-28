@@ -1,77 +1,13 @@
 import { NextResponse } from "next/server";
-import sharp from "sharp";
 
+import { ensureGenerationVariants } from "@/lib/generation/ensure-variants";
 import { parseGenerationIdParam } from "@/lib/parse-generation-id";
-import { getGenerationImagesBucket } from "@/lib/env-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-function variantObjectPath(
-  originalPath: string,
-  variant: "card" | "detail" | "og",
-): string {
-  // Keep it deterministic and co-located with the original object.
-  // Example: `foo/bar.png.detail.webp`
-  if (variant === "og") return `${originalPath}.og.jpg`;
-  return `${originalPath}.${variant}.webp`;
-}
-
-async function ensurePublishVariants(opts: {
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
-  originalPath: string;
-}) {
-  const { supabase, originalPath } = opts;
-  const bucket = getGenerationImagesBucket();
-
-  const { data: blob, error: dlErr } = await supabase.storage
-    .from(bucket)
-    .download(originalPath);
-  if (dlErr || !blob) throw new Error("Could not download original image");
-
-  const input = Buffer.from(await blob.arrayBuffer());
-  const base = sharp(input).rotate();
-
-  const card = await base
-    .clone()
-    .resize({ width: 560, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
-  const detail = await base
-    .clone()
-    .resize({ width: 1280, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
-  const og = await base
-    .clone()
-    .resize({ width: 1200, withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .toBuffer();
-
-  const uploads: Array<Promise<{ error: unknown }>> = [
-    supabase.storage.from(bucket).upload(variantObjectPath(originalPath, "card"), card, {
-      upsert: true,
-      contentType: "image/webp",
-    }),
-    supabase.storage.from(bucket).upload(variantObjectPath(originalPath, "detail"), detail, {
-      upsert: true,
-      contentType: "image/webp",
-    }),
-    supabase.storage.from(bucket).upload(variantObjectPath(originalPath, "og"), og, {
-      upsert: true,
-      contentType: "image/jpeg",
-    }),
-  ];
-
-  const results = await Promise.all(uploads);
-  for (const r of results) {
-    if ((r as { error?: unknown }).error) {
-      throw new Error("Could not upload one or more variants");
-    }
-  }
-}
 
 export async function POST(_request: Request, context: RouteContext) {
   const { id: idStr } = await context.params;
@@ -117,12 +53,15 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 
+  // New generations already have CDN variants (built at generation time). This is
+  // a safety net for legacy drafts: generate any missing variants via the service
+  // client (storage writes bypass RLS), so published rows are always CDN-servable.
   try {
-    await ensurePublishVariants({
-      supabase,
+    await ensureGenerationVariants({
+      service: createSupabaseServiceClient(),
       originalPath: row.image_path.trim(),
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: "Could not publish (variant generation failed)" },
       { status: 500 },

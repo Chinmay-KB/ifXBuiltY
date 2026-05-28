@@ -1,5 +1,5 @@
 import { getAnonSessionId } from "@/lib/anon-session";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import type { GenerationStatus } from "@/lib/generation/types";
 import { isGenerationStatus } from "@/lib/generation/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -164,8 +164,8 @@ function mapRow(
     status === "completed" && data.image_ready
       ? data.image_path?.trim()
       : null;
-  const imageUrl = path ? generationMediaPath(data.slug, "detail") : null;
-  const imageDownloadUrl = path ? generationMediaPath(data.slug, "full") : null;
+  const imageUrl = path ? generationImageUrl(path, "detail") : null;
+  const imageDownloadUrl = path ? generationImageUrl(path, "full") : null;
 
   return {
     id: data.id,

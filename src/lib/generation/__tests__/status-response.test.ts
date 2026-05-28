@@ -1,9 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { toGenerationStatusResponse } from "@/lib/generation/status-response";
 
 describe("toGenerationStatusResponse", () => {
-  it("returns media URL only when completed with image", () => {
+  beforeAll(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://proj.supabase.co";
+  });
+
+  it("returns public CDN media URLs only when completed with image", () => {
     const completed = toGenerationStatusResponse({
       id: 1,
       slug: "duolingo-built-tinder",
@@ -14,8 +18,12 @@ describe("toGenerationStatusResponse", () => {
       image_path: "user/duolingo-built-tinder.png",
       image_ready: true,
     });
-    expect(completed.imageUrl).toContain("/api/generations/");
-    expect(completed.imageUrl).toContain("variant=detail");
+    expect(completed.imageUrl).toBe(
+      "https://proj.supabase.co/storage/v1/object/public/generation-images/user/duolingo-built-tinder.png.detail.webp",
+    );
+    expect(completed.imageDownloadUrl).toBe(
+      "https://proj.supabase.co/storage/v1/object/public/generation-images/user/duolingo-built-tinder.png",
+    );
 
     const queued = toGenerationStatusResponse({
       id: 2,

@@ -1,10 +1,12 @@
 import { Buffer } from "node:buffer";
 
 import { generateImage, generateText } from "ai";
+import sharp from "sharp";
 
 import {
   getCompanyScreenshots,
 } from "@/data/company-profiles";
+import { generationVariantObjectPath } from "@/lib/generation-media-url";
 import { getDodoClient } from "@/lib/dodo/client";
 import {
   getGenerationImageSize,
@@ -106,6 +108,48 @@ async function generateImageViaTextModel(args: {
     bytes: Buffer.from(imageFile.uint8Array),
     mediaType: imageFile.mediaType ?? "image/png",
   };
+}
+
+/**
+ * Build and upload the CDN display variants (card/detail/og) alongside the
+ * original. Generating these at generation time means every completed generation
+ * is immediately servable from the public bucket with no runtime transform.
+ */
+async function uploadDisplayVariants(args: {
+  service: ReturnType<typeof createSupabaseServiceClient>;
+  bucket: string;
+  objectPath: string;
+  imageBytes: Buffer;
+}): Promise<void> {
+  const base = sharp(args.imageBytes).rotate();
+
+  const [card, detail, og] = await Promise.all([
+    base.clone().resize({ width: 560, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(),
+    base.clone().resize({ width: 1280, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(),
+    base.clone().resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer(),
+  ]);
+
+  const variants: Array<{ bytes: Buffer; variant: "card" | "detail" | "og"; contentType: string }> = [
+    { bytes: card, variant: "card", contentType: "image/webp" },
+    { bytes: detail, variant: "detail", contentType: "image/webp" },
+    { bytes: og, variant: "og", contentType: "image/jpeg" },
+  ];
+
+  const results = await Promise.all(
+    variants.map(({ bytes, variant, contentType }) =>
+      args.service.storage
+        .from(args.bucket)
+        .upload(generationVariantObjectPath(args.objectPath, variant), bytes, {
+          contentType,
+          upsert: true,
+        }),
+    ),
+  );
+
+  const failed = results.find((r) => r.error);
+  if (failed?.error) {
+    throw new Error(`Variant upload failed: ${failed.error.message}`);
+  }
 }
 
 async function downloadScreenshot(
@@ -238,6 +282,18 @@ export async function executeImageGeneration(
       }
     },
     { generationId: args.generationId, bytes: imageBytes.length },
+  );
+
+  await withGenerationTiming(
+    "variants_generate",
+    () =>
+      uploadDisplayVariants({
+        service,
+        bucket: args.bucket,
+        objectPath: args.objectPath,
+        imageBytes,
+      }),
+    { generationId: args.generationId },
   );
 
   return {

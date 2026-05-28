@@ -1,10 +1,8 @@
 import { ImageResponse } from "next/og";
-import sharp from "sharp";
 
-import { getGenerationImagesBucket } from "@/lib/env-server";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { getPublishedGenerationBySlug } from "@/lib/public-generation";
 import { getPublishedImagePathBySlug } from "@/lib/public-generation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatResultTitle } from "@/lib/ui/format";
 
 export const runtime = "nodejs";
@@ -53,14 +51,12 @@ export default async function OGImage({
     );
   }
 
-  // Fetch the actual image from Supabase storage
-  const supabase = await createSupabaseServerClient();
-  const bucket = getGenerationImagesBucket();
-  const { data: blob, error } = await supabase.storage
-    .from(bucket)
-    .download(imagePath);
+  // The 1200px JPEG OG variant is produced at generation time and lives in the
+  // public bucket, so we can fetch it straight from the CDN (no auth, no sharp).
+  const ogUrl = generationImageUrl(imagePath, "og");
+  const ogResponse = ogUrl ? await fetch(ogUrl).catch(() => null) : null;
 
-  if (error || !blob) {
+  if (!ogResponse || !ogResponse.ok) {
     return new ImageResponse(
       (
         <div
@@ -82,15 +78,7 @@ export default async function OGImage({
     );
   }
 
-  // Resize to 1200px and convert to JPEG for maximum crawler compatibility
-  const buf = Buffer.from(await blob.arrayBuffer());
-  const jpeg = await sharp(buf)
-    .rotate()
-    .resize({ width: 1200, withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .toBuffer();
-
-  return new Response(new Uint8Array(jpeg), {
+  return new Response(ogResponse.body, {
     headers: {
       "Content-Type": "image/jpeg",
       "Cache-Control": "public, max-age=31536000, stale-while-revalidate=86400",

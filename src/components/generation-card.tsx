@@ -11,7 +11,7 @@ const CardShareAction = dynamic(
 import { cn } from "@/lib/cn";
 import { GENERATION_CARD_IMAGE_SIZES } from "@/lib/generation-image-sizes";
 import { formatScreenBadge, getDisplayAspectClass } from "@/lib/screen-type";
-import { generationMediaPath } from "@/lib/generation-media-url";
+import { generationImageUrl } from "@/lib/generation-media-url";
 import { formatCardLabel, formatCompactCount } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -61,6 +61,9 @@ export function GenerationCard({
       ? formatScreenBadge(item.screenType)
       : "Screenshot";
   const imageAspectClass = getDisplayAspectClass(item.screenType ?? "desktop");
+  const downloadHref = item.imagePath
+    ? generationImageUrl(item.imagePath, "full")
+    : null;
 
   if (variant === "paper") {
     return (
@@ -123,9 +126,7 @@ export function GenerationCard({
               >
                 <CardAction
                   label="Download"
-                  href={
-                    item.imageUrl ? generationMediaPath(item.slug, "full") : "#"
-                  }
+                  href={downloadHref ?? "#"}
                   download
                   icon={
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -212,9 +213,7 @@ export function GenerationCard({
             >
               <CardAction
                 label="Download"
-                href={
-                  item.imageUrl ? generationMediaPath(item.slug, "full") : "#"
-                }
+                href={downloadHref ?? "#"}
                 download
                 icon={
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
