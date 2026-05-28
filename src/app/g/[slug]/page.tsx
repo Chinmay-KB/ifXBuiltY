@@ -61,7 +61,7 @@ export default async function GenerationDetailPage({ params }: Props) {
     preload(gen.imageUrl, { as: "image" });
   }
 
-  let related: FeedItem[] = [];
+  const related: FeedItem[] = [];
   if (gen.status === "completed") {
     const [byBuilder, byTarget] = await Promise.all([
       fetchFeedServer({ sort: "trending", limit: 6, builders: [gen.builder] }),

@@ -17,6 +17,11 @@ export type PublicGeneration = {
   extraDetails: string;
   status: GenerationStatus;
   errorMessage: string | null;
+  creator: {
+    id: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  } | null;
   /** Optimized WebP for on-page display (~1280px wide max). */
   imageUrl: string | null;
   /** Original bytes from storage (large download / save-as). */
@@ -50,6 +55,12 @@ type GenerationRow = {
   moderation_status: string;
 };
 
+type CreatorSummary = {
+  id: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+};
+
 async function fetchUserVote(
   generationId: number,
   anonSessionId: string | null,
@@ -77,10 +88,51 @@ async function fetchUserVote(
   return null;
 }
 
+async function fetchCreatorSummary(creatorId: string): Promise<CreatorSummary | null> {
+  let service: ReturnType<typeof createSupabaseServiceClient>;
+  try {
+    service = createSupabaseServiceClient();
+  } catch {
+    return null;
+  }
+
+  const { data, error } = await service
+    // Supabase Auth users table (requires service role; safe because we only read public metadata)
+    .from("auth.users")
+    .select("id, raw_user_meta_data")
+    .eq("id", creatorId)
+    .maybeSingle();
+
+  if (error || !data?.id) return null;
+
+  const meta = data.raw_user_meta_data as
+    | {
+        full_name?: unknown;
+        name?: unknown;
+        avatar_url?: unknown;
+      }
+    | null
+    | undefined;
+
+  const rawName =
+    typeof meta?.full_name === "string"
+      ? meta.full_name
+      : typeof meta?.name === "string"
+        ? meta.name
+        : "";
+  const displayName = rawName.trim() || null;
+
+  const rawAvatar = typeof meta?.avatar_url === "string" ? meta.avatar_url : "";
+  const avatarUrl = rawAvatar.trim() || null;
+
+  return { id: data.id as string, displayName, avatarUrl };
+}
+
 function mapRow(
   data: GenerationRow,
   isOwner: boolean,
   userVote: 1 | -1 | null,
+  creator: CreatorSummary | null,
 ): PublicGeneration {
   const status: GenerationStatus = isGenerationStatus(data.status)
     ? data.status
@@ -103,6 +155,7 @@ function mapRow(
     extraDetails: data.extra_details,
     status,
     errorMessage: data.error_message,
+    creator,
     imageUrl,
     imageDownloadUrl,
     upvoteCount: data.upvote_count,
@@ -162,9 +215,12 @@ export async function getGenerationBySlug(
 
   const row = data as GenerationRow;
   const anonSessionId = await getAnonSessionId();
-  const userVote = await fetchUserVote(row.id, anonSessionId);
+  const [userVote, creator] = await Promise.all([
+    fetchUserVote(row.id, anonSessionId),
+    fetchCreatorSummary(row.creator_id),
+  ]);
 
-  return mapRow(row, isOwner, userVote);
+  return mapRow(row, isOwner, userVote, creator);
 }
 
 /**

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "perf:lighthouse": "node scripts/lighthouse-mobile.mjs",
+    "backfill:variants": "tsx scripts/backfill-generation-variants.ts",
     "db:reset": "supabase db reset --local",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
