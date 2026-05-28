@@ -152,12 +152,14 @@ export function GeneratorForm({
   useEffect(() => {
     if (!merged.builder || builderId) return;
     const id = resolveProfileIdByName(merged.builder, groups);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (id) setBuilderId(id);
   }, [merged.builder, builderId, groups]);
 
   useEffect(() => {
     if (!merged.target || targetId) return;
     const id = resolveProfileIdByName(merged.target, groups);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (id) setTargetId(id);
   }, [merged.target, targetId, groups]);
 
@@ -224,20 +226,17 @@ export function GeneratorForm({
     await generate(inputs, remixSource?.id ? { remixParentId: remixSource.id } : undefined);
   }, [builder, target, builderId, targetId, extraDetails, screenType, generate, remixSource]);
 
-  const handlePickerSelect = useCallback(
-    (option: GeneratorProfileOption) => {
-      if (pickerField === "builder") {
-        setBuilderId(option.id);
-        if (!screenTypeOverridden) {
-          setScreenType(normalizeRenderMode(option.screenType));
-        }
-      } else if (pickerField === "target") {
-        setTargetId(option.id);
+  const handlePickerSelect = (option: GeneratorProfileOption) => {
+    if (pickerField === "builder") {
+      setBuilderId(option.id);
+      if (!screenTypeOverridden) {
+        setScreenType(normalizeRenderMode(option.screenType));
       }
-      setPickerField(null);
-    },
-    [pickerField, screenTypeOverridden],
-  );
+    } else if (pickerField === "target") {
+      setTargetId(option.id);
+    }
+    setPickerField(null);
+  };
 
   const pickerReturnFocusRef =
     pickerField === "builder"

@@ -7,7 +7,7 @@ import {
 
 export type { DispatchGenerationResult };
 
-function useWorkflowRuntime(): boolean {
+function shouldUseWorkflowRuntime(): boolean {
   const flag = process.env.GENERATION_USE_WORKFLOW?.trim().toLowerCase();
   if (flag === "false" || flag === "0") return false;
   // Workflow only executes on Vercel; local `next dev` never runs the worker.
@@ -25,7 +25,7 @@ function useWorkflowRuntime(): boolean {
 export async function dispatchGenerationJob(
   input: GenerationJobInput,
 ): Promise<DispatchGenerationResult> {
-  if (!useWorkflowRuntime()) {
+  if (!shouldUseWorkflowRuntime()) {
     return scheduleInlineJob(input);
   }
 

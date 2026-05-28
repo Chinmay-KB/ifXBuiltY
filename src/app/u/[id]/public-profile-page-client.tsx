@@ -20,7 +20,7 @@ export function PublicProfilePageClient({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-10">
       <div className="flex items-center gap-4 pb-8">
         {creator.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

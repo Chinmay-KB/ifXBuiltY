@@ -18,6 +18,7 @@ export function useEnhanceWhenNearViewport({
   const [enhanced, setEnhanced] = useState(immediate);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (immediate) setEnhanced(true);
   }, [immediate]);
 
@@ -28,6 +29,7 @@ export function useEnhanceWhenNearViewport({
     if (!node) return;
 
     if (typeof IntersectionObserver === "undefined") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnhanced(true);
       return;
     }

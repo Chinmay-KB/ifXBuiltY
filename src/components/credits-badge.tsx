@@ -32,6 +32,7 @@ export function CreditsBadge() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchBalance();
   }, [fetchBalance]);
 

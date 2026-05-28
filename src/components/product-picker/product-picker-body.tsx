@@ -51,6 +51,7 @@ export function ProductPickerBody({
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const selected = useMemo(() => {
     for (const g of groups) {
       const hit = g.options.find((o) => o.id === valueId);
@@ -65,6 +66,7 @@ export function ProductPickerBody({
 
   useEffect(() => {
     if (selected?.group.companyId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveCompanyId(selected.group.companyId);
     }
   }, [selected?.group.companyId]);

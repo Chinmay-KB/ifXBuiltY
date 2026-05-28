@@ -1,9 +1,8 @@
 import { Buffer } from "node:buffer";
 
-import { generateImage } from "ai";
+import { generateImage, generateText } from "ai";
 
 import {
-  getCompanyProfileById,
   getCompanyScreenshots,
 } from "@/data/company-profiles";
 import { getDodoClient } from "@/lib/dodo/client";
@@ -14,6 +13,22 @@ import {
 } from "@/lib/screen-type";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { withGenerationTiming } from "@/lib/generation/timing";
+
+function resolveImageSize(args: {
+  imageModel: string;
+  renderMode: RenderMode;
+}): `${number}x${number}` {
+  // Default: follow existing screen_type → aspect ratio mapping.
+  const base = getGenerationImageSize(normalizeRenderMode(args.renderMode));
+
+  // Some providers enforce a minimum pixel count. Seedream currently requires
+  // >= 3,686,400 pixels; 2048x2048 = 4,194,304.
+  if (args.imageModel.trim().toLowerCase().startsWith("bytedance/seedream")) {
+    return "2048x2048";
+  }
+
+  return base;
+}
 
 export type ExecuteImageGenerationArgs = {
   generationId: number;
@@ -45,6 +60,52 @@ function imageQualitySetting(): "low" | "medium" | "high" {
   const raw = process.env.GENERATION_IMAGE_QUALITY?.trim().toLowerCase();
   if (raw === "low" || raw === "medium" || raw === "high") return raw;
   return "high";
+}
+
+function isGeminiNanoBananaImageModel(model: string): boolean {
+  return model.trim().toLowerCase().startsWith("google/gemini-3.1-flash-image-preview");
+}
+
+function isLanguageModelNotImageModelError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return msg.includes("is a language model, not an image model");
+}
+
+async function generateImageViaTextModel(args: {
+  imageModel: string;
+  prompt: string | { images: Buffer[]; text: string };
+  userId: string;
+}): Promise<{ bytes: Buffer; mediaType: string }> {
+  // Nano Banana models return images as files on generateText().
+  const promptAsText =
+    typeof args.prompt === "string" ? args.prompt : args.prompt.text;
+
+  const result = await generateText({
+    model: args.imageModel,
+    prompt: promptAsText,
+    providerOptions: {
+      google: {
+        // Force image output. Some models may also return text; we ignore it.
+        responseModalities: ["IMAGE"],
+      },
+      gateway: {
+        user: args.userId,
+        tags: ["feature:generate", "app:ifxbuilty"],
+      },
+    },
+  });
+
+  const imageFile = (result.files ?? []).find((f) =>
+    (f.mediaType ?? "").startsWith("image/"),
+  );
+  if (!imageFile?.uint8Array || imageFile.uint8Array.length === 0) {
+    throw new Error("No image data returned");
+  }
+
+  return {
+    bytes: Buffer.from(imageFile.uint8Array),
+    mediaType: imageFile.mediaType ?? "image/png",
+  };
 }
 
 async function downloadScreenshot(
@@ -95,7 +156,7 @@ export async function executeImageGeneration(
   args: ExecuteImageGenerationArgs,
 ): Promise<ExecuteImageGenerationResult> {
   const renderMode = normalizeRenderMode(args.renderMode);
-  const size = getGenerationImageSize(renderMode);
+  const size = resolveImageSize({ imageModel: args.imageModel, renderMode });
   const quality = imageQualitySetting();
 
   const screenshotBuffers = await withGenerationTiming(
@@ -109,29 +170,53 @@ export async function executeImageGeneration(
       ? { images: screenshotBuffers, text: args.prompt }
       : args.prompt;
 
-  const result = await withGenerationTiming(
-    "ai_generate_image",
-    () =>
-      generateImage({
-        model: args.imageModel,
-        prompt: promptInput,
-        size,
-        providerOptions: {
-          openai: {
-            quality,
-          },
-          gateway: {
-            user: args.userId,
-            tags: ["feature:generate", "app:ifxbuilty"],
-          },
-        },
-      }),
-    { generationId: args.generationId, size, quality, renderMode },
-  );
+  let uploadContentType: string;
+  let imageBytes: Buffer;
 
-  const file = result.image;
-  const uploadContentType = file.mediaType;
-  const imageBytes = Buffer.from(file.uint8Array);
+  try {
+    const result = await withGenerationTiming(
+      "ai_generate_image",
+      () =>
+        generateImage({
+          model: args.imageModel,
+          prompt: promptInput,
+          size,
+          providerOptions: {
+            openai: {
+              quality,
+            },
+            gateway: {
+              user: args.userId,
+              tags: ["feature:generate", "app:ifxbuilty"],
+            },
+          },
+        }),
+      { generationId: args.generationId, size, quality, renderMode },
+    );
+
+    const file = result.image;
+    uploadContentType = file.mediaType;
+    imageBytes = Buffer.from(file.uint8Array);
+  } catch (e) {
+    // Gemini Nano Banana image models are exposed as multimodal LMs on the gateway.
+    // They can still output images, but via generateText() returning result.files.
+    if (isGeminiNanoBananaImageModel(args.imageModel) && isLanguageModelNotImageModelError(e)) {
+      const viaText = await withGenerationTiming(
+        "ai_generate_image",
+        () =>
+          generateImageViaTextModel({
+            imageModel: args.imageModel,
+            prompt: promptInput,
+            userId: args.userId,
+          }),
+        { generationId: args.generationId, size, quality, renderMode, fallback: "generateText" },
+      );
+      uploadContentType = viaText.mediaType;
+      imageBytes = viaText.bytes;
+    } else {
+      throw e;
+    }
+  }
 
   if (imageBytes.length === 0) {
     throw new Error("No image data returned");

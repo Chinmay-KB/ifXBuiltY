@@ -13,6 +13,11 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Companies", match: /^\/admin$/ },
   { href: "/admin/products", label: "Products", match: /^\/admin\/products/ },
   { href: "/admin/research", label: "Research", match: /^\/admin\/research/ },
+  {
+    href: "/admin/model-test",
+    label: "Model test",
+    match: /^\/admin\/model-test/,
+  },
 ];
 
 export function AdminShell({ children }: AdminShellProps) {

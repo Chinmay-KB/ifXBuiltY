@@ -192,7 +192,9 @@ function FeedPageInteractive({
 
   useEffect(() => {
     if (!hasFilteredUrl) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems(initialItems);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSyncing(false);
       return;
     }
@@ -206,12 +208,15 @@ function FeedPageInteractive({
         return res.json() as Promise<{ items: FeedItem[] }>;
       })
       .then((data) => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!cancelled) setItems(data.items ?? []);
       })
       .catch(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!cancelled) setItems([]);
       })
       .finally(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!cancelled) setIsSyncing(false);
       });
 

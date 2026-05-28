@@ -69,6 +69,7 @@ export function CompanyProductFilterDropdown({
 
   useEffect(() => {
     if (!groups.some((g) => g.companyId === activeCompanyId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveCompanyId(groups[0]?.companyId ?? "");
     }
   }, [groups, activeCompanyId]);

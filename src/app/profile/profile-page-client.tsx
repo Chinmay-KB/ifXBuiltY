@@ -84,7 +84,9 @@ export function ProfilePageClient({ user }: { user: UserProfile }) {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOffset(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchGenerations(0, false);
   }, [fetchGenerations]);
 
@@ -95,7 +97,7 @@ export function ProfilePageClient({ user }: { user: UserProfile }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-6 py-8 lg:px-10">
       <div className="flex items-center gap-4 pb-8">
         {user.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -119,7 +121,7 @@ export function ProfilePageClient({ user }: { user: UserProfile }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 pt-6 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -142,7 +144,7 @@ export function ProfilePageClient({ user }: { user: UserProfile }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 pt-6 sm:grid-cols-2 xl:grid-cols-3">
             {generations.map((gen) => (
               <GenerationCard key={gen.id} generation={gen} />
             ))}
@@ -185,7 +187,7 @@ function GenerationCard({ generation }: { generation: Generation }) {
               alt={title}
               className="absolute inset-0 h-full w-full object-cover"
               loading="lazy"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
             />
           </Zoom>
         ) : pending ? (

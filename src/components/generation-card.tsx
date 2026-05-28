@@ -142,6 +142,9 @@ export function GenerationCard({
                     </svg>
                   }
                   slug={item.slug}
+                  builder={item.builder}
+                  target={item.target}
+                  imageUrl={item.imageUrl}
                 />
               </div>
             )}
@@ -228,6 +231,9 @@ export function GenerationCard({
                   </svg>
                 }
                 slug={item.slug}
+                builder={item.builder}
+                target={item.target}
+                imageUrl={item.imageUrl}
               />
             </div>
           )}
@@ -255,9 +261,21 @@ type CardActionProps = {
   href?: string;
   download?: boolean;
   slug?: string;
+  builder?: string;
+  target?: string;
+  imageUrl?: string | null;
 };
 
-function CardAction({ label, icon, href, download, slug }: CardActionProps) {
+function CardAction({
+  label,
+  icon,
+  href,
+  download,
+  slug,
+  builder,
+  target,
+  imageUrl = null,
+}: CardActionProps) {
   const classes =
     "flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm transition-transform duration-150 hover:scale-110";
 
@@ -275,7 +293,16 @@ function CardAction({ label, icon, href, download, slug }: CardActionProps) {
   }
 
   if (slug) {
-    return <CardShareAction label={label} slug={slug} icon={icon} />;
+    return (
+      <CardShareAction
+        label={label}
+        slug={slug}
+        builder={builder ?? ""}
+        target={target ?? ""}
+        imageUrl={imageUrl}
+        icon={icon}
+      />
+    );
   }
 
   return null;

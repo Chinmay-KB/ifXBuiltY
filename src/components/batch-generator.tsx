@@ -109,6 +109,7 @@ export function BatchGenerator() {
   // Load initial slots on mount
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlotsLoading(true);
     fetchFourSlots()
       .then((s) => {

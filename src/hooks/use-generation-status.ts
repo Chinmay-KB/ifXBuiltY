@@ -48,7 +48,10 @@ export function useGenerationStatus({
   const completedRef = useRef(false);
   const inFlightRef = useRef(false);
   const dataRef = useRef(data);
-  dataRef.current = data;
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const fetchStatus = useCallback(async () => {
     const res = await fetch(`/api/generations/${generationId}/status`);

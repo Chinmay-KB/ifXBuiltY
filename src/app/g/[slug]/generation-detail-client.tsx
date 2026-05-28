@@ -217,7 +217,9 @@ export function GenerationDetailClient({
               <div>
                 <GenerationDetailActions
                   slug={gen.slug}
-                  title={title}
+                  builder={gen.builder}
+                  target={gen.target}
+                  imageUrl={gen.imageUrl}
                   imageDownloadUrl={gen.imageDownloadUrl ?? null}
                 />
               </div>

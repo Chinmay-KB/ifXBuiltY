@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Zoom from "@/components/image-zoom";
+import { ShareSheet } from "@/components/share-sheet";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { formatResultTitle, hasInputsChanged } from "@/lib/ui/format";
@@ -35,9 +36,8 @@ export function GenerationResultView({
   variant = "default",
   viewportContained = false,
 }: GenerationResultViewProps) {
-  const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
   const [downloadState, setDownloadState] = useState<"idle" | "saved">("idle");
-  const shareResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const downloadResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const title = formatResultTitle(result.builder, result.target);
@@ -45,15 +45,8 @@ export function GenerationResultView({
 
   useEffect(() => {
     return () => {
-      if (shareResetRef.current) clearTimeout(shareResetRef.current);
       if (downloadResetRef.current) clearTimeout(downloadResetRef.current);
     };
-  }, []);
-
-  const flashShareState = useCallback((state: "copied" | "shared") => {
-    setShareState(state);
-    if (shareResetRef.current) clearTimeout(shareResetRef.current);
-    shareResetRef.current = setTimeout(() => setShareState("idle"), 1800);
   }, []);
 
   const flashDownloadState = useCallback(() => {
@@ -62,33 +55,9 @@ export function GenerationResultView({
     downloadResetRef.current = setTimeout(() => setDownloadState("idle"), 1800);
   }, []);
 
-  const handleShare = useCallback(async () => {
-    const shareUrl = `${window.location.origin}/g/${result.slug}`;
-    const shareData = {
-      title,
-      url: shareUrl,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        flashShareState("shared");
-        return;
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
-        // Native share failed — fall through to clipboard.
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      flashShareState("copied");
-    } catch {
-      // Clipboard may be blocked; the visible action simply stays idle.
-    }
-  }, [flashShareState, result.slug, title]);
+  const handleShare = useCallback(() => {
+    setShareSheetOpen(true);
+  }, []);
 
   const handleDownload = useCallback(async () => {
     if (!result.imageUrl) return;
@@ -124,58 +93,63 @@ export function GenerationResultView({
       actionMotion,
     );
     return (
-      <div
-        className={cn(
-          "flex flex-col",
-          vc
-            ? "min-h-0 gap-4 overflow-y-auto px-1 pb-4 lg:h-full lg:overflow-hidden lg:px-0 lg:pb-0 lg:flex-row lg:gap-5"
-            : "gap-6 lg:flex-row lg:gap-12",
-        )}
-      >
-        <figure
+      <>
+        <div
           className={cn(
-            "relative isolate flex min-w-0 flex-col items-center justify-center overflow-hidden border border-line bg-linear-to-br from-panel to-canvas",
+            "flex flex-col",
             vc
-              ? "rounded-[22px] lg:min-h-0 lg:flex-1"
-              : "min-h-[320px] rounded-3xl lg:min-h-[480px]",
+              ? "min-h-0 gap-4 overflow-y-auto px-1 pb-4 lg:h-full lg:overflow-hidden lg:px-0 lg:pb-0 lg:flex-row lg:gap-5"
+              : "gap-6 lg:flex-row lg:gap-12",
           )}
         >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-55"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle farthest-corner at 20% 20% in oklab, oklab(88.5% -0.016 0.181 / 18%) 0%, oklab(0% 0 0 / 0%) 36%), linear-gradient(135deg, oklab(100% 0 0 / 0%) 0%, oklab(0% 0 0 / 4%) 100%)",
-            }}
-            aria-hidden
-          />
-          {result.imageUrl ? (
-            <Zoom>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={result.imageUrl}
-                alt={title}
-                className={cn(
-                  "relative z-10 object-contain",
-                  vc ? "max-h-[54vh] w-full lg:max-h-full lg:max-w-full" : "h-full w-full",
-                )}
-                style={vc ? undefined : { maxHeight: "min(72vh, 640px)" }}
-              />
-            </Zoom>
-          ) : (
-            <div className={cn("flex items-center justify-center", vc ? "h-36" : "h-80")}>
-              <span className="text-muted">Image unavailable</span>
-            </div>
-          )}
-          <figcaption className="sr-only">{title}</figcaption>
-        </figure>
+          <figure
+            className={cn(
+              "relative isolate flex min-w-0 flex-col items-center justify-center overflow-hidden border border-line bg-linear-to-br from-panel to-canvas",
+              vc
+                ? "rounded-[22px] lg:min-h-0 lg:flex-1"
+                : "min-h-[320px] rounded-3xl lg:min-h-[480px]",
+            )}
+          >
+            <div
+              className="pointer-events-none absolute inset-0 opacity-55"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle farthest-corner at 20% 20% in oklab, oklab(88.5% -0.016 0.181 / 18%) 0%, oklab(0% 0 0 / 0%) 36%), linear-gradient(135deg, oklab(100% 0 0 / 0%) 0%, oklab(0% 0 0 / 4%) 100%)",
+              }}
+              aria-hidden
+            />
+            {result.imageUrl ? (
+              <Zoom>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={result.imageUrl}
+                  alt={title}
+                  className={cn(
+                    "relative z-10 object-contain",
+                    vc
+                      ? "max-h-[54vh] w-full lg:max-h-full lg:max-w-full"
+                      : "h-full w-full",
+                  )}
+                  style={vc ? undefined : { maxHeight: "min(72vh, 640px)" }}
+                />
+              </Zoom>
+            ) : (
+              <div className={cn("flex items-center justify-center", vc ? "h-36" : "h-80")}>
+                <span className="text-muted">Image unavailable</span>
+              </div>
+            )}
+            <figcaption className="sr-only">{title}</figcaption>
+          </figure>
 
-        <aside
-          className={cn(
-            "flex w-full shrink-0 flex-col",
-            vc ? "min-h-0 gap-4 lg:w-[320px] lg:overflow-y-auto lg:pr-1" : "gap-6 lg:w-[380px]",
-          )}
-          aria-label="Generated image actions"
-        >
+          <aside
+            className={cn(
+              "flex w-full shrink-0 flex-col",
+              vc
+                ? "min-h-0 gap-4 lg:w-[320px] lg:overflow-y-auto lg:pr-1"
+                : "gap-6 lg:w-[380px]",
+            )}
+            aria-label="Generated image actions"
+          >
           <div className="flex flex-col gap-3">
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-panel py-1.5 pl-2.5 pr-3 lg:gap-2.5 lg:py-2 lg:pl-3 lg:pr-3.5">
               <span className="size-2 rounded-full bg-[#58CC02]" />
@@ -231,22 +205,14 @@ export function GenerationResultView({
                 onClick={() => void handleShare()}
                 className={quietActionClass}
               >
-                {shareState === "idle" ? <ShareIcon /> : <CheckIcon />}
-                {shareState === "copied"
-                  ? "Copied link"
-                  : shareState === "shared"
-                    ? "Shared"
-                    : "Share link"}
+                <ShareIcon />
+                Share
               </button>
             </div>
           </div>
 
           <div className="min-h-5" aria-live="polite">
-            {shareState !== "idle" ? (
-              <p className="text-xs font-semibold text-muted">
-                {shareState === "copied" ? "Link copied to clipboard." : "Shared from this timeline."}
-              </p>
-            ) : downloadState === "saved" ? (
+            {downloadState === "saved" ? (
               <p className="text-xs font-semibold text-muted">Image handed to your downloads folder.</p>
             ) : null}
           </div>
@@ -269,8 +235,18 @@ export function GenerationResultView({
               Reroll same prompt
             </Button>
           </div>
-        </aside>
-      </div>
+          </aside>
+        </div>
+
+        <ShareSheet
+          open={shareSheetOpen}
+          onClose={() => setShareSheetOpen(false)}
+          slug={result.slug}
+          builder={result.builder}
+          target={result.target}
+          imageUrl={result.imageUrl}
+        />
+      </>
     );
   }
 
@@ -365,6 +341,15 @@ export function GenerationResultView({
           </div>
         </div>
       </div>
+
+      <ShareSheet
+        open={shareSheetOpen}
+        onClose={() => setShareSheetOpen(false)}
+        slug={result.slug}
+        builder={result.builder}
+        target={result.target}
+        imageUrl={result.imageUrl}
+      />
     </div>
   );
 }

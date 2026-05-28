@@ -41,7 +41,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return { data, error };
   };
 
-  let { data: row, error } = await loadRow();
+  const { data: row, error } = await loadRow();
 
   if (error || !row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

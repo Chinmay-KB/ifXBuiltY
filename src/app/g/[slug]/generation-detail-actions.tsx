@@ -2,41 +2,31 @@
 
 import { useState } from "react";
 
+import { ShareSheet } from "@/components/share-sheet";
+
 type GenerationDetailActionsProps = {
   slug: string;
-  title: string;
+  builder: string;
+  target: string;
+  imageUrl: string | null;
   imageDownloadUrl: string | null;
 };
 
 export function GenerationDetailActions({
   slug,
-  title,
+  builder,
+  target,
+  imageUrl,
   imageDownloadUrl,
 }: GenerationDetailActionsProps) {
-  const [shareMessage, setShareMessage] = useState<string | null>(null);
-
-  async function handleShare() {
-    const url = `${window.location.origin}/g/${slug}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, url });
-        setShareMessage("Shared from the lab.");
-      } else {
-        await navigator.clipboard.writeText(url);
-        setShareMessage("Link copied. Go cause a timeline problem.");
-      }
-    } catch {
-      setShareMessage("Share cancelled.");
-    }
-  }
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-2.5">
       <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
-          onClick={() => void handleShare()}
+          onClick={() => setShareOpen(true)}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-chrome transition-[filter,transform] hover:brightness-110 active:translate-y-px"
         >
           <ShareIcon />
@@ -59,16 +49,14 @@ export function GenerationDetailActions({
         )}
       </div>
 
-      {shareMessage ? (
-        <p
-          key={shareMessage}
-          className="px-1 font-mono text-[10px] uppercase tracking-[0.08em] text-muted motion-safe:animate-detail-status-in"
-          role="status"
-          aria-live="polite"
-        >
-          {shareMessage}
-        </p>
-      ) : null}
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        slug={slug}
+        builder={builder}
+        target={target}
+        imageUrl={imageUrl}
+      />
     </div>
   );
 }
