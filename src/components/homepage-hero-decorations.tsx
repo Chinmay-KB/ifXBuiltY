@@ -7,6 +7,8 @@ import Link from "next/link";
 import { cn } from "@/lib/cn";
 import type { HeroFloatingThumb } from "@/lib/ui/types";
 
+const REVEAL_SAFETY_MS = 2500;
+
 type HomepageHeroDecorationsProps = {
   thumbnails: HeroFloatingThumb[];
 };
@@ -57,26 +59,7 @@ export function HomepageHeroDecorations({
 
       <div className="relative z-10 mb-6 flex items-center gap-3 md:hidden">
         {thumbnails.slice(0, 3).map((thumb, i) => (
-          <Link
-            key={thumb.id}
-            href={`/g/${thumb.slug}`}
-            className="relative block h-[72px] w-[56px] overflow-hidden rounded-lg border border-line bg-panel shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
-            style={{
-              transform: `rotate(${MOBILE_ROTATIONS[i % MOBILE_ROTATIONS.length]}deg)`,
-            }}
-          >
-            {thumb.imageUrl && (
-              <Image
-                src={thumb.imageUrl}
-                alt={`${thumb.builder} × ${thumb.target}`}
-                fill
-                sizes="56px"
-                className="object-cover"
-                priority={i === 0}
-                unoptimized
-              />
-            )}
-          </Link>
+          <MobileFloatingThumbnail key={thumb.id} thumb={thumb} index={i} />
         ))}
       </div>
     </>
@@ -116,6 +99,23 @@ const DESKTOP_POSITIONS: ThumbPosition[] = [
 
 const MOBILE_ROTATIONS = [-4, 3, -2, 5, -3];
 
+function useImageReveal(hasImage: boolean) {
+  const [loaded, setLoaded] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!hasImage) return;
+
+    const t = setTimeout(() => setTimedOut(true), REVEAL_SAFETY_MS);
+    return () => clearTimeout(t);
+  }, [hasImage]);
+
+  return {
+    onLoad: () => setLoaded(true),
+    revealed: !hasImage || loaded || timedOut,
+  };
+}
+
 function FloatingThumbnail({
   thumb,
   index,
@@ -128,8 +128,11 @@ function FloatingThumbnail({
   positions: ThumbPosition[];
 }) {
   const pos = positions[index % positions.length]!;
+  const hasImage = Boolean(thumb.imageUrl);
+  const { onLoad, revealed: imageReady } = useImageReveal(hasImage);
+  const revealed = mounted && imageReady;
 
-  const positionStyle: React.CSSProperties = {
+  const wrapperStyle: React.CSSProperties = {
     position: "absolute",
     width: pos.w,
     height: pos.h,
@@ -137,48 +140,90 @@ function FloatingThumbnail({
     ...(pos.bottom ? { bottom: pos.bottom } : {}),
     ...(pos.left ? { left: pos.left } : {}),
     ...(pos.right ? { right: pos.right } : {}),
-  };
+    "--reveal-opacity": pos.opacity,
+    "--reveal-delay": `${index * 70 + 120}ms`,
+  } as React.CSSProperties;
 
-  const animationStyle: React.CSSProperties = {
+  const floatStyle: React.CSSProperties = {
     "--float-base": `rotate(${pos.rotate}deg)`,
     "--float-y": `${pos.floatY}px`,
     "--float-duration": `${pos.floatDuration}s`,
     "--float-delay": `${index * 0.4}s`,
-    transform: mounted
-      ? `rotate(${pos.rotate}deg) scale(1)`
-      : `rotate(${pos.rotate}deg) scale(0.98)`,
-    opacity: pos.opacity,
-    transition: mounted
-      ? `transform 800ms cubic-bezier(0.22, 1, 0.36, 1)`
-      : undefined,
-    transitionDelay: mounted ? `${index * 80 + 150}ms` : undefined,
   } as React.CSSProperties;
+
+  return (
+    <div
+      className="hero-thumb-reveal pointer-events-none"
+      style={wrapperStyle}
+      data-revealed={revealed ? "true" : "false"}
+    >
+      <Link
+        href={`/g/${thumb.slug}`}
+        className={cn(
+          "pointer-events-auto relative block h-full w-full overflow-hidden rounded-xl border border-line bg-panel shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-shadow duration-250",
+          revealed && "hero-thumb-float",
+          "hover:z-50 hover:scale-[1.08] hover:rotate-0 hover:shadow-[0_16px_50px_rgba(0,0,0,0.2)] hover:opacity-100",
+        )}
+        style={floatStyle}
+        aria-label={`${thumb.builder} × ${thumb.target}`}
+        tabIndex={-1}
+      >
+        {hasImage ? (
+          <Image
+            src={thumb.imageUrl}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 0px, 200px"
+            className="object-cover transition-transform duration-300 hover:scale-105"
+            loading="lazy"
+            priority={false}
+            unoptimized
+            onLoad={onLoad}
+          />
+        ) : (
+          <div className="h-full w-full bg-panel" />
+        )}
+      </Link>
+    </div>
+  );
+}
+
+function MobileFloatingThumbnail({
+  thumb,
+  index,
+}: {
+  thumb: HeroFloatingThumb;
+  index: number;
+}) {
+  const hasImage = Boolean(thumb.imageUrl);
+  const { onLoad, revealed } = useImageReveal(hasImage);
+  const rotation = MOBILE_ROTATIONS[index % MOBILE_ROTATIONS.length]!;
 
   return (
     <Link
       href={`/g/${thumb.slug}`}
       className={cn(
-        "pointer-events-auto block overflow-hidden rounded-xl border border-line shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-shadow duration-250",
-        mounted && "hero-thumb-float",
-        "hover:z-50 hover:scale-[1.08] hover:rotate-0 hover:shadow-[0_16px_50px_rgba(0,0,0,0.2)] hover:opacity-100",
+        "hero-thumb-mobile-reveal relative block h-[72px] w-[56px] overflow-hidden rounded-lg border border-line bg-panel shadow-[0_4px_16px_rgba(0,0,0,0.1)]",
       )}
-      style={{ ...positionStyle, ...animationStyle }}
-      aria-label={`${thumb.builder} × ${thumb.target}`}
-      tabIndex={-1}
+      style={
+        {
+          transform: `rotate(${rotation}deg)`,
+          "--reveal-delay": `${index * 60 + 80}ms`,
+        } as React.CSSProperties
+      }
+      data-revealed={revealed ? "true" : "false"}
     >
-      {thumb.imageUrl ? (
+      {hasImage && (
         <Image
           src={thumb.imageUrl}
-          alt=""
+          alt={`${thumb.builder} × ${thumb.target}`}
           fill
-          sizes="(max-width: 768px) 0px, 200px"
-          className="object-cover transition-transform duration-300 hover:scale-105"
-          loading="lazy"
-          priority={false}
+          sizes="56px"
+          className="object-cover"
+          priority={index === 0}
           unoptimized
+          onLoad={onLoad}
         />
-      ) : (
-        <div className="h-full w-full bg-panel" />
       )}
     </Link>
   );

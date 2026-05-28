@@ -188,6 +188,57 @@ body {
   animation-delay: var(--float-delay, 0s);
 }
 
+/* Homepage hero — thumbnail entrance (opacity/scale/blur on wrapper) */
+.hero-thumb-reveal {
+  opacity: 0;
+  transform: scale(0.96);
+  filter: blur(8px);
+  transition:
+    opacity 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 650ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity, filter;
+}
+
+.hero-thumb-reveal[data-revealed="true"] {
+  opacity: var(--reveal-opacity, 1);
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.hero-thumb-mobile-reveal {
+  opacity: 0;
+  transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.hero-thumb-mobile-reveal[data-revealed="true"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-thumb-reveal {
+    transition: none;
+    transform: none;
+    filter: none;
+  }
+
+  .hero-thumb-reveal[data-revealed="true"] {
+    opacity: var(--reveal-opacity, 1);
+    transform: none;
+    filter: none;
+  }
+
+  .hero-thumb-mobile-reveal {
+    transition: none;
+  }
+
+  .hero-thumb-float {
+    animation: none;
+  }
+}
+
 /*
   Wall card hover — layered scrim: smooth perceptual fade (no muddy band).
   Uses ink + oklab mixing to stay on-brand; stacks two soft ramps like film overlays.
