@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
+import {
+  EmailPasswordSignInForm,
+  isEmailPasswordAuthEnabled,
+} from "@/components/email-password-sign-in-form";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LogoMark, Wordmark } from "@/components/ui";
 
@@ -15,6 +19,7 @@ type Props = {
 export function SignInModal({ open, onClose, authError }: Props) {
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const showEmailPasswordAuth = isEmailPasswordAuthEnabled();
 
   useEffect(() => {
     const el = dialogRef.current;
@@ -100,6 +105,20 @@ export function SignInModal({ open, onClose, authError }: Props) {
 
         {/* Google button */}
         <GoogleSignInButton nextPath={pathname} />
+
+        {showEmailPasswordAuth ? (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-line" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
+                Dev/test
+              </span>
+              <div className="h-px flex-1 bg-line" />
+            </div>
+
+            <EmailPasswordSignInForm nextPath={pathname} />
+          </>
+        ) : null}
 
         {/* Footer */}
         <p className="text-xs leading-relaxed text-muted">

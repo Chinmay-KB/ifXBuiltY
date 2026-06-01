@@ -166,6 +166,18 @@ describe("GeneratorForm", () => {
     expect(screen.getByRole("button", { name: /sign in to generate/i })).toBeDefined();
   });
 
+  it("opens the sign-in modal from the unauthenticated prompt", () => {
+    render(<GeneratorForm {...defaultProps} signedIn={false} />);
+    fireEvent.click(screen.getByRole("button", { name: /sign in to generate/i }));
+    expect(mockOpenSignIn).toHaveBeenCalledOnce();
+  });
+
+  it("opens the sign-in modal from the paper variant prompt", () => {
+    render(<GeneratorForm {...defaultProps} signedIn={false} variant="paper" />);
+    fireEvent.click(screen.getByRole("button", { name: /sign in to generate/i }));
+    expect(mockOpenSignIn).toHaveBeenCalledOnce();
+  });
+
   it("does not show Generate button when not signed in", () => {
     render(<GeneratorForm {...defaultProps} signedIn={false} />);
     expect(screen.queryByRole("button", { name: /^generate$/i })).toBeNull();
