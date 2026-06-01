@@ -33,6 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = formatResultTitle(gen.builder, gen.target);
   const description = `A cursed AI UI screenshot from the ifXBuiltY evidence locker: ${title}.`;
   const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
+  const ogImages = gen.imageUrl
+    ? [{ url: gen.imageUrl, alt: title }]
+    : undefined;
 
   return {
     title,
@@ -43,11 +46,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: "website",
       url: canonicalPath,
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: ogImages?.map((img) => img.url),
     },
   };
 }

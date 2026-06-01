@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Admin Panel",
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminLayout({

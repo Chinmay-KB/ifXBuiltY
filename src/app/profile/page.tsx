@@ -6,6 +6,7 @@ import { ProfilePageClient } from "./profile-page-client";
 
 export const metadata: Metadata = {
   title: "My Profile",
+  robots: { index: false, follow: false },
 };
 
 export default async function ProfilePage() {

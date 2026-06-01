@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useNavigationGenerating } from "@/components/navigation-generating-context";
 import { NavigationShell } from "@/components/navigation-shell";
 import { isSuperadmin as isSuperadminEmail } from "@/lib/admin-constants";
-import { useDeferUntilIdle } from "@/lib/defer-until-idle";
 
 type NavUser = {
   id: string;
@@ -33,53 +32,83 @@ function getNavVariant(pathname: string): "marketing" | "app" {
   return "app";
 }
 
+function navUserFromAuthUser(authUser: {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): NavUser {
+  return {
+    id: authUser.id,
+    email: authUser.email ?? undefined,
+    avatar_url:
+      typeof authUser.user_metadata?.avatar_url === "string"
+        ? authUser.user_metadata.avatar_url
+        : undefined,
+    display_name:
+      (typeof authUser.user_metadata?.full_name === "string"
+        ? authUser.user_metadata.full_name
+        : undefined) ??
+      (typeof authUser.user_metadata?.name === "string"
+        ? authUser.user_metadata.name
+        : undefined),
+  };
+}
+
 export function NavigationShellWrapper() {
   const pathname = usePathname();
   const { state: generatingNavState } = useNavigationGenerating();
   const [user, setUser] = useState<NavUser>(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const navVariant = getNavVariant(pathname);
-  const readyToHydrate = useDeferUntilIdle(navVariant === "marketing" ? 6000 : 2500);
 
   useEffect(() => {
-    if (navVariant !== "app") return;
-    if (!readyToHydrate) return;
-
     let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
 
-    async function hydrateUserFromSession() {
+    async function bindAuthSession() {
       try {
         const { createSupabaseBrowserClient } = await import(
           "@/lib/supabase/client"
         );
         const supabase = createSupabaseBrowserClient();
+
+        async function syncUserFromSession() {
+          const {
+            data: { user: authUser },
+          } = await supabase.auth.getUser();
+
+          if (cancelled) return;
+
+          if (!authUser) {
+            setUser(null);
+            setIsSuperadmin(false);
+            return;
+          }
+
+          setUser(navUserFromAuthUser(authUser));
+          setIsSuperadmin(isSuperadminEmail(authUser.email));
+        }
+
+        await syncUserFromSession();
+
         const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-
-        if (cancelled || !authUser) return;
-
-        setUser({
-          id: authUser.id,
-          email: authUser.email ?? undefined,
-          avatar_url: authUser.user_metadata?.avatar_url ?? undefined,
-          display_name:
-            authUser.user_metadata?.full_name ??
-            authUser.user_metadata?.name ??
-            undefined,
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(() => {
+          void syncUserFromSession();
         });
-        setIsSuperadmin(isSuperadminEmail(authUser.email));
+        unsubscribe = () => subscription.unsubscribe();
       } catch {
         // Keep anonymous shell on transient client auth failures.
       }
     }
 
-    void hydrateUserFromSession();
+    void bindAuthSession();
 
     return () => {
       cancelled = true;
+      unsubscribe?.();
     };
-  }, [readyToHydrate]);
+  }, []);
 
   if (pathname.startsWith("/admin")) {
     return null;

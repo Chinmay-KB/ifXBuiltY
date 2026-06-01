@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit, Space_Mono } from "next/font/google";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { DeferredAnalytics } from "@/components/deferred-analytics";
 import { DeferredSpeedInsights } from "@/components/deferred-speed-insights";
@@ -86,11 +87,20 @@ export default function RootLayout({
   const siteUrl = getSiteUrl();
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "ifXBuiltY",
-    url: siteUrl,
-    description:
-      "A cursed product lab for AI UI screenshots, brand mashups, satirical fake-app imagery, and ideas nobody should put on a roadmap.",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "ifXBuiltY",
+        url: siteUrl,
+        description:
+          "A cursed product lab for AI UI screenshots, brand mashups, satirical fake-app imagery, and ideas nobody should put on a roadmap.",
+      },
+      {
+        "@type": "Organization",
+        name: "ifXBuiltY",
+        url: siteUrl,
+      },
+    ],
   };
 
   return (
@@ -103,13 +113,15 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <SignInModalProvider>
-          <NavigationShellWrapper />
-          {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
-          <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
-            {children}
-          </main>
-        </SignInModalProvider>
+        <Suspense fallback={null}>
+          <SignInModalProvider>
+            <NavigationShellWrapper />
+            {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
+            <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
+              {children}
+            </main>
+          </SignInModalProvider>
+        </Suspense>
         <footer className="border-t border-ink/10 px-4 py-5 text-center text-sm text-ink/70">
           <p>
             Made with questionable sleep decisions by{" "}

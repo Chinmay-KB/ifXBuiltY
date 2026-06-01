@@ -135,10 +135,40 @@ async function fetchPublicGenerations(userId: string): Promise<FeedItem[]> {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const creator = await fetchCreatorSummary(id);
-  const title = creator?.displayName?.trim()
-    ? `${creator.displayName} — Profile`
-    : "Profile";
-  return { title };
+
+  if (!creator) {
+    return {
+      title: "Profile not found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const displayName = creator.displayName?.trim() || "Creator";
+  const title = `${displayName} — Profile`;
+  const description = `Browse cursed AI UI screenshots published by ${displayName} on ifXBuiltY.`;
+  const canonicalPath = `/u/${encodeURIComponent(creator.id)}`;
+  const ogImages = creator.avatarUrl
+    ? [{ url: creator.avatarUrl, alt: `${displayName} avatar` }]
+    : undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: canonicalPath,
+      images: ogImages,
+    },
+    twitter: {
+      card: ogImages ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: ogImages?.map((img) => img.url),
+    },
+  };
 }
 
 export default async function PublicProfilePage({ params }: Props) {

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "About the bad idea lab",
   description:
     "ifXBuiltY is a tiny comedy lab for satirical AI UI screenshots: mix brands, invent products nobody asked for, and browse the community's evidence.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

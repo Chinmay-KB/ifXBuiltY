@@ -9,9 +9,10 @@ import { LogoMark, Wordmark } from "@/components/ui";
 type Props = {
   open: boolean;
   onClose: () => void;
+  authError?: string | null;
 };
 
-export function SignInModal({ open, onClose }: Props) {
+export function SignInModal({ open, onClose, authError }: Props) {
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -90,6 +91,12 @@ export function SignInModal({ open, onClose }: Props) {
             Your prompt stays put. We just need somewhere to attach the evidence.
           </p>
         </div>
+
+        {authError ? (
+          <p className="text-sm font-medium text-barrier" role="alert">
+            {authError}
+          </p>
+        ) : null}
 
         {/* Google button */}
         <GoogleSignInButton nextPath={pathname} />
