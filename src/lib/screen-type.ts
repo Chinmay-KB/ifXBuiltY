@@ -1,5 +1,4 @@
 import type { CompanyProfile } from "@/data/company-profiles";
-import companyProfilesJson from "@/data/company-profiles.json";
 
 /** Canonical render modes for image generation. */
 export const RENDER_MODE_OPTIONS = ["mobile", "desktop"] as const;
@@ -23,21 +22,6 @@ const LEGACY_ALIASES = new Set([
   "tv",
   "kiosk",
 ]);
-
-/** Lookup screen type from static catalog JSON by profile id. */
-const JSON_SCREEN_BY_ID = new Map<string, string>();
-
-for (const company of companyProfilesJson as {
-  id: string;
-  products?: { id: string; screenType?: string }[];
-}[]) {
-  for (const p of company.products ?? []) {
-    if (p.screenType?.trim()) {
-      JSON_SCREEN_BY_ID.set(p.id, p.screenType.trim());
-    }
-  }
-  JSON_SCREEN_BY_ID.set(company.id, "desktop web");
-}
 
 export function isKnownScreenType(value: string): boolean {
   const v = value.trim().toLowerCase();
@@ -76,8 +60,6 @@ export function resolveProfileScreenType(profile: CompanyProfile): RenderMode {
   if (layout && isKnownScreenType(layout)) {
     return normalizeRenderMode(layout);
   }
-  const fromJson = JSON_SCREEN_BY_ID.get(profile.id);
-  if (fromJson) return normalizeRenderMode(fromJson);
   return "desktop";
 }
 

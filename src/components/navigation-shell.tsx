@@ -1,31 +1,16 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 
+import { CreditsBadge } from "@/components/credits-badge";
 import { useSignInModal } from "@/components/sign-in-modal-provider";
+import { UserMenu } from "@/components/user-menu";
 import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
-
-const CreditsBadge = dynamic(
-  () => import("@/components/credits-badge").then((mod) => mod.CreditsBadge),
-  { ssr: false },
-);
-
-const UserMenu = dynamic(
-  () => import("@/components/user-menu").then((mod) => mod.UserMenu),
-  { ssr: false },
-);
-
-type User = {
-  id: string;
-  email?: string;
-  avatar_url?: string;
-  display_name?: string;
-} | null;
+import type { NavUser } from "@/lib/nav-user";
 
 type NavigationShellProps = {
-  user: User;
+  user: NavUser | null;
   activeSection: "home" | "feed" | "generate" | "admin" | "about";
   isSuperadmin: boolean;
   isGenerationDetail?: boolean;
@@ -130,7 +115,7 @@ const appNavItems: {
   { label: "Feed", href: "/feed", activeMatch: "feed" },
 ];
 
-function UserAvatarMobile({ user }: { user: NonNullable<User> }) {
+function UserAvatarMobile({ user }: { user: NavUser }) {
   const displayName = user.display_name ?? user.email ?? "User";
 
   return (

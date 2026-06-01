@@ -160,7 +160,7 @@ export function CompanyProductFilterDropdown({
             ? "border-ink bg-ink text-white"
             : "border-line bg-panel text-ink hover:border-line-strong",
         )}
-        aria-expanded={open}
+        aria-expanded={open ? true : undefined}
         aria-haspopup="listbox"
       >
         <span className="max-w-[140px] truncate">{buttonLabel}</span>

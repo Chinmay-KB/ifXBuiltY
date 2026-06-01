@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { GeneratorForm } from "@/components/generator-form";
+import type { GeneratorProfileGroup } from "@/data/generator-profile-options";
 import { pollGenerationUntilDone } from "@/lib/generation/poll-until-done";
 import type {
   GenerationInputs,
@@ -13,6 +14,7 @@ import type {
 
 type RemixFormProps = {
   signedIn: boolean;
+  profileGroups: GeneratorProfileGroup[];
   remixSource: RemixSource;
   initialValues: Partial<GenerationInputs>;
 };
@@ -25,6 +27,7 @@ type RemixFormProps = {
  */
 export function RemixForm({
   signedIn,
+  profileGroups,
   remixSource,
   initialValues,
 }: RemixFormProps) {
@@ -47,6 +50,7 @@ export function RemixForm({
   return (
     <GeneratorForm
       signedIn={signedIn}
+      profileGroups={profileGroups}
       initialValues={initialValues}
       remixSource={remixSource}
       onGenerated={handleGenerated}

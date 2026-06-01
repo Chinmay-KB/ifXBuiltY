@@ -28,7 +28,7 @@ export function PromptNoteCollapsible({ content }: PromptNoteCollapsibleProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
+        aria-expanded={open ? true : undefined}
         aria-controls={open ? panelId : undefined}
         className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-ink underline-offset-2 transition-opacity hover:underline"
       >

@@ -22,7 +22,7 @@ export type FeedItem = {
   downvoteCount?: number;
 };
 
-export type FeedSort = "trending" | "newest" | "top" | "remixes";
+export type { FeedSort } from "@/lib/feed-types";
 
 /** Hero floating thumbnail passed from the homepage server page. */
 export type HeroFloatingThumb = {

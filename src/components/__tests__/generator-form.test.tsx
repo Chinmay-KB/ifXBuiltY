@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { GeneratorForm } from "../generator-form";
-import { buildGeneratorProfileGroups } from "@/data/generator-profile-options";
-import companyProfilesJson from "@/data/company-profiles.json";
-import type { CompanyGroup } from "@/data/company-profiles";
+import { mockGeneratorProfileGroups } from "@/data/test-fixtures/profile-groups";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -54,66 +52,8 @@ vi.mock("@/hooks/use-generate", () => ({
   }),
 }));
 
-function mockProfileGroups() {
-  const companies = (companyProfilesJson as { id: string; name: string; products?: { id: string; name: string; screenType?: string }[] }[]).slice(0, 3);
-  const groups: CompanyGroup[] = companies.map((c) => ({
-    company: {
-      id: c.id,
-      name: c.name,
-      styleDna: {
-        tone: [],
-        colors: [],
-        visual_traits: [],
-        ux_traits: [],
-        meme_exaggeration: [],
-        iconic_elements: [],
-        behavioral_stereotypes: [],
-        satirical_patterns: [],
-      },
-      archetype: { type: "", sections: [], layout: "desktop web", content_style: [] },
-      logoPath: null,
-      defaultVibeTags: [],
-      parentCompanyId: null,
-      profileType: "company",
-      category: "search",
-      popularityTier: 1,
-      researchStatus: "approved",
-      memeStrength: 3,
-    },
-    products: (c.products ?? []).slice(0, 2).map((p) => ({
-      id: p.id,
-      name: p.name,
-      styleDna: {
-        tone: [],
-        colors: [],
-        visual_traits: [],
-        ux_traits: [],
-        meme_exaggeration: [],
-        iconic_elements: [],
-        behavioral_stereotypes: [],
-        satirical_patterns: [],
-      },
-      archetype: {
-        type: "",
-        sections: [],
-        layout: p.screenType ?? "desktop web",
-        content_style: [],
-      },
-      logoPath: null,
-      defaultVibeTags: [],
-      parentCompanyId: c.id,
-      profileType: "product" as const,
-      category: "search",
-      popularityTier: 1,
-      researchStatus: "approved",
-      memeStrength: 3,
-    })),
-  }));
-  return buildGeneratorProfileGroups(groups);
-}
-
 describe("GeneratorForm", () => {
-  const profileGroups = mockProfileGroups();
+  const profileGroups = mockGeneratorProfileGroups();
   const defaultProps = {
     signedIn: true,
     profileGroups,
@@ -154,6 +94,7 @@ describe("GeneratorForm", () => {
           target: "YouTube",
           builderId: "google",
           targetId: "google-youtube",
+          screenType: "desktop",
         }}
       />,
     );
@@ -217,6 +158,7 @@ describe("GeneratorForm", () => {
           target: "YouTube",
           builderId: "google",
           targetId: "google-youtube",
+          screenType: "desktop",
         }}
         remixSource={{
           id: 42,
@@ -230,14 +172,16 @@ describe("GeneratorForm", () => {
     expect(mockGenerate).toHaveBeenCalledWith(expect.anything(), { remixParentId: 42 });
   });
 
-  it("opens picker and selects a product", () => {
+  it("opens picker and selects a company", () => {
     render(<GeneratorForm {...defaultProps} />);
     fireEvent.click(screen.getByLabelText(/builder/i));
-    expect(screen.getByRole("dialog")).toBeDefined();
-    const youtube = screen.getAllByText("YouTube")[0]!;
-    fireEvent.click(youtube);
+    const dialog = screen.getByRole("dialog");
+    const productCard = within(dialog).getByRole("button", {
+      name: /Duolingo Mobile/i,
+    });
+    fireEvent.click(productCard);
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByLabelText(/builder/i).textContent).toMatch(/YouTube/i);
+    expect(screen.getByLabelText(/builder/i).textContent).toMatch(/Duolingo/i);
   });
 
   it("calls generate with form values on submit", () => {
@@ -249,6 +193,7 @@ describe("GeneratorForm", () => {
           target: "YouTube",
           builderId: "google",
           targetId: "google-youtube",
+          screenType: "desktop",
         }}
       />,
     );
@@ -277,6 +222,7 @@ describe("GeneratorForm", () => {
           target: "YouTube",
           builderId: "google",
           targetId: "google-youtube",
+          screenType: "desktop",
         }}
       />,
     );

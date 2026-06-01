@@ -6,13 +6,7 @@ import { usePathname } from "next/navigation";
 import { useNavigationGenerating } from "@/components/navigation-generating-context";
 import { NavigationShell } from "@/components/navigation-shell";
 import { isSuperadmin as isSuperadminEmail } from "@/lib/admin-constants";
-
-type NavUser = {
-  id: string;
-  email?: string;
-  avatar_url?: string;
-  display_name?: string;
-} | null;
+import { navUserFromAuthUser, type NavUser } from "@/lib/nav-user";
 
 function getActiveSection(
   pathname: string,
@@ -32,33 +26,19 @@ function getNavVariant(pathname: string): "marketing" | "app" {
   return "app";
 }
 
-function navUserFromAuthUser(authUser: {
-  id: string;
-  email?: string | null;
-  user_metadata?: Record<string, unknown>;
-}): NavUser {
-  return {
-    id: authUser.id,
-    email: authUser.email ?? undefined,
-    avatar_url:
-      typeof authUser.user_metadata?.avatar_url === "string"
-        ? authUser.user_metadata.avatar_url
-        : undefined,
-    display_name:
-      (typeof authUser.user_metadata?.full_name === "string"
-        ? authUser.user_metadata.full_name
-        : undefined) ??
-      (typeof authUser.user_metadata?.name === "string"
-        ? authUser.user_metadata.name
-        : undefined),
-  };
-}
+type NavigationShellWrapperProps = {
+  initialUser: NavUser | null;
+  initialIsSuperadmin: boolean;
+};
 
-export function NavigationShellWrapper() {
+export function NavigationShellWrapper({
+  initialUser,
+  initialIsSuperadmin,
+}: NavigationShellWrapperProps) {
   const pathname = usePathname();
   const { state: generatingNavState } = useNavigationGenerating();
-  const [user, setUser] = useState<NavUser>(null);
-  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [user, setUser] = useState<NavUser | null>(initialUser);
+  const [isSuperadmin, setIsSuperadmin] = useState(initialIsSuperadmin);
   const navVariant = getNavVariant(pathname);
 
   useEffect(() => {
@@ -98,7 +78,7 @@ export function NavigationShellWrapper() {
         });
         unsubscribe = () => subscription.unsubscribe();
       } catch {
-        // Keep anonymous shell on transient client auth failures.
+        // Keep SSR nav state on transient client auth failures.
       }
     }
 

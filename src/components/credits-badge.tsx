@@ -1,49 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { CreditsModal } from "@/components/credits-modal";
-import { onCreditsChanged } from "@/lib/credits-events";
+import { useCredits } from "@/hooks/use-credits";
 
 /**
  * Displays the user's credit balance as a small badge in the nav.
- * Fetches from /api/credits/balance on mount and re-fetches whenever
- * any component emits a credits-changed event.
+ * Balance is loaded via `useCredits` and stays in sync with credits-changed events.
  */
 export function CreditsBadge() {
-  const [credits, setCredits] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { credits, isLoading } = useCredits(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
 
-  const fetchBalance = useCallback(async () => {
-    try {
-      const res = await fetch("/api/credits/balance");
-      if (!res.ok) {
-        setCredits(null);
-        return;
-      }
-      const data = await res.json();
-      setCredits(typeof data.credits === "number" ? data.credits : null);
-    } catch {
-      setCredits(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchBalance();
-  }, [fetchBalance]);
-
-  // Re-fetch when any component signals that credits changed
-  useEffect(() => {
-    return onCreditsChanged(() => {
-      void fetchBalance();
-    });
-  }, [fetchBalance]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center gap-1.5 rounded-full border border-ink py-2 px-3">
         <div className="size-1.5 animate-pulse rounded-full bg-chrome" />

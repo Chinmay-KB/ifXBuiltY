@@ -1,42 +1,15 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import { FeedFilterBarSkeleton } from "@/components/feed-filter-bar-skeleton";
-import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
-
-const FeedFilterBar = dynamic(
-  () =>
-    import("@/components/feed-filter-bar").then((mod) => mod.FeedFilterBar),
-  {
-    ssr: false,
-    loading: () => <FeedFilterBarSkeleton />,
-  },
-);
+import { FeedSectionChrome } from "@/components/feed/feed-section-chrome";
 import {
-  expandProfileSelectionsToNames,
-  type FeedHierarchicalFilterOptions,
-  type FeedProfileFilterPick,
-} from "@/lib/feed-profile-filter";
-import type { FeedSort } from "@/lib/ui/types";
-
-const DynamicFeedMasonryGrid = dynamic(
-  () =>
-    import("@/components/feed-masonry-grid").then(
-      (module) => module.FeedMasonryGrid,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <FeedLoadingSpinner
-        className="py-8"
-        label="Loading filtered feed..."
-      />
-    ),
-  },
-);
+  LazyFeedFilterBar,
+  LazyFeedMasonryGrid,
+} from "@/components/feed/feed-lazy-modules";
+import { useHierarchicalFeedFilters } from "@/hooks/use-hierarchical-feed-filters";
+import type { FeedHierarchicalFilterOptions } from "@/lib/feed-profile-filter";
 
 type HomepageFeedClientProps = {
   filterOptions: FeedHierarchicalFilterOptions;
@@ -47,73 +20,43 @@ export function HomepageFeedClient({
   filterOptions,
   children,
 }: HomepageFeedClientProps) {
-  const [sort, setSort] = useState<FeedSort>("newest");
-  const [selectedBuilderPicks, setSelectedBuilderPicks] = useState<
-    FeedProfileFilterPick[]
-  >([]);
-  const [selectedTargetPicks, setSelectedTargetPicks] = useState<
-    FeedProfileFilterPick[]
-  >([]);
-  const [selectedTones, setSelectedTones] = useState<string[]>([]);
-
-  const expandedBuilders = expandProfileSelectionsToNames(
+  const {
+    sort,
     selectedBuilderPicks,
-    filterOptions.builderGroups,
-  );
-  const expandedTargets = expandProfileSelectionsToNames(
     selectedTargetPicks,
-    filterOptions.targetGroups,
-  );
-
-  const handleSortChange = useCallback((newSort: FeedSort) => {
-    setSort(newSort);
-  }, []);
-
-  const handleBuilderPicksChange = useCallback(
-    (picks: FeedProfileFilterPick[]) => {
-      setSelectedBuilderPicks(picks);
-    },
-    [],
-  );
-
-  const handleTargetPicksChange = useCallback((picks: FeedProfileFilterPick[]) => {
-    setSelectedTargetPicks(picks);
-  }, []);
-
-  const handleTonesChange = useCallback((next: string[]) => {
-    setSelectedTones(next);
-  }, []);
-
-  const isInitialView =
-    sort === "newest" &&
-    selectedBuilderPicks.length === 0 &&
-    selectedTargetPicks.length === 0 &&
-    selectedTones.length === 0;
+    selectedTones,
+    expandedBuilders,
+    expandedTargets,
+    isInitialView,
+    handleSortChange,
+    handleBuilderPicksChange,
+    handleTargetPicksChange,
+    handleTonesChange,
+  } = useHierarchicalFeedFilters(filterOptions);
 
   return (
     <>
-      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
-        <FeedFilterBar
-          variant="paper"
-          syncUrl={false}
-          currentSort={sort}
-          builderGroups={filterOptions.builderGroups}
-          targetGroups={filterOptions.targetGroups}
-          selectedBuilderPicks={selectedBuilderPicks}
-          selectedTargetPicks={selectedTargetPicks}
-          selectedTones={selectedTones}
-          onSortChange={handleSortChange}
-          onBuilderPicksChange={handleBuilderPicksChange}
-          onTargetPicksChange={handleTargetPicksChange}
-          onTonesChange={handleTonesChange}
-        />
-      </div>
-
-      <div className="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-7">
+      <FeedSectionChrome
+        stickyClassName="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20"
+        contentClassName="flex-1 px-4 pt-6 pb-10 md:px-10 md:pt-7"
+        filterBar={
+          <LazyFeedFilterBar
+            variant="paper"
+            currentSort={sort}
+            builderGroups={filterOptions.builderGroups}
+            targetGroups={filterOptions.targetGroups}
+            selectedBuilderPicks={selectedBuilderPicks}
+            selectedTargetPicks={selectedTargetPicks}
+            onSortChange={handleSortChange}
+            onBuilderPicksChange={handleBuilderPicksChange}
+            onTargetPicksChange={handleTargetPicksChange}
+          />
+        }
+      >
         {isInitialView ? (
           children
         ) : (
-          <DynamicFeedMasonryGrid
+          <LazyFeedMasonryGrid
             key={`${sort}|${expandedBuilders.join(",")}|${expandedTargets.join(",")}|${selectedTones.join(",")}`}
             initialItems={[]}
             sort={sort}
@@ -122,7 +65,7 @@ export function HomepageFeedClient({
             tones={selectedTones.length > 0 ? selectedTones : undefined}
           />
         )}
-      </div>
+      </FeedSectionChrome>
 
       <Link
         href="/generate"

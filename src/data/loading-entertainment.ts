@@ -1,5 +1,3 @@
-import companyProfiles from "@/data/company-profiles.json";
-
 /**
  * Loading screen entertainment data.
  * Used during image generation to keep users engaged with
@@ -186,35 +184,6 @@ export const GENERIC_FUN_FACTS = [
   "Most viral product ideas sound ridiculous right up until they have 10 million users.",
 ];
 
-type CatalogProduct = { id: string; name: string };
-type CatalogCompany = { id: string; name: string; products?: CatalogProduct[] };
-
-function buildCatalogBackfillFunFacts(): Record<string, string[]> {
-  const backfill: Record<string, string[]> = {};
-  for (const company of companyProfiles as CatalogCompany[]) {
-    if (!BUILDER_FUN_FACTS[company.id]) {
-      backfill[company.id] = [
-        `${company.name} users can smell an inconsistent border radius from three screens away.`,
-        `${company.name} has at least one micro-interaction someone will defend as "core to the experience."`,
-        `If this UI feels ${company.name}-ish in under two seconds, the branding team wins.`,
-      ];
-    }
-
-    for (const product of company.products ?? []) {
-      if (!BUILDER_FUN_FACTS[product.id]) {
-        backfill[product.id] = [
-          `${product.name} fans will absolutely notice if this doesn't feel like ${product.name}.`,
-          `${product.name} is where tiny UX choices become full-blown internet discourse.`,
-          `Every ${product.name} screen has one detail that looks simple and took twenty design iterations.`,
-        ];
-      }
-    }
-  }
-  return backfill;
-}
-
-const CATALOG_BACKFILL_FUN_FACTS = buildCatalogBackfillFunFacts();
-
 function humanizeProfileId(profileId: string): string {
   return profileId
     .split("-")
@@ -249,17 +218,11 @@ function getFunFacts(builder: string, builderId?: string): string[] {
   const dynamicFacts = buildDynamicFunFacts(builder, builderId);
   if (builderId) {
     const directFacts = BUILDER_FUN_FACTS[builderId];
-    const directBackfill = CATALOG_BACKFILL_FUN_FACTS[builderId];
-    const mergedDirect = mergeFactLists(directFacts, directBackfill, dynamicFacts, GENERIC_FUN_FACTS);
+    const mergedDirect = mergeFactLists(directFacts, dynamicFacts, GENERIC_FUN_FACTS);
     if (mergedDirect.length > 0) return mergedDirect;
   }
   const key = resolveEntertainmentKey(builder, builderId);
-  return mergeFactLists(
-    BUILDER_FUN_FACTS[key],
-    CATALOG_BACKFILL_FUN_FACTS[key],
-    dynamicFacts,
-    GENERIC_FUN_FACTS,
-  );
+  return mergeFactLists(BUILDER_FUN_FACTS[key], dynamicFacts, GENERIC_FUN_FACTS);
 }
 
 /**

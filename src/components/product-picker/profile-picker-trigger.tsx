@@ -93,7 +93,7 @@ export function ProfilePickerTrigger({
           type="button"
           onClick={onOpen}
           aria-haspopup="dialog"
-          aria-expanded={open}
+          aria-expanded={open ? true : undefined}
           className="flex w-full items-baseline gap-3.5 rounded-[14px] bg-panel py-3.5 pl-5 pr-4 text-left transition-opacity"
         >
           <span className="font-display text-[32px] font-black italic leading-none text-ink">
@@ -146,7 +146,7 @@ export function ProfilePickerTrigger({
         type="button"
         onClick={onOpen}
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={open ? true : undefined}
         className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-[10px] border-2 border-line-strong bg-panel px-3 py-2.5 text-left"
       >
         <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink">

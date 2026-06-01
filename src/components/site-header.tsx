@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 
 type Props = {
   user: User | null;
-  active?: "specimen" | "generate" | "images" | "feed" | "batch";
+  active?: "specimen" | "generate" | "feed" | "batch";
   primaryAction?: { label: string; href: string };
 };
 
@@ -25,9 +25,6 @@ export function SiteHeader({ user, active, primaryAction }: Props) {
         </NavTextLink>
         <NavTextLink href="/generate" active={active === "generate"} className="hidden sm:inline">
           Generate
-        </NavTextLink>
-        <NavTextLink href="/images" active={active === "images"} className="hidden sm:inline">
-          Images
         </NavTextLink>
         <NavTextLink href="/batch" active={active === "batch"} className="hidden sm:inline">
           Batch

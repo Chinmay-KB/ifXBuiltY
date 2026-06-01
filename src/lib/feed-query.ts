@@ -1,14 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 
 import { FEED_MAX_LIMIT } from "@/lib/constants";
+import { createPublicFeedClient } from "@/lib/feed-client";
 import type { FeedResponse, FeedSort } from "@/lib/feed-types";
 import {
   publicGenerationsQuery,
   type GenerationsSelectClient,
 } from "@/lib/feed-public-filters";
 import { generationImageUrl } from "@/lib/generation-media-url";
-import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
 
 const HOMEPAGE_FEED_REVALIDATE_SECONDS = 2 * 60;
@@ -40,18 +39,6 @@ type GenerationFeedRow = {
   remix_count: number;
   created_at: string;
 };
-
-function createPublicSupabaseClient(): GenerationsSelectClient | null {
-  const env = tryGetSupabasePublicEnv();
-  if (!env) return null;
-
-  return createClient(env.url, env.anonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  }) as unknown as GenerationsSelectClient;
-}
 
 function clampLimit(limit: number): number {
   if (!Number.isFinite(limit) || limit < 1) return FEED_MAX_LIMIT;
@@ -154,7 +141,7 @@ export async function queryFeed(
 
 export const fetchCachedFeedServer = unstable_cache(
   async (opts: FeedQueryOptions): Promise<FeedResponse> => {
-    const supabase = createPublicSupabaseClient();
+    const supabase = createPublicFeedClient();
     if (!supabase) {
       return { sort: opts.sort, items: [], hasMore: false, ideasThisWeek: 0 };
     }

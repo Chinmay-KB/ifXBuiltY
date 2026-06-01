@@ -1,6 +1,7 @@
 {
   "name": "ifxbuilty",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "packageManager": "yarn@4.12.0",
   "scripts": {

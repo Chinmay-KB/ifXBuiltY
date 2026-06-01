@@ -13,11 +13,9 @@ import type {
   GeneratorProfileOption,
 } from "@/data/generator-profile-options";
 import {
-  buildGeneratorProfileGroups,
   profileById,
   resolveProfileIdByName,
 } from "@/data/generator-profile-options";
-import { FLAT_OPTIONS } from "@/data/generator-options";
 import { useGenerate } from "@/hooks/use-generate";
 import { cn } from "@/lib/cn";
 import {
@@ -31,10 +29,10 @@ import type {
   RemixSource,
 } from "@/lib/ui/types";
 
-export type GeneratorCompanyOption = { id: string; name: string };
-
 type GeneratorFormProps = {
   signedIn: boolean;
+  /** Grouped company/product options from Supabase */
+  profileGroups: GeneratorProfileGroup[];
   initialValues?: Partial<GenerationInputs>;
   remixSource?: RemixSource | null;
   onGenerated: (result: GenerationResult) => void;
@@ -45,10 +43,6 @@ type GeneratorFormProps = {
   variant?: "default" | "paper";
   /** Tighter Paper layout to fit one viewport (Generate page) */
   paperDensity?: "comfortable" | "flush";
-  /** Grouped company/product options from Supabase */
-  profileGroups?: GeneratorProfileGroup[];
-  /** @deprecated Use profileGroups */
-  companyOptions?: GeneratorCompanyOption[];
   /** Parent can call `abortControlRef.current?.()` to cancel the in-flight `/api/generate` request */
   abortControlRef?: MutableRefObject<(() => void) | null>;
 };
@@ -73,60 +67,18 @@ export function GeneratorForm({
   variant = "default",
   paperDensity = "comfortable",
   profileGroups,
-  companyOptions,
   abortControlRef,
 }: GeneratorFormProps) {
   const { openSignIn } = useSignInModal();
   const merged = { ...defaults, ...initialValues };
 
-  const groups = useMemo((): GeneratorProfileGroup[] =>
-      profileGroups ??
-      (companyOptions
-        ? [
-            {
-              companyId: "_flat",
-              companyName: "All",
-              options: companyOptions.map((o) => ({
-                id: o.id,
-                name: o.name,
-                profileType: "company" as const,
-                parentCompanyId: null,
-                category: "",
-                screenType: FALLBACK_SCREEN,
-              })),
-            },
-          ]
-        : [
-            {
-              companyId: "_catalog",
-              companyName: "Companies & products",
-              options: Array.from(
-                new Map(
-                  FLAT_OPTIONS.map((o) => [
-                    o.id,
-                    {
-                      id: o.id,
-                      name: o.name,
-                      profileType: "company" as const,
-                      parentCompanyId: null,
-                      category: "",
-                      screenType: FALLBACK_SCREEN,
-                    },
-                  ]),
-                ).values(),
-              ),
-            },
-          ]),
-    [profileGroups, companyOptions],
-  );
-
-  const idMap = useMemo(() => profileById(groups), [groups]);
+  const idMap = useMemo(() => profileById(profileGroups), [profileGroups]);
 
   const [builderId, setBuilderId] = useState(
-    merged.builderId ?? resolveProfileIdByName(merged.builder, groups) ?? "",
+    merged.builderId ?? resolveProfileIdByName(merged.builder, profileGroups) ?? "",
   );
   const [targetId, setTargetId] = useState(
-    merged.targetId ?? resolveProfileIdByName(merged.target, groups) ?? "",
+    merged.targetId ?? resolveProfileIdByName(merged.target, profileGroups) ?? "",
   );
   const [extraDetails, setExtraDetails] = useState(merged.extraDetails);
   const [pickerField, setPickerField] = useState<null | "builder" | "target">(null);
@@ -151,17 +103,17 @@ export function GeneratorForm({
 
   useEffect(() => {
     if (!merged.builder || builderId) return;
-    const id = resolveProfileIdByName(merged.builder, groups);
+    const id = resolveProfileIdByName(merged.builder, profileGroups);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (id) setBuilderId(id);
-  }, [merged.builder, builderId, groups]);
+  }, [merged.builder, builderId, profileGroups]);
 
   useEffect(() => {
     if (!merged.target || targetId) return;
-    const id = resolveProfileIdByName(merged.target, groups);
+    const id = resolveProfileIdByName(merged.target, profileGroups);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (id) setTargetId(id);
-  }, [merged.target, targetId, groups]);
+  }, [merged.target, targetId, profileGroups]);
 
   const { generate, cancelInflight, result, isLoading, error, errorCode } = useGenerate();
 
@@ -249,7 +201,7 @@ export function GeneratorForm({
     <ProductPickerSheet
       open={pickerField !== null}
       field={pickerField ?? "builder"}
-      groups={groups}
+      groups={profileGroups}
       valueId={pickerField === "target" ? targetId : builderId}
       onClose={() => setPickerField(null)}
       onSelect={handlePickerSelect}
@@ -263,7 +215,7 @@ export function GeneratorForm({
         id="gen-builder"
         field="builder"
         prefix="If"
-        groups={groups}
+        groups={profileGroups}
         valueId={builderId}
         selected={builderOption}
         open={pickerField === "builder"}
@@ -294,7 +246,7 @@ export function GeneratorForm({
       id="gen-target"
       field="target"
       prefix={variant === "paper" ? "built" : "Target"}
-      groups={groups}
+      groups={profileGroups}
       valueId={targetId}
       selected={targetOption}
       open={pickerField === "target"}

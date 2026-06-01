@@ -3,7 +3,8 @@ import * as fc from "fast-check";
 import { render, screen } from "@testing-library/react";
 import { GeneratorForm } from "../generator-form";
 import type { GenerationInputs } from "@/lib/ui/types";
-import { FLAT_OPTIONS } from "@/data/generator-options";
+import { flattenGeneratorProfileGroups } from "@/data/generator-profile-options";
+import { mockGeneratorProfileGroups } from "@/data/test-fixtures/profile-groups";
 
 // Mock next/link to render a plain anchor
 vi.mock("next/link", () => ({
@@ -51,24 +52,20 @@ vi.mock("@/hooks/use-generate", () => ({
 /**
  * Feature: ui-redesign, Property 12: Remix pre-fill from source
  * Validates: Requirements 6.6, 7.1
- *
- * For any source generation with fields (builder, target, extraDetails),
- * opening the remix flow SHALL pre-fill the form with the exact values from the source generation
- * for the visible form fields (builder select, target select, extra details textarea).
  */
 describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
-  // Constrained arbitraries matching the actual select option values
-  const builderArb = fc.constantFrom(...FLAT_OPTIONS.map((b) => b.id));
-  const targetArb = fc.constantFrom(...FLAT_OPTIONS.map((t) => t.id));
+  const profileGroups = mockGeneratorProfileGroups();
+  const flatOptions = flattenGeneratorProfileGroups(profileGroups);
 
-  // Arbitrary for extra details (free text)
+  const builderArb = fc.constantFrom(...flatOptions.map((b) => b.id));
+  const targetArb = fc.constantFrom(...flatOptions.map((t) => t.id));
   const extraDetailsArb = fc.string({ minLength: 0, maxLength: 100 });
 
   it("should pre-fill builder, target, and extra details with exact values from source generation", () => {
     fc.assert(
       fc.property(builderArb, targetArb, extraDetailsArb, (builderId, targetId, extraDetails) => {
-        const builderOpt = FLAT_OPTIONS.find((o) => o.id === builderId)!;
-        const targetOpt = FLAT_OPTIONS.find((o) => o.id === targetId)!;
+        const builderOpt = flatOptions.find((o) => o.id === builderId)!;
+        const targetOpt = flatOptions.find((o) => o.id === targetId)!;
         const sourceInputs: GenerationInputs = {
           builder: builderOpt.name,
           target: targetOpt.name,
@@ -80,6 +77,7 @@ describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
         const { container } = render(
           <GeneratorForm
             signedIn={true}
+            profileGroups={profileGroups}
             initialValues={sourceInputs}
             remixSource={{
               id: 1,
@@ -87,31 +85,23 @@ describe("GeneratorForm - Property 12: Remix pre-fill from source", () => {
               imageUrl: null,
             }}
             onGenerated={vi.fn()}
-          />
+          />,
         );
 
         const builderInput = screen.getByLabelText(/builder/i);
-        expect(builderInput.textContent).toContain(
-          builderOpt.name.includes(" — ")
-            ? builderOpt.name.split(" — ").pop()!
-            : builderOpt.name,
-        );
+        expect(builderInput.textContent).toContain(builderOpt.name);
 
         const targetInput = screen.getByLabelText(/target/i);
-        expect(targetInput.textContent).toContain(
-          targetOpt.name.includes(" — ")
-            ? targetOpt.name.split(" — ").pop()!
-            : targetOpt.name,
-        );
+        expect(targetInput.textContent).toContain(targetOpt.name);
 
-        // Verify extraDetails textarea
-        const extraDetailsTextarea = screen.getByLabelText(/extra details/i) as HTMLTextAreaElement;
+        const extraDetailsTextarea = screen.getByLabelText(
+          /extra details/i,
+        ) as HTMLTextAreaElement;
         expect(extraDetailsTextarea.value).toBe(extraDetails);
 
-        // Clean up for next iteration
         container.remove();
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

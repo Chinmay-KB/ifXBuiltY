@@ -62,7 +62,7 @@ export function UserMenu({ user }: UserMenuProps) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-panel"
-        aria-expanded={open}
+        aria-expanded={open ? true : undefined}
         aria-haspopup="true"
         aria-label="User menu"
       >

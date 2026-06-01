@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { DeferredAnalytics } from "@/components/deferred-analytics";
 import { DeferredSpeedInsights } from "@/components/deferred-speed-insights";
-import { NavigationShellWrapper } from "@/components/navigation-shell-wrapper";
+import { NavigationShellRoot } from "@/components/navigation-shell-root";
 import { SignInModalProvider } from "@/components/sign-in-modal-provider";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -115,7 +115,7 @@ export default function RootLayout({
         />
         <Suspense fallback={null}>
           <SignInModalProvider>
-            <NavigationShellWrapper />
+            <NavigationShellRoot />
             {/* flex 1 1 auto: fill leftover space on short pages, but min height follows content on tall pages */}
             <main className="flex min-h-0 w-full flex-1 flex-col pb-14 md:pt-20 md:pb-0">
               {children}

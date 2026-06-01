@@ -1,3 +1,7 @@
+import {
+  FEED_DEFAULT_LIMIT,
+  FEED_MAX_LIMIT,
+} from "@/lib/constants";
 import type { FeedSort } from "@/lib/feed-types";
 
 export type FeedUrlParams = {
@@ -12,6 +16,20 @@ export function parseFeedSort(raw: string | null | undefined): FeedSort {
   if (raw === "top") return "top";
   if (raw === "remixes") return "remixes";
   return "newest";
+}
+
+export function parseFeedLimit(raw: string | null | undefined): number {
+  if (raw == null || raw === "") return FEED_DEFAULT_LIMIT;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return FEED_DEFAULT_LIMIT;
+  return Math.min(Math.floor(n), FEED_MAX_LIMIT);
+}
+
+export function parseFeedOffset(raw: string | null | undefined): number {
+  if (raw == null || raw === "") return 0;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.floor(n);
 }
 
 export function parseCommaSeparated(raw: string | null | undefined): string[] {

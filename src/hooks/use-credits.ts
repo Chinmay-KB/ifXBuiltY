@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { emitCreditsChanged } from "@/lib/credits-events";
+import { fetchCreditsBalance } from "@/lib/credits/fetch-balance";
+import { emitCreditsChanged, onCreditsChanged } from "@/lib/credits-events";
 
 type CreditsState = {
   credits: number | null;
@@ -19,98 +20,71 @@ type UseCreditsReturn = CreditsState & {
 
 /**
  * useCredits — fetches and caches the user's credit balance.
- * Call `refresh()` after a purchase or generation to update.
+ * Call `refresh()` after a purchase or generation to update peers via credits-changed events.
  */
 export function useCredits(signedIn: boolean): UseCreditsReturn {
-  const [state, setState] = useState<CreditsState>({
+  const [state, setState] = useState<CreditsState>(() => ({
     credits: null,
-    isLoading: false,
+    isLoading: signedIn,
     error: null,
     hasCustomer: false,
-  });
+  }));
 
-  const refresh = useCallback(async () => {
-    if (!signedIn) {
-      setState({ credits: null, isLoading: false, error: null, hasCustomer: false });
-      return;
-    }
+  const load = useCallback(
+    async (opts?: { notifyPeers?: boolean }) => {
+      if (!signedIn) {
+        setState({
+          credits: null,
+          isLoading: false,
+          error: null,
+          hasCustomer: false,
+        });
+        return;
+      }
 
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    try {
-      const res = await fetch("/api/credits/balance");
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+      const result = await fetchCreditsBalance();
+      if (!result.ok) {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: (body as { error?: string }).error ?? "Failed to load credits",
+          error: result.unauthorized ? null : result.error,
+          credits: result.unauthorized ? null : prev.credits,
         }));
         return;
       }
 
-      const data = await res.json();
       setState({
-        credits: data.credits ?? 0,
+        credits: result.data.credits,
         isLoading: false,
         error: null,
-        hasCustomer: data.hasCustomer ?? false,
+        hasCustomer: result.data.hasCustomer,
       });
-      emitCreditsChanged();
-    } catch {
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: "Network error loading credits",
-      }));
-    }
-  }, [signedIn]);
 
-  // Fetch on mount when signed in
+      if (opts?.notifyPeers) {
+        emitCreditsChanged();
+      }
+    },
+    [signedIn],
+  );
+
+  const refresh = useCallback(async () => {
+    await load({ notifyPeers: true });
+  }, [load]);
+
   useEffect(() => {
     if (!signedIn) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial balance fetch on sign-in
+    void load();
+  }, [signedIn, load]);
 
-    let cancelled = false;
-
-    async function fetchCredits() {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        const res = await fetch("/api/credits/balance");
-        if (cancelled) return;
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: (body as { error?: string }).error ?? "Failed to load credits",
-          }));
-          return;
-        }
-
-        const data = await res.json();
-        if (cancelled) return;
-
-        setState({
-          credits: data.credits ?? 0,
-          isLoading: false,
-          error: null,
-          hasCustomer: data.hasCustomer ?? false,
-        });
-      } catch {
-        if (cancelled) return;
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: "Network error loading credits",
-        }));
-      }
-    }
-
-    void fetchCredits();
-    return () => { cancelled = true; };
-  }, [signedIn]);
+  useEffect(() => {
+    if (!signedIn) return;
+    return onCreditsChanged(() => {
+      void load();
+    });
+  }, [signedIn, load]);
 
   const needsCredits =
     signedIn && state.credits !== null && state.credits <= 0;

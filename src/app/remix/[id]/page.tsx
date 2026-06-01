@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { RemixForm } from "@/components/remix-form";
 import { SiteHeader } from "@/components/site-header";
+import { getSelectableCompanyGroups } from "@/data/company-profiles";
+import { buildGeneratorProfileGroups } from "@/data/generator-profile-options";
 import { generationImageUrl } from "@/lib/generation-media-url";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatResultTitle } from "@/lib/ui/format";
@@ -89,6 +91,9 @@ export default async function RemixPage({ params }: Props) {
     extraDetails: source.extra_details,
   };
 
+  const groups = await getSelectableCompanyGroups();
+  const profileGroups = buildGeneratorProfileGroups(groups);
+
   return (
     <div className="flex min-h-full flex-col bg-canvas">
       <SiteHeader user={user} active="generate" />
@@ -98,6 +103,7 @@ export default async function RemixPage({ params }: Props) {
         </h1>
         <RemixForm
           signedIn={!!user}
+          profileGroups={profileGroups}
           remixSource={remixSource}
           initialValues={initialValues}
         />

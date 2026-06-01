@@ -1,10 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { FeedSectionChrome } from "@/components/feed/feed-section-chrome";
+import {
+  LazyFeedFilterBar,
+  LazyFeedMasonryGrid,
+} from "@/components/feed/feed-lazy-modules";
 import { FeedFilterBarSkeleton } from "@/components/feed-filter-bar-skeleton";
 import { FeedLoadingSpinner } from "@/components/feed-loading-spinner";
 import { FeedMasonryGridStatic } from "@/components/feed-masonry-grid-static";
@@ -22,32 +26,8 @@ import {
   type FeedUrlParams,
 } from "@/lib/feed-url-params";
 import { useEnhanceWhenNearViewport } from "@/lib/use-enhance-when-near-viewport";
-import type { FeedItem, FeedSort } from "@/lib/ui/types";
-
-const FeedFilterBar = dynamic(
-  () =>
-    import("@/components/feed-filter-bar").then((mod) => mod.FeedFilterBar),
-  {
-    ssr: false,
-    loading: () => <FeedFilterBarSkeleton />,
-  },
-);
-
-const DynamicFeedMasonryGrid = dynamic(
-  () =>
-    import("@/components/feed-masonry-grid").then(
-      (module) => module.FeedMasonryGrid,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <FeedLoadingSpinner
-        className="py-8"
-        label="Loading feed..."
-      />
-    ),
-  },
-);
+import type { FeedItem } from "@/lib/ui/types";
+import type { FeedSort } from "@/lib/feed-types";
 
 type FeedPageClientProps = {
   initialItems: FeedItem[];
@@ -78,14 +58,16 @@ export function FeedPageClient({
     return (
       <div ref={sectionRef} className="flex flex-1 flex-col">
         <FeedSectionChrome filterBar={<FeedFilterBarSkeleton />}>
-          {hasFilteredUrl ? (
-            <FeedLoadingSpinner
-              className="py-16"
-              label="Loading filtered feed..."
-            />
-          ) : (
-            <FeedMasonryGridStatic items={initialItems} />
-          )}
+          <FeedPageContentPanel>
+            {hasFilteredUrl ? (
+              <FeedLoadingSpinner
+                className="py-16"
+                label="Loading filtered feed..."
+              />
+            ) : (
+              <FeedMasonryGridStatic items={initialItems} />
+            )}
+          </FeedPageContentPanel>
         </FeedSectionChrome>
       </div>
     );
@@ -308,75 +290,61 @@ function FeedPageInteractive({
     <>
       <FeedSectionChrome
         filterBar={
-          <FeedFilterBar
+          <LazyFeedFilterBar
             variant="paper"
-            syncUrl={false}
             currentSort={sort}
             builderGroups={filterOptions.builderGroups}
             targetGroups={filterOptions.targetGroups}
             selectedBuilderPicks={selectedBuilderPicks}
             selectedTargetPicks={selectedTargetPicks}
-            selectedTones={tones}
             onSortChange={handleSortChange}
             onBuilderPicksChange={handleBuilderPicksChange}
             onTargetPicksChange={handleTargetPicksChange}
-            onTonesChange={handleTonesChange}
           />
         }
       >
-        {isSyncing ? (
-          <FeedLoadingSpinner
-            className="py-16"
-            label="Loading filtered feed..."
-          />
-        ) : items.length === 0 && hasActiveFilters ? (
-          <EmptyFilterState />
-        ) : useInteractiveGrid ? (
-          <DynamicFeedMasonryGrid
-            key={feedUrlParamsKey(feedQueryParams)}
-            initialItems={items}
-            sort={sort}
-            builders={
-              feedQueryParams.builders.length > 0
-                ? feedQueryParams.builders
-                : undefined
-            }
-            targets={
-              feedQueryParams.targets.length > 0
-                ? feedQueryParams.targets
-                : undefined
-            }
-            tones={tones.length > 0 ? tones : undefined}
-          />
-        ) : (
-          <>
-            <FeedMasonryGridStatic items={items} />
-            <div ref={loadMoreSentinelRef} aria-hidden className="h-px w-full" />
-          </>
-        )}
+        <FeedPageContentPanel>
+          {isSyncing ? (
+            <FeedLoadingSpinner
+              className="py-16"
+              label="Loading filtered feed..."
+            />
+          ) : items.length === 0 && hasActiveFilters ? (
+            <EmptyFilterState />
+          ) : useInteractiveGrid ? (
+            <LazyFeedMasonryGrid
+              key={feedUrlParamsKey(feedQueryParams)}
+              initialItems={items}
+              sort={sort}
+              builders={
+                feedQueryParams.builders.length > 0
+                  ? feedQueryParams.builders
+                  : undefined
+              }
+              targets={
+                feedQueryParams.targets.length > 0
+                  ? feedQueryParams.targets
+                  : undefined
+              }
+              tones={tones.length > 0 ? tones : undefined}
+            />
+          ) : (
+            <>
+              <FeedMasonryGridStatic items={items} />
+              <div ref={loadMoreSentinelRef} aria-hidden className="h-px w-full" />
+            </>
+          )}
+        </FeedPageContentPanel>
       </FeedSectionChrome>
     </>
   );
 }
 
-function FeedSectionChrome({
-  filterBar,
-  children,
-}: {
-  filterBar: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function FeedPageContentPanel({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <div className="sticky top-0 z-30 bg-canvas/95 backdrop-blur-sm md:top-20">
-        {filterBar}
-      </div>
-      <div className="mt-6 flex-1 px-4 pb-10 sm:px-6 lg:px-10">
-        <div className="rounded-[20px] border border-line/80 bg-linear-to-b from-panel/55 via-canvas to-panel/40 p-3 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.75)] sm:p-4 lg:p-5">
-          {children}
-        </div>
-      </div>
-    </>
+    <div className="rounded-[20px] border border-line/80 bg-linear-to-b from-panel/55 via-canvas to-panel/40 p-3 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.75)] sm:p-4 lg:p-5">
+      {children}
+    </div>
   );
 }
 
