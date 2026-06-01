@@ -1,5 +1,7 @@
 # ifXBuiltY
 
+![xBuildsy banner](https://github.com/Chinmay-KB/ifXBuiltY/blob/main/public/card-smol.png?raw=true)
+
 A playful image generator for the design thought experiment: **what if X built Y?**
 
 Pick a builder (company, government, fandom, celebrity…) and a target product (app, site, category). The app produces a shareable fake screenshot that blends X’s visual language with Y’s product shape—fast enough to post, remix, and vote on.
