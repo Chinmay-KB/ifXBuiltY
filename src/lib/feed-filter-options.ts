@@ -23,7 +23,13 @@ function mapSelectableGroupsToFilterGroups(
  * (approved companies + products), not historical generation strings.
  */
 async function fetchFeedHierarchicalFilterOptions(): Promise<FeedHierarchicalFilterOptions> {
-  const companyGroups = await getSelectableCompanyGroups();
+  let companyGroups: Awaited<ReturnType<typeof getSelectableCompanyGroups>>;
+  try {
+    companyGroups = await getSelectableCompanyGroups();
+  } catch {
+    companyGroups = [];
+  }
+
   const groups = mapSelectableGroupsToFilterGroups(companyGroups);
 
   return {
