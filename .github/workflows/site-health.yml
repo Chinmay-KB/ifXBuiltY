@@ -12,6 +12,10 @@ concurrency:
   group: site-health-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   checks:
     name: Build, test, and lint
@@ -46,3 +50,37 @@ jobs:
 
       - name: Lint
         run: yarn lint
+
+      - name: Open failure issue
+        if: failure() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Site health is failing"
+          existing="$(gh issue list \
+            --label "automation/site-health" \
+            --state open \
+            --search "$title in:title" \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          body="$(cat <<EOF
+          The scheduled site health workflow failed.
+
+          Run: ${RUN_URL}
+          Branch: ${GITHUB_REF_NAME}
+          Commit: ${GITHUB_SHA}
+
+          Next action: inspect the failed run, reproduce locally if needed, and draft a fix.
+          EOF
+          )"
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create \
+              --title "$title" \
+              --label "automation/site-health" \
+              --body "$body"
+          fi
