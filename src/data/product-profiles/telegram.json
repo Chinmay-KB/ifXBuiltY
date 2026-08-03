@@ -1,0 +1,35 @@
+{
+  "id": "telegram",
+  "name": "Telegram",
+  "parent_company_id": "telegram",
+  "category": "messaging",
+  "screen_type": "mobile app",
+  "popularity_tier": 1,
+  "meme_strength": 4,
+  "style_dna": {
+    "tone": ["fast", "privacy-branded", "channel-driven", "bot-heavy"],
+    "colors": ["#2AABEE Telegram blue", "white chat bubbles", "dark charcoal backgrounds", "green online indicators"],
+    "visual_traits": ["rounded chat bubbles", "channel feed with megaphone icon", "sticker panel drawer", "circular avatars", "reply/forward quote bars"],
+    "ux_traits": ["channels with unlimited subscribers", "secret chats with self-destruct timers", "bots for every workflow", "forwarded-message chains", "cloud sync across devices", "voice message hold-to-record"],
+    "meme_exaggeration": ["'encrypted' group chats with 50,000 members", "crypto pump signal channels", "forwarding the same meme through 12 groups", "admin-only channels that are just ads", "founder-as-meme energy in every update"],
+    "iconic_elements": ["paper plane logo", "blue circle app icon", "channel megaphone badge", "sticker/GIF tab", "double-check read receipts"],
+    "behavioral_stereotypes": ["moving every group chat off WhatsApp", "using Telegram as a cloud drive", "joining random channels at 2am", "trusting bots with your OTP"],
+    "satirical_patterns": ["This message was deleted (in a channel where nothing is ever deleted)", "Bot responded in 0.3s — humans still typing...", "Channel: 'Official Updates' (last post: crypto scam)"]
+  },
+  "archetype": {
+    "type": "messaging with channels, groups, and bot integrations",
+    "sections": ["chat list", "conversation thread", "channel broadcast feed", "sticker/GIF picker", "bot command inline keyboard", "voice message recorder"],
+    "layout": "mobile app with chat-list home and full-screen conversation views",
+    "content_style": ["text messages", "stickers", "voice notes", "forwarded quotes", "channel posts", "polls", "file attachments"]
+  },
+  "meme_dna": {
+    "observed_memes": ["Telegram vs WhatsApp migration waves", "crypto signal groups", "founder freedom-of-speech mythology"],
+    "user_frustrations": ["notification overload from channels", "scam bots in every group", "search that finds everything except what you need"],
+    "cultural_shorthand": "The chat app people switch to when they want to feel like journalists"
+  },
+  "reference_urls": ["https://telegram.org"],
+  "screenshot_targets": ["chat list", "group conversation", "channel feed", "sticker panel"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Chaotic"]
+}

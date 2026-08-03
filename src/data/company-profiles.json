@@ -24,6 +24,13 @@
     ]
   },
   {
+    "id": "govt-of-india",
+    "name": "Government of India",
+    "products": [
+      { "id": "govt-of-india", "name": "Government of India", "screenType": "desktop web" }
+    ]
+  },
+  {
     "id": "apple",
     "name": "Apple",
     "products": [

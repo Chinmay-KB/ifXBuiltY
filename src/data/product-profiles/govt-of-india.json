@@ -1,0 +1,35 @@
+{
+  "id": "govt-of-india",
+  "name": "Government of India",
+  "parent_company_id": "govt-of-india",
+  "category": "government",
+  "screen_type": "desktop web",
+  "popularity_tier": 1,
+  "meme_strength": 5,
+  "style_dna": {
+    "tone": ["bureaucratic", "form-heavy", "multi-language", "official-but-chaotic"],
+    "colors": ["saffron/white/green tricolor accents", "navy government headers", "beige form backgrounds", "red mandatory-field asterisks"],
+    "visual_traits": ["dense multi-column forms", "tricolor stripe banners", "Ashoka Chakra emblem placement", "captcha boxes", "PDF download buttons", ".gov.in domain chrome"],
+    "ux_traits": ["Aadhaar OTP verification", "mandatory document upload", "multi-step wizard with no save progress", "Digilocker integration prompts", "22-language selector", "office-hours disclaimers", "reference number generators"],
+    "meme_exaggeration": ["Aadhaar OTP never arrives", "please visit office in person for online service", "form 27B in triplicate", "website crashes on launch day", "captcha that even humans cannot read", "application under review for 18 months"],
+    "iconic_elements": ["Ashoka Chakra", "tricolor header stripe", "Government of India masthead", "Digilocker badge", "PAN/Aadhaar field pairs", "helpline number buried in footer"],
+    "behavioral_stereotypes": ["needing 15 documents to change one letter in your name", "office counters open 10am–1pm only", "printing forms to submit to a portal", "WhatsApp forwards treated as official notice"],
+    "satirical_patterns": ["Please enable JavaScript, Flash Player, and a valid reason for living", "Translating this page into 22 official languages simultaneously", "Mandatory Aadhaar verification to order pizza", "Your request has been received. Expected resolution: undefined"]
+  },
+  "archetype": {
+    "type": "citizen services portal with compliance-heavy workflows",
+    "sections": ["login with Aadhaar/mobile OTP", "multi-page application form", "document upload checklist", "fee payment gateway", "application status tracker", "grievance/helpline footer"],
+    "layout": "desktop web with dense government forms and status dashboards",
+    "content_style": ["form fields with asterisks", "declaration checkboxes", "reference numbers", "bilingual labels", "PDF notices", "queue position text"]
+  },
+  "meme_dna": {
+    "observed_memes": ["OTP never comes", "Digilocker will save you (it won't)", "visit office in person", "22 official languages"],
+    "user_frustrations": ["portals down during deadline week", "circular redirects between departments", "upload size limit smaller than the form PDF"],
+    "cultural_shorthand": "The UX where the process is the punishment"
+  },
+  "reference_urls": ["https://www.india.gov.in"],
+  "screenshot_targets": ["Aadhaar login screen", "multi-step application form", "document upload page", "application status tracker"],
+  "screenshot_paths": [],
+  "research_status": "seed",
+  "default_vibe_tags": ["Bureaucratic", "Chaotic"]
+}
