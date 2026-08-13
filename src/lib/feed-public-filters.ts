@@ -33,6 +33,7 @@ export type PublicFeedQueryable = PublicFeedFilterQuery & {
     options: { ascending: boolean },
   ) => PublicFeedQueryable;
   gte: (column: string, value: string) => PromiseLike<PublicFeedQueryResult>;
+  like: (column: string, pattern: string) => PublicFeedQueryable;
   limit: (count: number) => PublicFeedQueryable;
 } & PromiseLike<PublicFeedQueryResult>;
 

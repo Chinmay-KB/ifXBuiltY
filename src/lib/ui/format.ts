@@ -43,6 +43,13 @@ export function formatResultTitle(builder: string, target: string): string {
 }
 
 /**
+ * One-line OG/Twitter description. Keep it a joke, not a locker template.
+ */
+export function formatOgDescription(builder: string, target: string): string {
+  return `What if ${builder} built ${target}? The UI is the punchline.`;
+}
+
+/**
  * Determine if the Generate action should be enabled.
  * Returns true iff both builder and target are non-empty after trimming.
  *

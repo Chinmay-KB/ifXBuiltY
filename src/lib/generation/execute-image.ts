@@ -7,6 +7,10 @@ import {
   getCompanyScreenshots,
 } from "@/data/company-profiles";
 import { generationVariantObjectPath } from "@/lib/generation-media-url";
+import {
+  contentTypeForDisplayVariant,
+  renderDisplayVariant,
+} from "@/lib/generation/render-display-variants";
 import { getDodoClient } from "@/lib/dodo/client";
 import {
   getGenerationImageSize,
@@ -122,18 +126,17 @@ async function uploadDisplayVariants(args: {
   imageBytes: Buffer;
 }): Promise<void> {
   const base = sharp(args.imageBytes).rotate();
+  const meta = await base.metadata();
+  const imageSize = { width: meta.width ?? 1, height: meta.height ?? 1 };
 
-  const [card, detail, og] = await Promise.all([
-    base.clone().resize({ width: 560, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(),
-    base.clone().resize({ width: 1280, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer(),
-    base.clone().resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer(),
-  ]);
-
-  const variants: Array<{ bytes: Buffer; variant: "card" | "detail" | "og"; contentType: string }> = [
-    { bytes: card, variant: "card", contentType: "image/webp" },
-    { bytes: detail, variant: "detail", contentType: "image/webp" },
-    { bytes: og, variant: "og", contentType: "image/jpeg" },
-  ];
+  const [card, detail, og] = await Promise.all(
+    (["card", "detail", "og"] as const).map(async (variant) => ({
+      bytes: await renderDisplayVariant(base, variant, imageSize),
+      variant,
+      contentType: contentTypeForDisplayVariant(variant),
+    })),
+  );
+  const variants = [card, detail, og];
 
   const results = await Promise.all(
     variants.map(({ bytes, variant, contentType }) =>

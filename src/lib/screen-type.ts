@@ -79,11 +79,11 @@ export function getGenerationImageSize(
   }
 }
 
-/** Tailwind aspect ratio class for feed/detail frames. */
+/** Tailwind aspect ratio class for feed cards (mobile 1:1, desktop 7:4). */
 export function getDisplayAspectClass(mode: string): string {
   return normalizeRenderMode(mode) === "mobile"
-    ? "aspect-[9/16]"
-    : "aspect-video";
+    ? "aspect-square"
+    : "aspect-[7/4]";
 }
 
 export function formatScreenBadge(screenType: string): string {

@@ -87,7 +87,7 @@ export function GenerationCard({
                 alt={label}
                 fill
                 sizes={GENERATION_CARD_IMAGE_SIZES}
-                className="object-cover transition-transform duration-300 ease-out motion-safe:group-hover:scale-[1.015]"
+                className="object-cover object-top transition-transform duration-300 ease-out motion-safe:group-hover:scale-[1.015]"
                 loading={imagePriority ? "eager" : "lazy"}
                 fetchPriority={imagePriority ? "high" : undefined}
                 unoptimized
@@ -145,7 +145,11 @@ export function GenerationCard({
                   slug={item.slug}
                   builder={item.builder}
                   target={item.target}
-                  imageUrl={item.imageUrl}
+                  imageUrl={
+                    item.imagePath
+                      ? generationImageUrl(item.imagePath, "og")
+                      : item.imageUrl
+                  }
                 />
               </div>
             )}
@@ -189,7 +193,7 @@ export function GenerationCard({
               alt={label}
               fill
               sizes={GENERATION_CARD_IMAGE_SIZES}
-              className="object-contain"
+              className="object-cover object-top"
               loading={imagePriority ? "eager" : "lazy"}
               fetchPriority={imagePriority ? "high" : undefined}
               unoptimized
@@ -232,7 +236,11 @@ export function GenerationCard({
                 slug={item.slug}
                 builder={item.builder}
                 target={item.target}
-                imageUrl={item.imageUrl}
+                imageUrl={
+                    item.imagePath
+                      ? generationImageUrl(item.imagePath, "og")
+                      : item.imageUrl
+                  }
               />
             </div>
           )}

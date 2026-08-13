@@ -51,6 +51,7 @@ export function GenerationDetailClient({
           target: initial.target,
           errorMessage: initial.errorMessage,
           imageUrl: initial.imageUrl,
+          ogImageUrl: initial.ogImageUrl,
           imageDownloadUrl: initial.imageDownloadUrl,
         }
       : null,
@@ -65,6 +66,7 @@ export function GenerationDetailClient({
         status: statusData.status,
         errorMessage: statusData.errorMessage,
         imageUrl: statusData.imageUrl ?? initial.imageUrl,
+        ogImageUrl: statusData.ogImageUrl ?? initial.ogImageUrl,
         imageDownloadUrl: statusData.imageDownloadUrl ?? initial.imageDownloadUrl,
       }
     : initial;
@@ -216,7 +218,7 @@ export function GenerationDetailClient({
                   slug={gen.slug}
                   builder={gen.builder}
                   target={gen.target}
-                  imageUrl={gen.imageUrl}
+                  imageUrl={gen.ogImageUrl ?? gen.imageUrl}
                   imageDownloadUrl={gen.imageDownloadUrl ?? null}
                 />
               </div>

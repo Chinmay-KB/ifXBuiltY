@@ -2,9 +2,9 @@
  * One-off backfill: generate publish-time image variants for all published generations.
  *
  * This produces and uploads:
- * - `${image_path}.card.webp`   (560w)
+ * - `${image_path}.card.webp`   (560×320 landscape / 560×560 portrait, top-weighted)
  * - `${image_path}.detail.webp` (1280w)
- * - `${image_path}.og.jpg`      (1200w)
+ * - `${image_path}.og.jpg`      (1200w JPEG)
  *
  * Usage:
  *   yarn tsx scripts/backfill-generation-variants.ts
@@ -27,6 +27,10 @@ config({ path: ".env.local" });
 import sharp from "sharp";
 
 import { getGenerationImagesBucket } from "@/lib/env-server";
+import {
+  contentTypeForDisplayVariant,
+  renderDisplayVariant,
+} from "@/lib/generation/render-display-variants";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type GenerationRow = {
@@ -109,22 +113,14 @@ async function ensureVariantsForPath(opts: {
 
   const input = Buffer.from(await blob.arrayBuffer());
   const basePipeline = sharp(input).rotate();
+  const meta = await basePipeline.metadata();
+  const imageSize = { width: meta.width ?? 1, height: meta.height ?? 1 };
 
-  const card = await basePipeline
-    .clone()
-    .resize({ width: 560, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
-  const detail = await basePipeline
-    .clone()
-    .resize({ width: 1280, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
-  const og = await basePipeline
-    .clone()
-    .resize({ width: 1200, withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .toBuffer();
+  const [card, detail, og] = await Promise.all([
+    renderDisplayVariant(basePipeline, "card", imageSize),
+    renderDisplayVariant(basePipeline, "detail", imageSize),
+    renderDisplayVariant(basePipeline, "og", imageSize),
+  ]);
 
   const byVariant = {
     card,
@@ -143,7 +139,7 @@ async function ensureVariantsForPath(opts: {
       .from(bucket)
       .upload(v.path, payload, {
         upsert: true,
-        contentType: v.contentType,
+        contentType: contentTypeForDisplayVariant(key),
       });
     if (upErr) throw new Error(`upload failed: ${upErr.message}`);
   }
