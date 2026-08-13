@@ -21,6 +21,9 @@ describe("toGenerationStatusResponse", () => {
     expect(completed.imageUrl).toBe(
       "https://proj.supabase.co/storage/v1/object/public/generation-images/user/duolingo-built-tinder.png.detail.webp",
     );
+    expect(completed.ogImageUrl).toBe(
+      "https://proj.supabase.co/storage/v1/object/public/generation-images/user/duolingo-built-tinder.png.og.jpg",
+    );
     expect(completed.imageDownloadUrl).toBe(
       "https://proj.supabase.co/storage/v1/object/public/generation-images/user/duolingo-built-tinder.png",
     );
@@ -35,6 +38,7 @@ describe("toGenerationStatusResponse", () => {
       image_path: "user/queued-job.png",
     });
     expect(queued.imageUrl).toBeNull();
+    expect(queued.ogImageUrl).toBeNull();
 
     const completedNoMedia = toGenerationStatusResponse({
       id: 4,

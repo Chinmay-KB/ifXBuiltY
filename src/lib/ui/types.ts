@@ -50,6 +50,7 @@ export type GenerationResult = {
   id: number;
   slug: string;
   imageUrl: string | null;
+  ogImageUrl?: string | null;
   builder: string;
   target: string;
   status?: "queued" | "processing" | "completed" | "failed";

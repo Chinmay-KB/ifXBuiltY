@@ -26,8 +26,8 @@ describe("screen-type", () => {
   });
 
   it("provides display aspect classes", () => {
-    expect(getDisplayAspectClass("mobile")).toBe("aspect-[9/16]");
-    expect(getDisplayAspectClass("desktop web")).toBe("aspect-video");
+    expect(getDisplayAspectClass("mobile")).toBe("aspect-square");
+    expect(getDisplayAspectClass("desktop web")).toBe("aspect-[7/4]");
   });
 
   it("formats badges and labels", () => {

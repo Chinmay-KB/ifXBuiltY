@@ -13,6 +13,7 @@ export type GenerationStatusPayload = {
   target: string;
   errorMessage: string | null;
   imageUrl: string | null;
+  ogImageUrl: string | null;
   imageDownloadUrl: string | null;
 };
 

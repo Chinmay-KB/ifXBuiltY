@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { preload } from "react-dom";
 
 import { fetchFeedServer } from "@/lib/fetch-feed";
-import { getGenerationBySlugCached } from "@/lib/public-generation";
-import { formatResultTitle } from "@/lib/ui/format";
+import { OG_IMAGE_PIXEL_SIZE } from "@/lib/generation-media-url";
+import {
+  findPublishedSlugAlias,
+  getGenerationBySlugCached,
+} from "@/lib/public-generation";
+import { formatOgDescription, formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
 import { GenerationDetailClient } from "./generation-detail-client";
@@ -31,10 +35,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const title = formatResultTitle(gen.builder, gen.target);
-  const description = `A cursed AI UI screenshot from the ifXBuiltY evidence locker: ${title}.`;
+  const description = formatOgDescription(gen.builder, gen.target);
   const canonicalPath = `/g/${encodeURIComponent(gen.slug)}`;
-  const ogImages = gen.imageUrl
-    ? [{ url: gen.imageUrl, alt: title }]
+  const ogImages = gen.ogImageUrl
+    ? [
+        {
+          url: gen.ogImageUrl,
+          width: OG_IMAGE_PIXEL_SIZE.width,
+          height: OG_IMAGE_PIXEL_SIZE.height,
+          alt: title,
+          type: "image/jpeg" as const,
+        },
+      ]
     : undefined;
 
   return {
@@ -60,7 +72,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function GenerationDetailPage({ params }: Props) {
   const { slug } = await params;
   const gen = await getGenerationBySlugCached(slug);
-  if (!gen) notFound();
+  if (!gen) {
+    const alias = await findPublishedSlugAlias(slug);
+    if (alias) permanentRedirect(`/g/${encodeURIComponent(alias)}`);
+    notFound();
+  }
 
   if (gen.status === "completed" && gen.imageUrl) {
     preload(gen.imageUrl, { as: "image" });

@@ -4,12 +4,15 @@ import sharp from "sharp";
 
 import { getGenerationImagesBucket } from "@/lib/env-server";
 import { generationVariantObjectPath } from "@/lib/generation-media-url";
+import {
+  contentTypeForDisplayVariant,
+  renderDisplayVariant,
+} from "@/lib/generation/render-display-variants";
 import type { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
 
 const DISPLAY_VARIANTS = ["card", "detail", "og"] as const;
-type DisplayVariant = (typeof DISPLAY_VARIANTS)[number];
 
 function basename(path: string): string {
   const idx = path.lastIndexOf("/");
@@ -19,21 +22,6 @@ function basename(path: string): string {
 function dirname(path: string): string {
   const idx = path.lastIndexOf("/");
   return idx <= 0 ? "" : path.slice(0, idx);
-}
-
-function renderVariant(base: sharp.Sharp, variant: DisplayVariant): Promise<Buffer> {
-  switch (variant) {
-    case "card":
-      return base.clone().resize({ width: 560, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
-    case "detail":
-      return base.clone().resize({ width: 1280, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
-    case "og":
-      return base.clone().resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
-  }
-}
-
-function contentTypeFor(variant: DisplayVariant): string {
-  return variant === "og" ? "image/jpeg" : "image/webp";
 }
 
 /**
@@ -69,13 +57,15 @@ export async function ensureGenerationVariants(opts: {
   }
 
   const base = sharp(Buffer.from(await blob.arrayBuffer())).rotate();
+  const meta = await base.metadata();
+  const imageSize = { width: meta.width ?? 1, height: meta.height ?? 1 };
 
   const results = await Promise.all(
     missing.map(async ({ variant, path }) => {
-      const bytes = await renderVariant(base, variant);
+      const bytes = await renderDisplayVariant(base, variant, imageSize);
       return service.storage.from(bucket).upload(path, bytes, {
         upsert: true,
-        contentType: contentTypeFor(variant),
+        contentType: contentTypeForDisplayVariant(variant),
       });
     }),
   );

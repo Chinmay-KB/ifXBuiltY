@@ -47,7 +47,7 @@ export function FeedTile({ item, index, offsetClass }: Props) {
               alt=""
               fill
               sizes={FEED_TILE_PREVIEW_SIZES}
-              className="object-cover"
+              className="object-cover object-top"
               loading="lazy"
               unoptimized
             />

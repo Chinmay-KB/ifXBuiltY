@@ -1,5 +1,8 @@
 export type GenerationMediaVariant = "card" | "detail" | "full" | "og";
 
+/** Desktop `.og.jpg` produced at generation time (1200×686). */
+export const OG_IMAGE_PIXEL_SIZE = { width: 1200, height: 686 } as const;
+
 const DEFAULT_GENERATION_IMAGES_BUCKET = "generation-images";
 
 /**

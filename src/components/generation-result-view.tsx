@@ -244,7 +244,7 @@ export function GenerationResultView({
           slug={result.slug}
           builder={result.builder}
           target={result.target}
-          imageUrl={result.imageUrl}
+          imageUrl={result.ogImageUrl ?? result.imageUrl}
         />
       </>
     );
@@ -348,7 +348,7 @@ export function GenerationResultView({
         slug={result.slug}
         builder={result.builder}
         target={result.target}
-        imageUrl={result.imageUrl}
+        imageUrl={result.ogImageUrl ?? result.imageUrl}
       />
     </div>
   );

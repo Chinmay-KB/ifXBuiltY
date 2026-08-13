@@ -30,6 +30,7 @@ export function toGenerationStatusResponse(row: GenerationStatusRow) {
     target: row.target,
     errorMessage: row.error_message,
     imageUrl: hasImage && path ? generationImageUrl(path, "detail") : null,
+    ogImageUrl: hasImage && path ? generationImageUrl(path, "og") : null,
     imageDownloadUrl: hasImage && path ? generationImageUrl(path, "full") : null,
   };
 }
