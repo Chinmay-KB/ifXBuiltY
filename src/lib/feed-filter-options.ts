@@ -1,9 +1,7 @@
 import { unstable_cache } from "next/cache";
 
-import {
-  getSelectableCompanyGroups,
-  SELECTABLE_COMPANY_GROUPS_CACHE_TAG,
-} from "@/data/company-profiles";
+import { getSelectableCompanyGroups } from "@/data/company-profiles";
+import { SELECTABLE_COMPANY_GROUPS_CACHE_TAG } from "@/data/selectable-company-groups";
 import type {
   FeedHierarchicalFilterOptions,
   FeedProfileFilterGroup,

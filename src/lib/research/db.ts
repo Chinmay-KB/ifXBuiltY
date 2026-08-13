@@ -1,4 +1,4 @@
-import { revalidateSelectableCompanyGroups } from "@/data/company-profiles";
+import { revalidateSelectableCompanyGroups } from "@/data/revalidate-selectable-company-groups";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 import type { ProductResearchAgentInput } from "./schemas";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { groupSelectableCompanyProfiles } from "@/data/company-profiles";
+import { groupSelectableCompanyProfiles } from "@/data/selectable-company-groups";
 import { mockCompanyGroups } from "@/data/test-fixtures/profile-groups";
 
 describe("groupSelectableCompanyProfiles", () => {

@@ -1,8 +1,5 @@
-import {
-  groupSelectableCompanyProfiles,
-  type CompanyGroup,
-  type CompanyProfile,
-} from "@/data/company-profiles";
+import type { CompanyGroup, CompanyProfile } from "@/data/company-profiles";
+import { groupSelectableCompanyProfiles } from "@/data/selectable-company-groups";
 import { resolveProfileScreenType } from "@/lib/screen-type";
 
 export type GeneratorProfileOption = {
