@@ -80,6 +80,62 @@ export function resolveProfileIdByName(
   return null;
 }
 
+export type ProfileLookup = {
+  id: string;
+  name: string;
+};
+
+export class AmbiguousProfileError extends Error {
+  readonly matches: ProfileLookup[];
+
+  constructor(query: string, matches: ProfileLookup[]) {
+    super(
+      `Ambiguous profile "${query}". Matches: ${matches
+        .map((m) => `${m.id} (${m.name})`)
+        .join(", ")}. Use a unique slug.`,
+    );
+    this.name = "AmbiguousProfileError";
+    this.matches = matches;
+  }
+}
+
+export class UnknownProfileError extends Error {
+  constructor(query: string) {
+    super(
+      `No selectable company_profiles row matches "${query}". Use a slug (ikea, apple-ios, google-gmail) or an exact name.`,
+    );
+    this.name = "UnknownProfileError";
+  }
+}
+
+/**
+ * Resolve a picker noun by slug (`id`) first, then exact name (case-insensitive).
+ * Unlike {@link resolveProfileIdByName}, ambiguous names fail instead of taking the first hit.
+ */
+export function resolveProfileLookup(
+  query: string,
+  profiles: ProfileLookup[],
+): ProfileLookup {
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    throw new UnknownProfileError(query);
+  }
+
+  const idMatches = profiles.filter((p) => p.id.toLowerCase() === q);
+  if (idMatches.length === 1) return idMatches[0]!;
+  if (idMatches.length > 1) {
+    throw new AmbiguousProfileError(query, idMatches);
+  }
+
+  const nameMatches = profiles.filter((p) => p.name.toLowerCase() === q);
+  if (nameMatches.length === 1) return nameMatches[0]!;
+  if (nameMatches.length > 1) {
+    throw new AmbiguousProfileError(query, nameMatches);
+  }
+
+  throw new UnknownProfileError(query);
+}
+
 export function groupsFromProfiles(all: CompanyProfile[]): CompanyGroup[] {
   const companies = all.filter((p) => p.profileType === "company");
   const products = all.filter(

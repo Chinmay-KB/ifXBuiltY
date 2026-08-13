@@ -17,6 +17,7 @@
     "sb": "supabase",
     "sb:login": "supabase login",
     "ai:image": "tsx index.ts",
+    "generate:mashup": "tsx scripts/generate-mashup.ts",
     "test": "vitest --run"
   },
   "dependencies": {

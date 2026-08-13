@@ -206,6 +206,34 @@ export async function listSelectableProfileIds(): Promise<string[]> {
   return (data ?? []).map((r: { id: string }) => r.id);
 }
 
+export type SelectableProfileLookup = {
+  id: string;
+  name: string;
+};
+
+/**
+ * Slug + display name for selectable picker nouns (companies + approved products).
+ * Used by the ops mashup CLI; catalog JSON is not a live source.
+ */
+export async function listSelectableProfileLookups(): Promise<
+  SelectableProfileLookup[]
+> {
+  const supabase = createSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("company_profiles")
+    .select("id, name")
+    .or(
+      "profile_type.eq.company,and(profile_type.eq.product,research_status.eq.approved)",
+    )
+    .order("name");
+
+  if (error) throw error;
+  return (data ?? []).map((r: { id: string; name: string }) => ({
+    id: r.id,
+    name: r.name,
+  }));
+}
+
 /**
  * Groups for the generator picker: all companies plus approved products only.
  */
