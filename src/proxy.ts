@@ -1,14 +1,41 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import {
+  generationDetailSlugFromPathname,
+  publishedGenerationPath,
+  resolvePublishedSlugAliasRedirect,
+} from "@/lib/published-slug-alias";
 import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 import { tryGetSupabasePublicEnv } from "@/lib/supabase/public-env";
+
+/**
+ * HTTP 308 before any HTML. `permanentRedirect` in the page runs after
+ * generateMetadata / the root layout have already started the document, so
+ * crawlers that only read the status line saw 200 + "Not found" + noindex.
+ */
+async function publishedSlugAliasRedirect(
+  request: NextRequest,
+): Promise<NextResponse | null> {
+  const slug = generationDetailSlugFromPathname(request.nextUrl.pathname);
+  if (!slug) return null;
+
+  const alias = await resolvePublishedSlugAliasRedirect(slug);
+  if (!alias) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = publishedGenerationPath(alias);
+  return NextResponse.redirect(url, 308);
+}
 
 /**
  * Refreshes Supabase Auth cookies before render (Next.js 16+ proxy convention).
  * @see https://supabase.com/docs/guides/auth/server-side/nextjs
  */
 export async function proxy(request: NextRequest) {
+  const aliasRedirect = await publishedSlugAliasRedirect(request);
+  if (aliasRedirect) return aliasRedirect;
+
   if (!hasSupabaseAuthCookie(request.cookies.getAll())) {
     return NextResponse.next({ request });
   }

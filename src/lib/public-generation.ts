@@ -1,10 +1,7 @@
 import { getAnonSessionId } from "@/lib/anon-session";
-import { createPublicFeedClient } from "@/lib/feed-client";
-import { publicGenerationsQuery } from "@/lib/feed-public-filters";
 import { generationImageUrl } from "@/lib/generation-media-url";
 import type { GenerationStatus } from "@/lib/generation/types";
 import { isGenerationStatus } from "@/lib/generation/types";
-import { isNumericSlugAlias } from "@/lib/slug";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { cache } from "react";
@@ -258,42 +255,6 @@ export async function getGenerationBySlug(
  * don't re-query Supabase for the same slug.
  */
 export const getGenerationBySlugCached = cache(getGenerationBySlug);
-
-/**
- * If `/g/{slug}` is not a public generation, find a published numeric alias
- * (`{slug}-1`) so dead uniqueness-suffix paths can redirect.
- */
-export async function findPublishedSlugAlias(
-  requested: string,
-): Promise<string | null> {
-  const trimmed = requested.trim();
-  if (!trimmed) return null;
-
-  const supabase = createPublicFeedClient();
-  if (!supabase) return null;
-
-  try {
-    const { data, error } = await publicGenerationsQuery(supabase, "slug")
-      .like("slug", `${trimmed}-%`)
-      .limit(50);
-
-    if (error || !data) return null;
-
-    const matches = (data as { slug: unknown }[])
-      .map((row) => row.slug)
-      .filter((slug): slug is string => typeof slug === "string")
-      .filter((slug) => isNumericSlugAlias(trimmed, slug) && slug !== trimmed)
-      .sort((a, b) => {
-        const aN = Number(a.slice(trimmed.length + 1));
-        const bN = Number(b.slice(trimmed.length + 1));
-        return aN - bN;
-      });
-
-    return matches[0] ?? null;
-  } catch {
-    return null;
-  }
-}
 
 /** @deprecated Use getGenerationBySlug */
 export async function getPublishedGenerationBySlug(
