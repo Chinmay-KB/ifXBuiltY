@@ -1,4 +1,5 @@
 import type { CompanyGroup, CompanyProfile } from "@/data/company-profiles";
+import { groupSelectableCompanyProfiles } from "@/data/selectable-company-groups";
 import { resolveProfileScreenType } from "@/lib/screen-type";
 
 export type GeneratorProfileOption = {
@@ -137,19 +138,7 @@ export function resolveProfileLookup(
 }
 
 export function groupsFromProfiles(all: CompanyProfile[]): CompanyGroup[] {
-  const companies = all.filter((p) => p.profileType === "company");
-  const products = all.filter(
-    (p) => p.profileType === "product" && p.researchStatus === "approved",
-  );
-
-  return companies
-    .map((company) => ({
-      company,
-      products: products
-        .filter((p) => p.parentCompanyId === company.id)
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    }))
-    .sort((a, b) => a.company.name.localeCompare(b.company.name));
+  return groupSelectableCompanyProfiles(all);
 }
 
 export type ProfileFilterBucket = "all" | "consumer" | "work" | "dev" | "finance" | "social" | "media";

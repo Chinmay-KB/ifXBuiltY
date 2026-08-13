@@ -1,6 +1,11 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { unstable_cache } from "next/cache";
 
+import {
+  groupSelectableCompanyProfiles,
+  SELECTABLE_COMPANY_GROUPS_CACHE_TAG,
+} from "@/data/selectable-company-groups";
+
 export type StyleDna = {
   tone: string[];
   colors: string[];
@@ -250,20 +255,12 @@ export async function getSelectableCompanyGroups(): Promise<CompanyGroup[]> {
         .order("name");
 
       if (error) throw error;
-      const all = (data ?? []).map(mapRow);
-      const companies = all.filter((p) => p.profileType === "company");
-      const products = all.filter((p) => p.profileType === "product");
-
-      return companies
-        .map((company) => ({
-          company,
-          products: products
-            .filter((p) => p.parentCompanyId === company.id)
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        }))
-        .sort((a, b) => a.company.name.localeCompare(b.company.name));
+      return groupSelectableCompanyProfiles((data ?? []).map(mapRow));
     },
-    ["selectable-company-groups-v2"],
-    { revalidate: 60 * 60 },
+    ["selectable-company-groups-v3"],
+    {
+      revalidate: 60 * 60,
+      tags: [SELECTABLE_COMPANY_GROUPS_CACHE_TAG],
+    },
   )();
 }

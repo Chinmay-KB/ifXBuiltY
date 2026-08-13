@@ -205,6 +205,7 @@ export default function ProductDetailPage() {
             .map((s) => s.trim())
             .filter(Boolean),
           defaultVibeTags: textToDnaArray(defaultVibeTags),
+          researchStatus: "approved",
         }),
       });
 
