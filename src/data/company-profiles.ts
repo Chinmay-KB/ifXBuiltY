@@ -1,5 +1,5 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 export type StyleDna = {
   tone: string[];
@@ -171,6 +171,36 @@ export type CompanyGroup = {
 const SELECTABLE_COMPANY_PROFILES_SELECT =
   "id, name, archetype, logo_path, default_vibe_tags, parent_company_id, profile_type, category, popularity_tier, research_status, meme_strength";
 
+/** Shared Data Cache tag for the generator picker and feed catalog filters. */
+export const SELECTABLE_COMPANY_GROUPS_CACHE_TAG = "selectable-company-groups";
+
+/**
+ * Group companies (always) with approved products only.
+ * Used by the generator picker and any in-memory catalog grouping.
+ */
+export function groupSelectableCompanyProfiles(
+  profiles: CompanyProfile[],
+): CompanyGroup[] {
+  const companies = profiles.filter((p) => p.profileType === "company");
+  const products = profiles.filter(
+    (p) => p.profileType === "product" && p.researchStatus === "approved",
+  );
+
+  return companies
+    .map((company) => ({
+      company,
+      products: products
+        .filter((p) => p.parentCompanyId === company.id)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    }))
+    .sort((a, b) => a.company.name.localeCompare(b.company.name));
+}
+
+/** Immediate Data Cache bust after catalog create/approve (Route Handlers). */
+export function revalidateSelectableCompanyGroups(): void {
+  revalidateTag(SELECTABLE_COMPANY_GROUPS_CACHE_TAG, { expire: 0 });
+}
+
 /**
  * Fetch all profiles grouped by parent company.
  * Companies with no products still appear with an empty products array.
@@ -250,20 +280,12 @@ export async function getSelectableCompanyGroups(): Promise<CompanyGroup[]> {
         .order("name");
 
       if (error) throw error;
-      const all = (data ?? []).map(mapRow);
-      const companies = all.filter((p) => p.profileType === "company");
-      const products = all.filter((p) => p.profileType === "product");
-
-      return companies
-        .map((company) => ({
-          company,
-          products: products
-            .filter((p) => p.parentCompanyId === company.id)
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        }))
-        .sort((a, b) => a.company.name.localeCompare(b.company.name));
+      return groupSelectableCompanyProfiles((data ?? []).map(mapRow));
     },
-    ["selectable-company-groups-v2"],
-    { revalidate: 60 * 60 },
+    ["selectable-company-groups-v3"],
+    {
+      revalidate: 60 * 60,
+      tags: [SELECTABLE_COMPANY_GROUPS_CACHE_TAG],
+    },
   )();
 }

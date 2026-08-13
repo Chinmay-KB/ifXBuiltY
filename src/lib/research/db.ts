@@ -1,3 +1,4 @@
+import { revalidateSelectableCompanyGroups } from "@/data/company-profiles";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 import type { ProductResearchAgentInput } from "./schemas";
@@ -104,6 +105,8 @@ export async function publishDraftToProfile(draftId: string) {
     })
     .eq("id", draftId);
   if (stErr) throw stErr;
+
+  revalidateSelectableCompanyGroups();
 
   return { profileId: draft.product_slug as string };
 }

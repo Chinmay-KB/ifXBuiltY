@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { revalidateSelectableCompanyGroups } from "@/data/company-profiles";
 import { AdminAuthError, requireSuperadmin } from "@/lib/admin";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
@@ -187,6 +188,8 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  revalidateSelectableCompanyGroups();
 
   const result = {
     id: inserted.id,

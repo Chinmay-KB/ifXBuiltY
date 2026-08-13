@@ -1,6 +1,9 @@
 import { unstable_cache } from "next/cache";
 
-import { getSelectableCompanyGroups } from "@/data/company-profiles";
+import {
+  getSelectableCompanyGroups,
+  SELECTABLE_COMPANY_GROUPS_CACHE_TAG,
+} from "@/data/company-profiles";
 import type {
   FeedHierarchicalFilterOptions,
   FeedProfileFilterGroup,
@@ -41,5 +44,8 @@ async function fetchFeedHierarchicalFilterOptions(): Promise<FeedHierarchicalFil
 export const getFeedHierarchicalFilterOptions = unstable_cache(
   fetchFeedHierarchicalFilterOptions,
   ["feed-hierarchical-filter-options"],
-  { revalidate: FILTER_OPTIONS_REVALIDATE_SECONDS },
+  {
+    revalidate: FILTER_OPTIONS_REVALIDATE_SECONDS,
+    tags: [SELECTABLE_COMPANY_GROUPS_CACHE_TAG],
+  },
 );

@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 
+import { revalidateSelectableCompanyGroups } from "@/data/company-profiles";
 import { AdminAuthError, requireSuperadmin } from "@/lib/admin";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { sanitizeVibeTags } from "@/lib/vibe-tags";
+
+const RESEARCH_STATUSES = [
+  "seed",
+  "researched",
+  "reviewed",
+  "approved",
+  "rejected",
+] as const;
 
 export const runtime = "nodejs";
 
@@ -66,6 +75,7 @@ type UpdateProductBody = {
   archetype?: unknown;
   defaultVibeTags?: unknown;
   sourceUrls?: unknown;
+  researchStatus?: unknown;
 };
 
 function validateUpdateBody(body: UpdateProductBody): string | null {
@@ -83,6 +93,13 @@ function validateUpdateBody(body: UpdateProductBody): string | null {
   }
   if (body.archetype != null && (typeof body.archetype !== "object" || Array.isArray(body.archetype))) {
     return 'Field "archetype" must be a JSON object';
+  }
+  if (
+    body.researchStatus != null &&
+    (typeof body.researchStatus !== "string" ||
+      !(RESEARCH_STATUSES as readonly string[]).includes(body.researchStatus))
+  ) {
+    return `Field "researchStatus" must be one of ${RESEARCH_STATUSES.join(", ")}`;
   }
   return null;
 }
@@ -129,6 +146,7 @@ export async function PUT(
   if (body.archetype != null) updates.archetype = body.archetype as Record<string, unknown>;
   if (body.defaultVibeTags != null) updates.default_vibe_tags = sanitizeVibeTags(body.defaultVibeTags as string[]);
   if (body.sourceUrls != null) updates.source_urls = body.sourceUrls as string[];
+  if (body.researchStatus != null) updates.research_status = body.researchStatus as string;
 
   const { data, error } = await supabase
     .from("company_profiles")
@@ -143,6 +161,8 @@ export async function PUT(
       { status: 500 },
     );
   }
+
+  revalidateSelectableCompanyGroups();
 
   return NextResponse.json({
     id: data.id,
@@ -192,6 +212,8 @@ export async function DELETE(
       { status: 500 },
     );
   }
+
+  revalidateSelectableCompanyGroups();
 
   return NextResponse.json({ success: true });
 }
