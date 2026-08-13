@@ -13,7 +13,9 @@ import { executeImageGeneration } from "@/lib/generation/execute-image";
 import {
   assembleMashupPrompt,
   combineUserExtraDetails,
+  mashupListingFields,
   type MashupCliArgs,
+  type MashupListingFields,
 } from "@/lib/ops/mashup-cli";
 import { mergeCompanyPair } from "@/lib/prompt/merge-company-pair";
 import { normalizeRenderMode } from "@/lib/screen-type";
@@ -35,8 +37,9 @@ export type MashupDryRunResult = {
   prompt: string;
 };
 
-export type MashupPublishedResult = {
-  kind: "published";
+export type MashupInsertedResult = {
+  kind: "inserted";
+  visibility: MashupListingFields["visibility"];
   builder: ProfileLookup;
   target: ProfileLookup;
   screenType: string;
@@ -48,7 +51,7 @@ export type MashupPublishedResult = {
   imagePath: string;
 };
 
-export type MashupGenerateResult = MashupDryRunResult | MashupPublishedResult;
+export type MashupGenerateResult = MashupDryRunResult | MashupInsertedResult;
 
 function gatewayImageModel(): string {
   return process.env.AI_GATEWAY_IMAGE_MODEL?.trim() || DEFAULT_GATEWAY_IMAGE_MODEL;
@@ -85,7 +88,7 @@ async function resolveOpsCreatorId(explicit: string | null): Promise<string> {
   }
 
   throw new Error(
-    "Could not resolve a creator for the published row. Pass --creator-id <auth.users uuid> or set GENERATION_OPS_CREATOR_ID. No credits are debited.",
+    "Could not resolve a creator for the row. Pass --creator-id <auth.users uuid> or set GENERATION_OPS_CREATOR_ID. No credits are debited.",
   );
 }
 
@@ -102,7 +105,7 @@ async function resolvePair(
   return { builder, target };
 }
 
-async function insertPublishedGeneration(args: {
+async function insertGenerationRow(args: {
   creatorId: string;
   builderName: string;
   targetName: string;
@@ -110,6 +113,7 @@ async function insertPublishedGeneration(args: {
   prompt: string;
   screenType: string;
   vibeTags: string[];
+  listing: MashupListingFields;
 }): Promise<{ id: number; slug: string; objectPath: string }> {
   const supabase = createSupabaseServiceClient();
   const baseSlug = makeGenerationSlugSnippet({
@@ -137,8 +141,8 @@ async function insertPublishedGeneration(args: {
         extra_details: args.extraDetails,
         generated_prompt: args.prompt,
         image_path: objectPath,
-        visibility: "published",
-        moderation_status: "visible",
+        visibility: args.listing.visibility,
+        moderation_status: args.listing.moderation_status,
         status: "queued",
         image_ready: false,
       })
@@ -158,8 +162,9 @@ async function insertPublishedGeneration(args: {
 }
 
 /**
- * Build the production prompt and either return it (--dry-run) or publish
- * through executeImageGeneration (no Dodo debit).
+ * Build the production prompt and either return it (--dry-run) or insert
+ * through executeImageGeneration (no Dodo debit). Default listing is draft;
+ * pass --publish after review to insert a public row.
  */
 export async function generateMashup(
   args: MashupCliArgs,
@@ -195,7 +200,8 @@ export async function generateMashup(
 
   assertAiGatewayConfigured();
   const creatorId = await resolveOpsCreatorId(args.creatorId);
-  const inserted = await insertPublishedGeneration({
+  const listing = mashupListingFields(args.publish);
+  const inserted = await insertGenerationRow({
     creatorId,
     builderName: merged.builder,
     targetName: merged.target,
@@ -203,6 +209,7 @@ export async function generateMashup(
     prompt,
     screenType,
     vibeTags: merged.builderDefaultVibeTags,
+    listing,
   });
 
   try {
@@ -235,7 +242,8 @@ export async function generateMashup(
     });
 
     return {
-      kind: "published",
+      kind: "inserted",
+      visibility: listing.visibility,
       builder,
       target,
       screenType,

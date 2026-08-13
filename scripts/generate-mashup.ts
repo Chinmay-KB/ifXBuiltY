@@ -1,6 +1,7 @@
 /**
- * Ops mashup generator — ships published generations through the production
- * pipeline. Do not generate mashups by clicking the website.
+ * Ops mashup generator — ships generations through the production pipeline.
+ * Default insert is draft (unlisted). Pass --publish only after review.
+ * Do not generate mashups by clicking the website.
  *
  * Usage:
  *   yarn generate:mashup --help
@@ -20,7 +21,7 @@ import {
 import {
   generateMashup,
   type MashupDryRunResult,
-  type MashupPublishedResult,
+  type MashupInsertedResult,
 } from "@/lib/ops/mashup-run";
 import { generationVariantObjectPath } from "@/lib/generation-media-url";
 
@@ -38,16 +39,31 @@ function printDryRun(result: MashupDryRunResult) {
   console.log(result.prompt);
 }
 
-function printPublished(result: MashupPublishedResult) {
-  console.log("--- mashup published ---");
+function printInserted(result: MashupInsertedResult) {
+  switch (result.visibility) {
+    case "published":
+      console.log("--- mashup published ---");
+      break;
+    case "draft":
+      console.log("--- mashup saved (draft) ---");
+      break;
+    default: {
+      const _exhaustive: never = result.visibility;
+      throw new Error(`Unhandled mashup visibility: ${String(_exhaustive)}`);
+    }
+  }
   console.log(`builder: ${result.builder.name} (${result.builder.id})`);
   console.log(`target:  ${result.target.name} (${result.target.id})`);
   console.log(`id:      ${result.id}`);
   console.log(`slug:    ${result.slug}`);
+  console.log(`visibility: ${result.visibility}`);
   console.log(`image:   ${result.imagePath}`);
   console.log(
     `variants: ${generationVariantObjectPath(result.imagePath, "card")}, ${generationVariantObjectPath(result.imagePath, "detail")}, ${generationVariantObjectPath(result.imagePath, "og")}`,
   );
+  if (result.visibility === "draft") {
+    console.log("Not listed on the public feed, sitemap, or locker. Pass --publish after review.");
+  }
 }
 
 async function main() {
@@ -63,8 +79,8 @@ async function main() {
     case "dry-run":
       printDryRun(result);
       return;
-    case "published":
-      printPublished(result);
+    case "inserted":
+      printInserted(result);
       return;
     default: {
       const _exhaustive: never = result;

@@ -20,13 +20,13 @@ Optional: local Supabase (`yarn db:start`) and keys for image generation / payme
 
 ## Ship mashups (ops CLI)
 
-Do not generate mashups by clicking the website. `yarn generate:mashup` is the publish path: it reuses Style DNA merge, `buildGenerationPrompt`, `executeImageGeneration` (Vercel AI Gateway), sharp variants, the public `generation-images` bucket, and a **published** `generations` row. It does not debit Dodo credits.
+Do not generate mashups by clicking the website. `yarn generate:mashup` reuses Style DNA merge, `buildGenerationPrompt`, `executeImageGeneration` (Vercel AI Gateway), sharp variants, the public `generation-images` bucket, and a `generations` row. The default insert is **draft** (not on the public feed, sitemap, or locker). Pass `--publish` only after reviewing the image. It does not debit Dodo credits.
 
 ```bash
 yarn generate:mashup --help
 ```
 
-`--dry-run` (or `DRY_RUN=1`) prints the fully built prompt and skips the paid Gateway call, upload, and DB insert.
+`--dry-run` (or `DRY_RUN=1`) prints the fully built prompt and skips the paid Gateway call, upload, and DB insert. `--publish` inserts `visibility=published` so the row is listed publicly.
 
 Example pairings (live picker slugs; extras are prompt notes, not new catalog nouns):
 

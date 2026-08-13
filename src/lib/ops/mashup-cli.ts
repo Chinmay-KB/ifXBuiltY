@@ -8,9 +8,27 @@ export type MashupCliArgs = {
   inventedName: string;
   screenType: string | null;
   dryRun: boolean;
+  publish: boolean;
   help: boolean;
   creatorId: string | null;
 };
+
+/** Listing columns written on CLI insert. Matches generations_visibility_ck / feed filters. */
+export type MashupListingFields = {
+  visibility: "draft" | "published";
+  moderation_status: "visible";
+};
+
+/**
+ * Default insert is unlisted (`draft`). `--publish` is the only way to land a
+ * public feed/sitemap/locker row (`published` + `visible`).
+ */
+export function mashupListingFields(publish: boolean): MashupListingFields {
+  return {
+    visibility: publish ? "published" : "draft",
+    moderation_status: "visible",
+  };
+}
 
 const FLAG_ALIASES: Record<string, string> = {
   "-b": "--builder",
@@ -29,7 +47,9 @@ Ops CLI for shipping mashups. Do not generate by clicking the website.
 Reuses the production path: Style DNA merge (mergeCompanyPair) →
 buildGenerationPrompt → executeImageGeneration (Vercel AI Gateway,
 default openai/gpt-image-2) → sharp card/detail/og variants → upload to
-the public generation-images bucket → insert a published generations row.
+the public generation-images bucket → insert a generations row.
+Default insert is visibility=draft (not on the public feed, sitemap, or
+locker). Pass --publish only after the image has been reviewed.
 Does not debit Dodo credits and does not require a logged-in session.
 
 Options:
@@ -39,7 +59,8 @@ Options:
   --invented-name         Invented on-screen product name
   --screen-type           mobile | desktop (default: desktop, same as /api/generate)
   --dry-run               Print the fully built prompt; skip Gateway, upload, DB insert
-  --creator-id            auth.users UUID that owns the published row
+  --publish               Insert visibility=published (public feed). Default is draft
+  --creator-id            auth.users UUID that owns the row
   -h, --help              Show this help
 
 Env:
@@ -71,6 +92,9 @@ Example pairings (picker brands already live; extras are prompt notes):
 
 Dry-run (no paid image call):
   yarn generate:mashup --builder ikea --target figma --dry-run
+
+Publish after review (same flags, plus --publish):
+  yarn generate:mashup --builder ikea --target figma --invented-name SKISSA --publish
 `;
 
 function envDryRun(env: Record<string, string | undefined>): boolean {
@@ -102,6 +126,7 @@ export function parseMashupArgs(
     inventedName: "",
     screenType: null,
     dryRun: envDryRun(env),
+    publish: false,
     help: false,
     creatorId: null,
   };
@@ -132,6 +157,9 @@ export function parseMashupArgs(
         break;
       case "--dry-run":
         out.dryRun = true;
+        break;
+      case "--publish":
+        out.publish = true;
         break;
       case "--builder":
         out.builder = takeValue();
