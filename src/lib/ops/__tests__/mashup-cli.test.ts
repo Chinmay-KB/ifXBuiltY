@@ -11,6 +11,7 @@ import {
   assembleMashupPrompt,
   assertMashupArgs,
   combineUserExtraDetails,
+  mashupListingFields,
   MASHUP_HELP,
   parseMashupArgs,
 } from "@/lib/ops/mashup-cli";
@@ -38,6 +39,7 @@ describe("parseMashupArgs", () => {
     expect(args.extraDetails).toContain("Some assembly required");
     expect(args.screenType).toBe("desktop");
     expect(args.dryRun).toBe(false);
+    expect(args.publish).toBe(false);
     expect(args.help).toBe(false);
   });
 
@@ -63,6 +65,16 @@ describe("parseMashupArgs", () => {
     expect(args.inventedName).toBe("Halo");
     expect(args.screenType).toBe("mobile");
     expect(args.dryRun).toBe(true);
+    expect(args.publish).toBe(false);
+  });
+
+  it("parses --publish without changing --dry-run", () => {
+    const args = parseMashupArgs(
+      ["--builder", "ikea", "--target", "figma", "--publish"],
+      {},
+    );
+    expect(args.publish).toBe(true);
+    expect(args.dryRun).toBe(false);
   });
 
   it("honors DRY_RUN=1 without hitting the gateway path", () => {
@@ -118,11 +130,28 @@ describe("parseMashupArgs", () => {
   });
 });
 
+describe("mashupListingFields", () => {
+  it("defaults to draft so the row is not publicly listed", () => {
+    expect(mashupListingFields(false)).toEqual({
+      visibility: "draft",
+      moderation_status: "visible",
+    });
+  });
+
+  it("maps --publish to published + visible", () => {
+    expect(mashupListingFields(true)).toEqual({
+      visibility: "published",
+      moderation_status: "visible",
+    });
+  });
+});
+
 describe("MASHUP_HELP", () => {
   it("documents flags and the four example pairings", () => {
     expect(MASHUP_HELP).toContain("--builder");
     expect(MASHUP_HELP).toContain("--target");
     expect(MASHUP_HELP).toContain("--dry-run");
+    expect(MASHUP_HELP).toContain("--publish");
     expect(MASHUP_HELP).toContain("SKISSA");
     expect(MASHUP_HELP).toContain("Halo");
     expect(MASHUP_HELP).toContain("Perch");
