@@ -4,10 +4,11 @@ import { preload } from "react-dom";
 
 import { fetchFeedServer } from "@/lib/fetch-feed";
 import { OG_IMAGE_PIXEL_SIZE } from "@/lib/generation-media-url";
+import { getGenerationBySlugCached } from "@/lib/public-generation";
 import {
   findPublishedSlugAlias,
-  getGenerationBySlugCached,
-} from "@/lib/public-generation";
+  publishedGenerationPath,
+} from "@/lib/published-slug-alias";
 import { formatOgDescription, formatResultTitle } from "@/lib/ui/format";
 import type { FeedItem } from "@/lib/ui/types";
 
@@ -15,11 +16,19 @@ import { GenerationDetailClient } from "./generation-detail-client";
 
 type Props = { params: Promise<{ slug: string }> };
 
+async function redirectToPublishedSlugAlias(slug: string): Promise<void> {
+  const alias = await findPublishedSlugAlias(slug);
+  if (alias) permanentRedirect(publishedGenerationPath(alias));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const gen = await getGenerationBySlugCached(slug);
 
   if (!gen) {
+    // Must throw before this metadata is committed; otherwise the response is
+    // already 200 HTML ("Not found" + noindex) and permanentRedirect streams.
+    await redirectToPublishedSlugAlias(slug);
     return {
       title: "Not found",
       robots: { index: false, follow: false },
@@ -73,8 +82,7 @@ export default async function GenerationDetailPage({ params }: Props) {
   const { slug } = await params;
   const gen = await getGenerationBySlugCached(slug);
   if (!gen) {
-    const alias = await findPublishedSlugAlias(slug);
-    if (alias) permanentRedirect(`/g/${encodeURIComponent(alias)}`);
+    await redirectToPublishedSlugAlias(slug);
     notFound();
   }
 
